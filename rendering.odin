@@ -10,6 +10,7 @@ render :: proc() {
 render_scene_to_texture :: proc() {
 	rl.BeginTextureMode(assets.gameplay_texture)
 	rl.ClearBackground({255, 229, 180, 255})
+	draw_level_collision()
 	draw_player_and_ball()
 	rl.EndTextureMode()
 }
@@ -34,6 +35,7 @@ render_to_screen :: proc() {
 	origin := Vec2{0, 0}
 	rotation: f32 = 0
 	rl.DrawTexturePro(assets.gameplay_texture.texture, source, dest, origin, rotation, rl.WHITE)
+	player_debug()
 	rl.EndDrawing()
 }
 
@@ -43,4 +45,11 @@ draw_player_and_ball :: proc() {
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
 	rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
+}
+
+draw_level_collision :: proc() {
+	for collider in world.level_collision {
+		extents := collider.max - collider.min
+		rl.DrawRectangleV(collider.min, extents, rl.BLACK)
+	}
 }
