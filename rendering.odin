@@ -1,0 +1,46 @@
+package main
+
+import rl "vendor:raylib"
+
+render :: proc() {
+	render_scene_to_texture()
+	render_to_screen()
+}
+
+render_scene_to_texture :: proc() {
+	rl.BeginTextureMode(assets.gameplay_texture)
+	rl.ClearBackground({255, 229, 180, 255})
+	draw_player_and_ball()
+	rl.EndTextureMode()
+}
+
+render_to_screen :: proc() {
+	WINDOW_HEIGHT = rl.GetScreenWidth()
+	WINDOW_HEIGHT = rl.GetScreenHeight()
+	rl.BeginDrawing()
+	rl.ClearBackground(rl.BLACK)
+	source := rl.Rectangle {
+		x      = 0,
+		y      = f32(WINDOW_HEIGHT - SCREEN_HEIGHT),
+		width  = f32(SCREEN_WIDTH),
+		height = -f32(SCREEN_HEIGHT),
+	}
+	dest := rl.Rectangle {
+		x      = 0,
+		y      = 0,
+		width  = f32(WINDOW_WIDTH),
+		height = f32(WINDOW_HEIGHT),
+	}
+	origin := Vec2{0, 0}
+	rotation: f32 = 0
+	rl.DrawTexturePro(assets.gameplay_texture.texture, source, dest, origin, rotation, rl.WHITE)
+	rl.EndDrawing()
+}
+
+draw_player_and_ball :: proc() {
+	player := world.player
+	ball := world.ball
+	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
+	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
+	rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
+}
