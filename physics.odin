@@ -37,6 +37,7 @@ apply_player_ball_velocity :: proc(delta: f32) {
 physics_step :: proc() {
 	delta := rl.GetFrameTime()
 	player_jump()
+	player_kick()
 	apply_player_ball_gravity(delta)
 	apply_player_ball_velocity(delta)
 	player_ball_level_collision()

@@ -44,7 +44,12 @@ draw_player_and_ball :: proc() {
 	ball := world.ball
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
-	rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
+	if ball.carried {
+		rl.DrawCircleV(player.foot_position, ball.radius, rl.WHITE)
+	} else {
+		rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
+	}
+	rl.DrawCircleV(player.foot_position + (player.input_direction * 8), 4, rl.BLACK)
 }
 
 draw_level_collision :: proc() {

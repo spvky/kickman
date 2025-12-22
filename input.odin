@@ -1,5 +1,6 @@
 package main
 
+import l "core:math/linalg"
 import rl "vendor:raylib"
 
 input_buffer: Input_Buffer
@@ -15,6 +16,7 @@ Buffered_Input :: union {
 Input_Action :: enum {
 	Jump,
 	Dash,
+	Kick,
 }
 
 update_buffer :: proc() {
@@ -50,19 +52,31 @@ is_action_buffered :: proc(action: Input_Action) -> bool {
 }
 
 poll_input :: proc() {
-	delta: f32
+	direction: Vec2
 	facing := world.player.facing
 	if rl.IsKeyDown(.A) {
-		delta -= 1
+		direction.x -= 1
 		facing = -1
 	}
 	if rl.IsKeyDown(.D) {
-		delta += 1
+		direction.x += 1
 		facing = 1
 	}
+	if rl.IsKeyDown(.W) {
+		direction.y -= 1
+	}
+	if rl.IsKeyDown(.S) {
+		direction.y += 1
+	}
 
-	world.player.move_delta = delta
+	world.player.movement_delta = direction.x
+	world.player.input_direction =
+		direction != Vec2{0, 0} ? l.normalize(direction) : Vec2{world.player.facing, 0}
 	world.player.facing = facing
+	world.player.foot_position =
+		world.player.translation +
+		Vec2{world.player.facing * (world.player.radius * 0.75), world.player.radius}
 	update_buffer()
 	if rl.IsKeyPressed(.SPACE) do buffer_action(.Jump)
+	if rl.IsKeyPressed(.K) do buffer_action(.Kick)
 }

@@ -37,9 +37,12 @@ calculate_max_speed :: proc "c" () -> f32 {
 
 Player :: struct {
 	using rigidbody: Rigidbody,
-	move_delta:      f32,
+	input_direction: Vec2,
+	foot_position:   Vec2,
+	movement_delta:  f32,
 	facing:          f32,
 	carry_pos:       f32,
+	ignore_ball:     f32,
 	state_flags:     bit_set[Player_State],
 	has_ball:        bool,
 }
@@ -51,11 +54,31 @@ Player_State :: enum u8 {
 
 Ball :: struct {
 	using rigidbody: Rigidbody,
+	ignore_player:   f32,
 	carried:         bool,
 }
 
 Ball_State :: enum u8 {
 	Grounded,
+}
+
+manage_ignore_ball :: proc(delta: f32) {
+	player := &world.player
+	if player.ignore_ball > 0 {
+		player.ignore_ball = math.clamp(player.ignore_ball - delta, 0, 5)
+	}
+}
+
+player_kick :: proc() {
+	player := &world.player
+	ball := &world.ball
+	if is_action_buffered(.Kick) {
+		ball.translation = player.foot_position
+		ball.carried = false
+		ball.velocity = 300 * player.input_direction
+		player.ignore_ball = 0.2
+		consume_action(.Kick)
+	}
 }
 
 
