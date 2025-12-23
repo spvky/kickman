@@ -1,0 +1,44 @@
+# Pell (Irish for Gaelic Football)
+
+Cute little black fae kid with an afro
+
+
+# Tutorial
+    * Basic jumping tutorial
+    * Basic kicking tutorial
+    * Wall jump/bounce jump tutorial
+    * Need a mechanism to return the ball to the player to avoid soft locks
+    * No tutorial for headers, but make it clear that can header the ball by having it bounce off of their head
+    * Find the striker badge
+    * Next room, show button prompt for recalling, player then has to kick ball to a button that raises a bridge, and drops it when recalling
+    * Let player out into the open world
+
+# Starting Movement
+ * Mid air kicks stall momentum briefly
+
+# Generic Upgrades
+ * Dash, silk song style
+ * Slide, each ball type reacts to it differently
+ * Wall jump
+
+# Badges
+ Each badge has different ball mechanics and serve as the main method of traversal
+
+ ## Strikers Badge
+ Default moveset, first item is finding this badge which unlocks recalling the ball to your feet
+ Action: Recall Ball to you
+
+
+ ## Punished(Sisyphus) Badge
+ Make the ball really huge and chained to the player, sysiphus style, heavier and harder to move, use to smash open doors and breakable objects, ball pulls the player when you get too far from it, can stand on top of the ball, refreshing it's forward momentum to ride across certain hazards
+ Action: yank the chain to it's minumum length, drawing the ball and player towards each other, can hold to let the ball pull you
+
+
+ ## Ghost badge
+ Fast Straight ricocheting shots that ignore gravity for a while, pass through obstacles and cannot be headered
+ Action: Teleport to the ball and gain it's velocity
+
+TODO: Tue 23 Dec 2025 01:19:44 AM EST
+* Kick angles rework
+* Ldtk support
+* Start making tutorial stage
