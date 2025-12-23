@@ -56,6 +56,7 @@ Ball :: struct {
 	using rigidbody: Rigidbody,
 	ignore_player:   f32,
 	carried:         bool,
+	spin:            f32,
 }
 
 Ball_State :: enum u8 {
@@ -73,11 +74,15 @@ player_kick :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if is_action_buffered(.Kick) {
-		ball.translation = player.foot_position
-		ball.carried = false
-		ball.velocity = 300 * player.input_direction
-		player.ignore_ball = 0.2
-		consume_action(.Kick)
+		if player.has_ball && ball.carried {
+			ball.translation = player.foot_position
+			ball.carried = false
+			player.has_ball = false
+			ball.velocity = 300 * player.input_direction
+			player.ignore_ball = 0.2
+			ball.spin = player.facing
+			consume_action(.Kick)
+		}
 	}
 }
 

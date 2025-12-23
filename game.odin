@@ -21,6 +21,8 @@ init_world :: proc() {
 	init_events_system()
 	world.player.radius = 8
 	world.player.translation = {200, 125}
+	world.player.has_ball = true
+	world.player.facing = 1
 	world.ball.radius = 4
 	world.ball.carried = true
 	world.level_collision = make([dynamic]Level_Collider, 0, 16)

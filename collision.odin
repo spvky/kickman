@@ -44,10 +44,15 @@ circle_level_collide :: proc(
 	return
 }
 
-rigidbody_resolve_collision :: proc(rb: ^Rigidbody, collision: Collision, type: enum {
+rigidbody_resolve_collision :: proc(
+	rb: ^Rigidbody,
+	collision: Collision,
+	spin: f32 = 1,
+	type: enum {
 		Character,
 		Ball,
-	} = .Character) {
+	} = .Character,
+) {
 
 	rb.translation += collision.mtv
 	x_dot := math.abs(l.dot(collision.normal, Vec2{1, 0}))
@@ -65,7 +70,13 @@ rigidbody_resolve_collision :: proc(rb: ^Rigidbody, collision: Collision, type: 
 		case .Character:
 			rb.velocity.y = 0
 		case .Ball:
-			rb.velocity.y *= -1
+			// Should add some logic to convert some of balls velocity to lateral movement to simulate rolling
+			y_velo := rb.velocity.y
+			rb.velocity.y = y_velo * -0.6
+			// Roll based on spin if our x velo is low enough
+			if math.abs(rb.velocity.x) < 5 {
+				rb.velocity.x = y_velo * 0.2 * spin
+			}
 		}
 	}
 
@@ -81,22 +92,37 @@ player_ball_level_collision :: proc() {
 	for collider in world.level_collision {
 		// Player
 		nearest_point := collider_nearest_point(collider, player.translation)
-		if head_collision, ok := circle_level_collide(
+		head_collision, head_collided := circle_level_collide(
 			player.translation - {0, player.radius / 2},
 			player.radius,
 			collider,
-		); ok {
+		)
+		if head_collided {
 			rigidbody_resolve_collision(&player.rigidbody, head_collision)
 		}
-		if foot_collision, ok := circle_level_collide(
+
+		feet_collision, feet_collided := circle_level_collide(
 			player.translation + {0, player.radius / 2},
 			player.radius,
 			collider,
-		); ok {
-			rigidbody_resolve_collision(&player.rigidbody, foot_collision)
+		)
+		if feet_collided {
+			rigidbody_resolve_collision(&player.rigidbody, feet_collision)
 		}
 		if l.distance(nearest_point, player_feet_sensor) < 0.06 && .Standable in collider.flags {
 			feet_on_ground = true
+		}
+
+		if !ball.carried {
+			ball_nearest_point := collider_nearest_point(collider, ball.translation)
+			ball_collision, ball_collided := circle_level_collide(
+				ball.translation,
+				ball.radius,
+				collider,
+			)
+			if ball_collided {
+				rigidbody_resolve_collision(&ball.rigidbody, ball_collision, ball.spin, .Ball)
+			}
 		}
 	}
 	if feet_on_ground {
