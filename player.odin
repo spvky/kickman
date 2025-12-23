@@ -76,10 +76,12 @@ player_kick :: proc() {
 	ball := &world.ball
 	if is_action_buffered(.Kick) {
 		if player.has_ball && ball.carried {
+			ball_angle :=
+				math.abs(player.input_direction.x) == 1 ? player.input_direction + Vec2{0, 0.35} : player.input_direction
 			ball.translation = player.foot_position
 			ball.carried = false
 			player.has_ball = false
-			ball.velocity = (300 * player.input_direction) + player.velocity
+			ball.velocity = (300 * ball_angle) + player.velocity
 			player.ignore_ball = 0.2
 			ball.spin = player.facing
 			consume_action(.Kick)

@@ -49,7 +49,10 @@ draw_player_and_ball :: proc() {
 	} else {
 		rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
 	}
-	rl.DrawCircleV(player.foot_position + (player.input_direction * 8), 4, rl.BLACK)
+	if ODIN_DEBUG {
+		// Draw kick angle
+		rl.DrawCircleV(player.foot_position + (player.input_direction * 8), 4, rl.BLACK)
+	}
 }
 
 draw_level_collision :: proc() {

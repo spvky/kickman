@@ -30,10 +30,20 @@ apply_player_ball_gravity :: proc(delta: f32) {
 	}
 }
 
+player_movement :: proc() {
+	player := &world.player
+	if player.movement_delta != 0 {
+		player.velocity.x = max_speed * player.movement_delta
+	} else {
+		// This will eventually only zero out x velocity when able to move
+		player.velocity.x = 0
+	}
+}
+
 manage_player_ball_velocity :: proc() {
 	ball := &world.ball
 	if .Grounded in ball.state_flags {
-		ball.velocity *= 0.998
+		ball.velocity *= 0.999
 	}
 }
 
@@ -47,6 +57,7 @@ apply_player_ball_velocity :: proc(delta: f32) {
 physics_step :: proc() {
 	delta := rl.GetFrameTime()
 	manage_player_ball_velocity()
+	player_movement()
 	manage_ignore_ball(delta)
 	player_jump()
 	player_kick()
@@ -211,7 +222,8 @@ player_ball_collision :: proc() {
 	if player.ignore_ball == 0 && !ball.carried {
 		// Header
 		player_head := player.translation - {0, player.radius / 2}
-		if l.distance(player_head, ball.translation) < (player.radius * 0.75) + ball.radius {
+		ball_above_head := ball.translation.y < player_head.y
+		if l.distance(player_head, ball.translation) < player.radius + ball.radius {
 			ball_magnitude := l.length(ball.velocity)
 			player_magnitude := l.length(player.velocity)
 			head_normal := l.normalize0(ball.translation - player_head)
@@ -220,8 +232,13 @@ player_ball_collision :: proc() {
 		}
 		player_feet := player.translation + {0, player.radius / 2}
 		if l.distance(player_feet, ball.translation) < player.radius + ball.radius {
-			log.info("Foot collision")
-			catch_ball()
+			if .Grounded in player.state_flags {
+				catch_ball()
+			} else {
+				player.velocity.y = jump_speed
+				player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
+				player.ignore_ball = 0.2
+			}
 		}
 	}
 }
