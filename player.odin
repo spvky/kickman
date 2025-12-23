@@ -43,7 +43,7 @@ Player :: struct {
 	facing:          f32,
 	carry_pos:       f32,
 	ignore_ball:     f32,
-	state_flags:     bit_set[Player_State],
+	state_flags:     bit_set[Player_State;u8],
 	has_ball:        bool,
 }
 
@@ -57,6 +57,7 @@ Ball :: struct {
 	ignore_player:   f32,
 	carried:         bool,
 	spin:            f32,
+	state_flags:     bit_set[Ball_State;u8],
 }
 
 Ball_State :: enum u8 {
@@ -78,7 +79,7 @@ player_kick :: proc() {
 			ball.translation = player.foot_position
 			ball.carried = false
 			player.has_ball = false
-			ball.velocity = 300 * player.input_direction
+			ball.velocity = (300 * player.input_direction) + player.velocity
 			player.ignore_ball = 0.2
 			ball.spin = player.facing
 			consume_action(.Kick)
@@ -96,4 +97,12 @@ player_jump :: proc() {
 			return
 		}
 	}
+}
+
+catch_ball :: proc() {
+	player := &world.player
+	ball := &world.ball
+	ball.carried = true
+	ball.velocity = Vec2{0, 0}
+	player.has_ball = true
 }

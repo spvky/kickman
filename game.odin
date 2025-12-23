@@ -1,7 +1,6 @@
 package main
 
 import "core:container/queue"
-import "core:fmt"
 import rl "vendor:raylib"
 
 Vec2 :: [2]f32
