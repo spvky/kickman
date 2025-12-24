@@ -1,31 +1,48 @@
 package converter
 
-import game ".."
 import ldtk "../ldtk"
 import "core:fmt"
+import "core:time"
 
-Temp_Collider :: struct {
+Binary_Collider :: struct {
 	min, max: [2]int,
 }
 
+Binary_Region :: struct {
+	name:  string,
+	rooms: [dynamic]Binary_Room,
+}
+
+Binary_Room :: struct {
+	// Id field should go here to handle
+	room_collision: [dynamic]Binary_Collider,
+	width:          int,
+	height:         int,
+	image_path:     string,
+}
 
 main :: proc() {
+	start_time := time.now()
 	if project, ok := ldtk.load_from_file("../assets/levels/pell.ldtk", context.temp_allocator).?;
 	   ok {
 		for world in project.worlds {
-			region: game.Region
+			region: Binary_Region
 			region.name = world.identifier
-			region.rooms = make([dynamic]game.Room, 0, 10)
+			region.rooms = make([dynamic]Binary_Room, 0, 10)
 
 			fmt.printfln("Levels Count: %v", len(world.levels))
 
 			for level in world.levels {
+				room: Binary_Room
+				room.image_path = fmt.tprintf("assets/levels/pell/png/%v-collision_layer.png")
 				layer_width, layer_height: int
 				collision_csv: []int
 				for layer in level.layer_instances {
 					if layer.identifier == "collision_layer" {
 						layer_width = layer.c_width
 						layer_height = layer.c_height
+						room.height = layer_height
+						room.width = layer_width
 						collision_csv = layer.int_grid_csv
 					}
 				}
@@ -35,7 +52,7 @@ main :: proc() {
 					layer_height * layer_width,
 					allocator = context.temp_allocator,
 				)
-				colliders := make([dynamic]Temp_Collider, 0, 8)
+				colliders := make([dynamic]Binary_Collider, 0, 8)
 				collider_id: int
 
 				for y in 0 ..< layer_height {
@@ -83,7 +100,7 @@ main :: proc() {
 									t_y += 1
 								}
 
-								collider := Temp_Collider {
+								collider := Binary_Collider {
 									min = {starting_x, starting_y},
 									max = {ending_x, ending_y},
 								}
@@ -94,6 +111,7 @@ main :: proc() {
 								)
 								append(&colliders, collider)
 
+
 							} else {
 								// X,Y Tile is not collidable
 								mark_checked(&checked, layer_width, x, y)
@@ -102,11 +120,16 @@ main :: proc() {
 					}
 				}
 				fmt.printfln("Colliders found %v", len(colliders))
-				// End reading grid
+				room.room_collision = colliders
 			}
+			// Finished with level
 		}
+		// After parsing all rooms, write the region to file in binary
 	}
 	free_all(context.temp_allocator)
+	end_time := time.now()
+	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
+	fmt.printfln("Processing all rooms took %v ms", total_duration)
 }
 
 

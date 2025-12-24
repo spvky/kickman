@@ -36,7 +36,6 @@ Room :: struct {
 	room_collision: [dynamic]Level_Collider,
 	width:          int,
 	height:         int,
-	position:       Vec2,
 }
 
 Region :: struct {
