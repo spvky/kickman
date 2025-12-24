@@ -69,9 +69,19 @@ poll_input :: proc() {
 		direction.y += 1
 	}
 
+	kick_angle: Kick_Angle
+
+	if direction.y == 0 {
+		kick_angle = .Forward
+	} else if direction.y < 0 {
+		kick_angle = .Up
+	} else {
+		kick_angle = .Down
+	}
+
+
 	world.player.movement_delta = direction.x
-	world.player.input_direction =
-		direction != Vec2{0, 0} ? l.normalize(direction) : Vec2{world.player.facing, 0}
+	world.player.kick_angle = kick_angle
 	world.player.facing = facing
 	world.player.foot_position =
 		world.player.translation +

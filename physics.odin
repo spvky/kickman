@@ -221,6 +221,8 @@ player_ball_collision :: proc() {
 	ball := &world.ball
 	if player.ignore_ball == 0 && !ball.carried {
 		// Header
+		// Define specific head angles based on how close the ball is to the center of the player:
+		// Center - straight up with the characters x momentum
 		player_head := player.translation - {0, player.radius / 2}
 		ball_above_head := ball.translation.y < player_head.y
 		if l.distance(player_head, ball.translation) < player.radius + ball.radius {

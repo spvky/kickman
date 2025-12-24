@@ -8,11 +8,12 @@ player_debug :: proc() {
 	player := world.player
 
 	player_string := fmt.tprintf(
-		"Player:\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tIgnore Ball: %.2f\n\tFlags: %v",
+		"Player:\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tKick Angle: %v\n\tIgnore Ball: %.2f\n\tFlags: %v",
 		player.translation.x,
 		player.translation.y,
 		player.velocity.x,
 		player.velocity.y,
+		player.kick_angle,
 		player.ignore_ball,
 		player.state_flags,
 	)

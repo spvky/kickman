@@ -37,7 +37,6 @@ calculate_max_speed :: proc "c" () -> f32 {
 
 Player :: struct {
 	using rigidbody: Rigidbody,
-	input_direction: Vec2,
 	// TODO: replace input direction with Kick angles, define the kick angles for the Striker Badge
 	kick_angle:      Kick_Angle,
 	foot_position:   Vec2,
@@ -84,8 +83,15 @@ player_kick :: proc() {
 	ball := &world.ball
 	if is_action_buffered(.Kick) {
 		if player.has_ball && ball.carried {
-			ball_angle :=
-				math.abs(player.input_direction.x) == 1 ? player.input_direction + Vec2{0, 0.35} : player.input_direction
+			ball_angle: Vec2
+			switch player.kick_angle {
+			case .Up:
+				ball_angle = Vec2{0, -1}
+			case .Forward:
+				ball_angle = Vec2{player.facing, -0.4}
+			case .Down:
+				ball_angle = Vec2{player.facing * 0.4, -0.9}
+			}
 			ball.translation = player.foot_position
 			ball.carried = false
 			player.has_ball = false
