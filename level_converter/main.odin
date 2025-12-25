@@ -2,6 +2,8 @@ package converter
 
 import ldtk "../ldtk"
 import "core:fmt"
+import "core:mem"
+import "core:os"
 import "core:time"
 
 Binary_Collider :: struct {
@@ -121,8 +123,9 @@ main :: proc() {
 				}
 				fmt.printfln("Colliders found %v", len(colliders))
 				room.room_collision = colliders
+				append(&region.rooms, room)
 			}
-			// Finished with level
+			write_rooms_to_file(&region)
 		}
 		// After parsing all rooms, write the region to file in binary
 	}
@@ -130,6 +133,36 @@ main :: proc() {
 	end_time := time.now()
 	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
 	fmt.printfln("Processing all rooms took %v ms", total_duration)
+}
+
+write_rooms_to_file :: proc(region: ^Binary_Region) {
+	file_permissions := 0o644
+	file_flags := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
+	dir_path := "../assets/levels/bin/"
+	for room, i in region.rooms {
+		level_name := fmt.tprintf("%v_%02d", region.name, i)
+		path := fmt.tprintf("%v%v.lvl", dir_path, level_name)
+		file, err := os.open(path, file_flags, file_permissions)
+		if err != nil {
+			fmt.eprintln("Error opening file:", err)
+		}
+		defer os.close(file)
+		name_slice := transmute([]u8)level_name
+		os.write(file, name_slice)
+		image_path_slice := transmute([]u8)room.image_path
+		os.write(file, image_path_slice)
+		width_array := transmute([int(size_of(int))]u8)room.width
+		os.write(file, width_array[:])
+		height_array := transmute([int(size_of(int))]u8)room.height
+		os.write(file, height_array[:])
+		collision_bytes_to_write := len(room.room_collision) * size_of(Binary_Collider)
+		n, write_err := os.write_ptr(file, raw_data(room.room_collision), collision_bytes_to_write)
+		if write_err != nil {
+			fmt.eprintln("Error writing to file:", write_err)
+		}
+		fmt.printfln("Successfully wrote %v bytes to %v", n, path)
+
+	}
 }
 
 
