@@ -16,13 +16,14 @@ Binary_Region :: struct {
 
 Binary_Room :: struct {
 	// Id field should go here to handle
-	room_collision: [dynamic]Binary_Collider,
-	width:          u16,
-	height:         u16,
-	image_path:     string,
+	collision:  [dynamic]Binary_Collider,
+	width:      int,
+	height:     int,
+	image_path: string,
 }
 
 main :: proc() {
+	fmt.printfln("ColliderSize %v", size_of(Binary_Collider))
 	start_time := time.now()
 	if project, ok := ldtk.load_from_file("../assets/levels/pell.ldtk", context.temp_allocator).?;
 	   ok {
@@ -42,8 +43,8 @@ main :: proc() {
 					if layer.identifier == "collision_layer" {
 						layer_width = layer.c_width
 						layer_height = layer.c_height
-						room.height = u16(layer_height)
-						room.width = u16(layer_width)
+						room.height = layer_height
+						room.width = layer_width
 						collision_csv = layer.int_grid_csv
 					}
 				}
@@ -121,7 +122,7 @@ main :: proc() {
 					}
 				}
 				fmt.printfln("Colliders found %v", len(colliders))
-				room.room_collision = colliders
+				room.collision = colliders
 				append(&region.rooms, room)
 			}
 			write_rooms_to_file(&region)
@@ -153,26 +154,23 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 		// os.write(file, name_len[:])
 		// os.write(file, name)
 
-		// Write the path to the levels png and its len
+		// // Write the path to the levels png and its len
 		image_path := transmute([]u8)room.image_path
 		image_path_len := transmute([8]u8)len(image_path)
-		os.write(file, image_path_len[:])
-		os.write(file, image_path)
-
-		// Write the length and with of the array as 2 bytes each
-		width_array := transmute([2]u8)room.width
-		os.write(file, width_array[:])
-		height_array := transmute([2]u8)room.height
-		os.write(file, height_array[:])
-
-
-		collision_len := len(room.room_collision) * size_of(Binary_Collider)
-		//Write the length of the dynamic array to load it later
+		width_array := transmute([8]u8)room.width
+		height_array := transmute([8]u8)room.height
+		fmt.printfln("Collider Count %v", len(room.collision))
+		collision_len := len(room.collision) * size_of(Binary_Collider)
 		collision_len_bytes := transmute([8]u8)collision_len
+
+		// Write our ints first
+		os.write(file, image_path_len[:])
+		os.write(file, width_array[:])
+		os.write(file, height_array[:])
 		os.write(file, collision_len_bytes[:])
-
-
-		n, write_err := os.write_ptr(file, raw_data(room.room_collision), collision_len)
+		// Write dynamic data
+		os.write(file, image_path)
+		n, write_err := os.write_ptr(file, raw_data(room.collision), collision_len)
 		if write_err != nil {
 			fmt.eprintln("Error writing to file:", write_err)
 		}

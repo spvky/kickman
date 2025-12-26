@@ -1,0 +1,7 @@
+	image_path: string
+	image_path_len: int
+
+	file, read_err := os.open(filename)
+	bytes_read, read_err = os.read_ptr(file, &image_path_len, size_of(int))
+	bytes_read, read_err = os.read_ptr(file, &image_path, image_path_len)
+
