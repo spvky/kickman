@@ -175,7 +175,6 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 			fmt.eprintln("Error writing to file:", write_err)
 		}
 		fmt.printfln("Successfully wrote %v bytes to %v", n, path)
-
 	}
 }
 
