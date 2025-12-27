@@ -66,7 +66,14 @@ main :: proc() {
 								for t_y <= layer_height - 1 && !finished_y {
 									finished_x = false
 									for t_x <= layer_width - 1 && !finished_x {
-										if t_x > ending_x && t_y > starting_y do break
+										if (t_x > ending_x || t_x == layer_width - 1) &&
+										   t_y > starting_y {
+											for i_x in starting_x ..= ending_x {
+												// When we move to another row, mark the previous row
+												mark_checked(&checked, layer_width, i_x, t_y)
+											}
+											break
+										}
 										tile_unchecked := !is_checked(
 											checked,
 											layer_width,
@@ -84,12 +91,17 @@ main :: proc() {
 												ending_x = t_x
 											}
 										} else {
-											if t_x < ending_x && t_y > starting_y {
+											if (t_x < ending_x ||
+												   (t_x == ending_x && !tile_collidable)) &&
+											   t_y > starting_y {
 												finished_y = true
 											}
 											finished_x = true
 										}
-										mark_checked(&checked, layer_width, t_x, t_y)
+										// Mark initial row as we read it
+										if t_y == starting_y {
+											mark_checked(&checked, layer_width, t_x, t_y)
+										}
 										t_x += 1
 									}
 									if !finished_y {

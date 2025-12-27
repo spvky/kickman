@@ -39,14 +39,3 @@ Room_Collision :: struct {
 Region :: struct {
 	tag: Region_Tag,
 }
-
-
-// load_room :: proc(r: lw.Binary_Room) -> (room: ^Room) {
-// 	room.width = r.width
-// 	room.height = r.height
-// 	collision := make([dynamic]game.Level_Collider, 0, len(r.collision))
-// 	for c in r.collision {
-// 		level_collider: game.Level_Collider
-// 	}
-
-// }
