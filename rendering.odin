@@ -10,10 +10,8 @@ render :: proc() {
 render_scene_to_texture :: proc() {
 	rl.BeginTextureMode(assets.gameplay_texture)
 	rl.ClearBackground({255, 229, 180, 255})
-	// draw_level_collision()
 	draw_current_room()
 	draw_player_and_ball()
-	draw_level_collision()
 	rl.EndTextureMode()
 }
 
@@ -54,10 +52,6 @@ draw_player_and_ball :: proc() {
 		rl.DrawCircleV(player.foot_position, ball.radius, rl.WHITE)
 	} else {
 		rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
-	}
-	if ODIN_DEBUG {
-		// Draw kick angle
-		//rl.DrawCircleV(player.foot_position + (player.input_direction * 8), 4, rl.BLACK)
 	}
 }
 

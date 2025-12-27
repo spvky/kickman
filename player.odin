@@ -95,7 +95,7 @@ player_kick :: proc() {
 			ball.translation = player.foot_position
 			ball.carried = false
 			player.has_ball = false
-			ball.velocity = (300 * ball_angle) + player.velocity
+			ball.velocity = (200 * ball_angle) + player.velocity
 			// Instead of the movement direction system, hone some specific angles:
 			// - Heel kick up (Up)
 			// - Normal Shot (Forward/Neutral)
