@@ -10,8 +10,10 @@ render :: proc() {
 render_scene_to_texture :: proc() {
 	rl.BeginTextureMode(assets.gameplay_texture)
 	rl.ClearBackground({255, 229, 180, 255})
-	draw_level_collision()
+	// draw_level_collision()
+	draw_current_room()
 	draw_player_and_ball()
+	draw_level_collision()
 	rl.EndTextureMode()
 }
 
@@ -39,6 +41,10 @@ render_to_screen :: proc() {
 	rl.EndDrawing()
 }
 
+draw_current_room :: proc() {
+	rl.DrawTexture(assets.room_textures[world.current_room], 0, 0, rl.WHITE)
+}
+
 draw_player_and_ball :: proc() {
 	player := world.player
 	ball := world.ball
@@ -56,8 +62,8 @@ draw_player_and_ball :: proc() {
 }
 
 draw_level_collision :: proc() {
-	for collider in world.level_collision {
+	for collider in assets.room_collision[world.current_room].room_collision {
 		extents := collider.max - collider.min
-		rl.DrawRectangleV(collider.min, extents, rl.BLACK)
+		rl.DrawRectangleV(collider.min, extents, rl.RED)
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
-import "ldtk"
+import lr "./level_read"
+import lw "./level_write"
 
 
 build_level :: proc() {
@@ -28,17 +29,24 @@ Room_Tag :: struct {
 }
 
 Region_Tag :: enum {
-	Tutorial,
+	tutorial,
 }
 
-Room :: struct {
-	// Id field should go here to handle
+Room_Collision :: struct {
 	room_collision: [dynamic]Level_Collider,
-	width:          int,
-	height:         int,
 }
 
 Region :: struct {
-	name:  string,
-	rooms: [dynamic]Room,
+	tag: Region_Tag,
 }
+
+
+// load_room :: proc(r: lw.Binary_Room) -> (room: ^Room) {
+// 	room.width = r.width
+// 	room.height = r.height
+// 	collision := make([dynamic]game.Level_Collider, 0, len(r.collision))
+// 	for c in r.collision {
+// 		level_collider: game.Level_Collider
+// 	}
+
+// }

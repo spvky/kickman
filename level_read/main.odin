@@ -8,7 +8,7 @@ import "core:time"
 
 main :: proc() {
 	start_time := time.now()
-	room, ok := read_room_from_file("../assets/levels/bin/tutorial_00.lvl")
+	room, ok := read_room_collision_from_file("../assets/levels/collision/tutorial_00.col")
 	if ok {
 		fmt.printfln("%v", len(room.collision))
 	}
@@ -17,27 +17,36 @@ main :: proc() {
 	fmt.printfln("Reading room took %v ms", total_duration)
 }
 
-read_room_from_file :: proc(filename: string) -> (room: lvl_write.Binary_Room, success: bool) {
+load_region :: proc(path: string) {
+	file, read_err := os.open(path)
+	if read_err != nil {
+
+	}
+}
+
+read_room_collision_from_file :: proc(
+	filename: string,
+) -> (
+	room: lvl_write.Binary_Room,
+	success: bool,
+) {
 	file, read_err := os.open(filename)
 	if read_err != nil {
 		fmt.eprintfln("Failed to read %v: %v", filename, read_err)
 		return
 	}
+	defer os.close(file)
 
 	bytes_read: int
-	image_path_len, collision_len, height, width: int
-	image_path: string
+	collision_len: int
 
 	// Read ints from the start of the file
-	bytes_read = read_int_from_file(file, &image_path_len)
-	bytes_read = read_int_from_file(file, &width)
-	bytes_read = read_int_from_file(file, &height)
 	bytes_read = read_int_from_file(file, &collision_len)
 	// Read dynamic data from the file
-	bytes_read = read_string_from_file(file, &image_path, image_path_len)
 	collision_raw := make(
 		[]lvl_write.Binary_Collider,
 		collision_len / size_of(lvl_write.Binary_Collider),
+		allocator = context.temp_allocator,
 	)
 	collision_bytes := slice.to_bytes(collision_raw)
 	bytes_read, read_err = os.read_full(file, collision_bytes)
@@ -45,25 +54,19 @@ read_room_from_file :: proc(filename: string) -> (room: lvl_write.Binary_Room, s
 		fmt.printfln("Failed to read %v: %v", filename, read_err)
 		return
 	}
-	colliders := slice.clone_to_dynamic(collision_raw)
+	colliders := slice.clone_to_dynamic(collision_raw, allocator = context.temp_allocator)
 
 	if ODIN_DEBUG {
-		fmt.printfln("Image Path len %v", image_path_len)
-		fmt.printfln("Width %v", width)
-		fmt.printfln("Height %v", height)
 		fmt.printfln("Collision Len %v", collision_len)
-		fmt.printfln("Image Path %v", image_path)
 		fmt.printfln("Collision dynamic len %v", len(colliders))
 	}
-	room.image_path = image_path
-	room.width = width
-	room.height = height
 	room.collision = colliders
 
 
 	success = true
 	return
 }
+
 
 // Read int from passed file into the passed pointer
 read_int_from_file :: proc(file: os.Handle, destination: ^int) -> (bytes_read: int) {
@@ -83,7 +86,7 @@ read_string_from_file :: proc(
 ) -> (
 	bytes_read: int,
 ) {
-	value_bytes := make([]u8, len)
+	value_bytes := make([]u8, len, allocator = context.temp_allocator)
 	n, read_err := os.read_full(file, value_bytes)
 	bytes_read = n
 	if read_err != nil {

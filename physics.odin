@@ -161,7 +161,7 @@ player_ball_level_collision :: proc() {
 	feet_on_ground, ball_on_ground: bool
 	falling := player.velocity.y > 0
 
-	for collider in world.level_collision {
+	for collider in assets.room_collision[world.current_room].room_collision {
 		// Player
 		head_collision, head_collided := circle_level_collide(
 			player.translation - {0, player.radius / 2},

@@ -4,15 +4,15 @@ import "core:log"
 import "core:math"
 
 
-TILE_SIZE: f32 : 16
+TILE_SIZE: f32 : 8
 // How far can the player jump horizontally (in pixels)
-MAX_JUMP_DISTANCE: f32 : 3 * TILE_SIZE
+MAX_JUMP_DISTANCE: f32 : 4 * TILE_SIZE
 // How long to reach jump peak (in seconds)
 TIME_TO_PEAK: f32 : 0.3
 // How long to reach height we jumped from (in seconds)
 TIME_TO_DESCENT: f32 : 0.25
 // How many pixels high can we jump
-JUMP_HEIGHT: f32 : 2 * TILE_SIZE
+JUMP_HEIGHT: f32 : 3 * TILE_SIZE
 
 max_speed := calculate_max_speed()
 jump_speed := calulate_jump_speed()
