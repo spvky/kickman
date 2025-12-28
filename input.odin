@@ -6,7 +6,8 @@ import rl "vendor:raylib"
 input_buffer: Input_Buffer
 
 Input_Buffer :: struct {
-	actions: [Input_Action]Buffered_Input,
+	buffered: [Input_Action]Buffered_Input,
+	held:     bit_set[Input_Action;u8],
 }
 
 Buffered_Input :: union {
@@ -23,7 +24,7 @@ Input_Action :: enum {
 update_buffer :: proc() {
 	frametime := rl.GetFrameTime()
 
-	for &buffered in input_buffer.actions {
+	for &buffered in input_buffer.buffered {
 		switch &v in buffered {
 		case f32:
 			v -= frametime
@@ -35,21 +36,30 @@ update_buffer :: proc() {
 }
 
 buffer_action :: proc(action: Input_Action) {
-	switch &v in input_buffer.actions[action] {
+	switch &v in input_buffer.buffered[action] {
 	case f32:
 		v = 0.15
 	case:
-		input_buffer.actions[action] = 0.15
+		input_buffer.buffered[action] = 0.15
 	}
+	input_buffer.held += {action}
+}
+
+release_action :: proc(action: Input_Action) {
+	input_buffer.held -= {action}
 }
 
 consume_action :: proc(action: Input_Action) {
-	input_buffer.actions[action] = nil
+	input_buffer.buffered[action] = nil
 }
 
 is_action_buffered :: proc(action: Input_Action) -> bool {
-	_, action_pressed := input_buffer.actions[action].(f32)
+	_, action_pressed := input_buffer.buffered[action].(f32)
 	return action_pressed
+}
+
+is_action_held :: proc(action: Input_Action) -> bool {
+	return action in input_buffer.held
 }
 
 poll_input :: proc() {
@@ -86,7 +96,15 @@ poll_input :: proc() {
 	player.kick_angle = kick_angle
 	player.facing = facing
 	update_buffer()
+	// Buffer pressed inputs
 	if rl.IsKeyPressed(.SPACE) do buffer_action(.Jump)
 	if rl.IsKeyPressed(.K) do buffer_action(.Kick)
 	if rl.IsKeyPressed(.J) do buffer_action(.Badge)
+	if rl.IsKeyPressed(.H) do buffer_action(.Dash)
+
+	if rl.IsKeyReleased(.SPACE) do release_action(.Jump)
+	if rl.IsKeyReleased(.K) do release_action(.Kick)
+	if rl.IsKeyReleased(.J) do release_action(.Badge)
+	if rl.IsKeyReleased(.H) do release_action(.Dash)
+
 }

@@ -46,16 +46,9 @@ Player :: struct {
 	state_flags:       bit_set[Player_State;u8],
 	timed_state_flags: bit_set[Player_Timed_State;u8],
 	flag_timers:       [Player_Timed_State]f32,
+	juice_values:      [Player_Juice_Values]f32,
 	badge_type:        Player_Badge,
 	has_ball:          bool,
-}
-
-player_foot_position :: proc(direction: f32 = 1) -> Vec2 {
-	player := &world.player
-	return(
-		player.translation +
-		Vec2{player.facing * direction * (player.radius * 0.75), player.radius} \
-	)
 }
 
 Player_Badge :: enum u8 {
@@ -63,6 +56,10 @@ Player_Badge :: enum u8 {
 	Striker,
 	Sisyphus,
 	Ghost,
+}
+
+Player_Juice_Values :: enum u8 {
+	Dribble_Timer,
 }
 
 Kick_Angle :: enum u8 {
@@ -74,6 +71,8 @@ Kick_Angle :: enum u8 {
 Player_State :: enum u8 {
 	Grounded,
 	Double_Jump,
+	Walking,
+	Dashing,
 }
 
 Player_Timed_State :: enum u8 {
@@ -85,6 +84,8 @@ Player_Timed_State :: enum u8 {
 Player_Master_State :: enum u16 {
 	Grounded,
 	Double_Jump,
+	Walking,
+	Dashing,
 	Coyote,
 	Ignore_Ball,
 	No_Badge,
@@ -124,6 +125,10 @@ player_has :: proc(flag: Player_Master_State) -> (contains: bool) {
 		contains = .Grounded in world.player.state_flags
 	case .Double_Jump:
 		contains = .Double_Jump in world.player.state_flags
+	case .Walking:
+		contains = .Walking in world.player.state_flags
+	case .Dashing:
+		contains = .Dashing in world.player.state_flags
 	case .Coyote:
 		contains = .Coyote in world.player.timed_state_flags
 	case .Ignore_Ball:
@@ -150,9 +155,34 @@ ball_has :: proc(flag: Ball_Master_State) -> (contains: bool) {
 	return contains
 }
 
-manage_player_ball_timed_state_flags :: proc(delta: f32) {
+player_foot_position :: proc(direction: f32 = 1) -> Vec2 {
+	player := &world.player
+	return(
+		player.translation +
+		Vec2{player.facing * direction * (player.radius * 0.75), player.radius} \
+	)
+}
+
+manage_juice_values :: proc(delta: f32) {
+	player := &world.player
+	for v in Player_Juice_Values {
+		switch v {
+		case .Dribble_Timer:
+			dribble_timer := &player.juice_values[.Dribble_Timer]
+			dribble_timer^ += delta
+			// 2 radian
+			if dribble_timer^ > math.PI {
+				dribble_timer^ = 0
+			}
+		}
+	}
+}
+
+
+manage_player_ball_flags :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
+	// Player timed state flags
 	for v in Player_Timed_State {
 		timer := &player.flag_timers[v]
 		timer^ = math.clamp(timer^ - delta, 0, 10)
@@ -162,6 +192,23 @@ manage_player_ball_timed_state_flags :: proc(delta: f32) {
 			player.timed_state_flags -= {v}
 		}
 	}
+
+	// Un-Timed state management
+	if player_has(.Grounded) {
+		if player.movement_delta != 0 {
+			// Should use action system to allow held inputs
+			if is_action_held(.Dash) {
+				player.state_flags += {.Dashing}
+				player.state_flags -= {.Walking}
+			} else {
+				player.state_flags += {.Walking}
+				player.state_flags -= {.Dashing}
+			}
+		} else {
+			player.state_flags -= {.Walking, .Dashing}
+		}
+	}
+
 	for v in Ball_Timed_State {
 		timer := &ball.flag_timers[v]
 		timer^ = math.clamp(timer^ - delta, 0, 10)

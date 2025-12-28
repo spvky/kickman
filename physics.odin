@@ -46,6 +46,42 @@ manage_player_ball_velocity :: proc(delta: f32) {
 	if ball_has(.Recalling) {
 		player_feet := player.translation + {0, player.radius / 2}
 		ball.translation = math.lerp(ball.translation, player_feet, delta * 10)
+	} else if ball_has(.Carried) {
+
+		// time := f32(rl.GetTime())
+		if player_has(.Grounded) {
+			if player_has(.Walking) {
+				dribble_position :=
+					player_foot_position() +
+					{
+							player.facing *
+							math.abs(
+								math.sin(player.juice_values[.Dribble_Timer] * 5) *
+								player.radius *
+								1.5,
+							),
+							0,
+						}
+				ball.translation = math.lerp(ball.translation, dribble_position, delta * 50)
+			} else if player_has(.Dashing) {
+				dribble_position :=
+					player_foot_position() +
+					{
+							player.facing *
+							math.abs(
+								math.sin(player.juice_values[.Dribble_Timer] * 4) *
+								player.radius *
+								3,
+							),
+							0,
+						}
+				ball.translation = math.lerp(ball.translation, dribble_position, delta * 50)
+			} else {
+				ball.translation = math.lerp(ball.translation, player_foot_position(), delta * 80)
+			}
+		} else {
+			ball.translation = math.lerp(ball.translation, player_foot_position(), delta * 80)
+		}
 	} else {
 		if ball_has(.Grounded) {
 			ball.velocity *= 0.999
@@ -65,11 +101,12 @@ apply_player_ball_velocity :: proc(delta: f32) {
 physics_step :: proc() {
 	delta := rl.GetFrameTime()
 	manage_player_ball_velocity(delta)
+	manage_juice_values(delta)
 	player_controls()
 	apply_player_ball_gravity(delta)
 	apply_player_ball_velocity(delta)
 	//Update timed flags before collision occurs
-	manage_player_ball_timed_state_flags(delta)
+	manage_player_ball_flags(delta)
 	player_ball_level_collision()
 	player_ball_collision()
 }

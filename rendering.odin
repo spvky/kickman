@@ -74,18 +74,17 @@ draw_current_room :: proc() {
 draw_player_and_ball :: proc() {
 	player := world.player
 	ball := world.ball
-	player_bounce_box := AABB {
-		player.translation - {player.radius * 1.5, 0},
-		player.translation + ({player.radius * 1.5, player.radius * 2}),
-	}
-	box_extents := player_bounce_box.max - player_bounce_box.min
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
-	rl.DrawRectangleV(player_bounce_box.min, box_extents, {255, 255, 255, 100})
-	if ball_has(.Carried) {
-		rl.DrawCircleV(player_foot_position(), ball.radius, rl.WHITE)
-	} else {
-		rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
+	rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
+
+	if ODIN_DEBUG {
+		player_bounce_box := AABB {
+			player.translation - {player.radius * 1.5, 0},
+			player.translation + ({player.radius * 1.5, player.radius * 2}),
+		}
+		box_extents := player_bounce_box.max - player_bounce_box.min
+		rl.DrawRectangleV(player_bounce_box.min, box_extents, {255, 255, 255, 100})
 	}
 }
 
