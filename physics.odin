@@ -40,27 +40,31 @@ player_movement :: proc() {
 	}
 }
 
-manage_player_ball_velocity :: proc() {
+manage_player_ball_velocity :: proc(delta: f32) {
+	player := &world.player
 	ball := &world.ball
-	if .Grounded in ball.state_flags {
-		ball.velocity *= 0.999
+	if ball_has(.Recalling) {
+		player_feet := player.translation + {0, player.radius / 2}
+		ball.translation = math.lerp(ball.translation, player_feet, delta * 10)
+	} else {
+		if ball_has(.Grounded) {
+			ball.velocity *= 0.999
+		}
 	}
 }
 
 apply_player_ball_velocity :: proc(delta: f32) {
 	ball := &world.ball
 	world.player.translation += world.player.velocity * delta
-	if !ball_has(.Carried) {
+	if !ball_has(.Carried) && !ball_has(.Recalling) {
 		world.ball.translation += world.ball.velocity * delta
 	}
 }
 
 physics_step :: proc() {
 	delta := rl.GetFrameTime()
-	manage_player_ball_velocity()
-	player_movement()
-	player_jump()
-	player_kick()
+	manage_player_ball_velocity(delta)
+	player_controls()
 	apply_player_ball_gravity(delta)
 	apply_player_ball_velocity(delta)
 	//Update timed flags before collision occurs
@@ -188,7 +192,7 @@ player_ball_level_collision :: proc() {
 		}
 
 		// Ball
-		if !ball_has(.Carried) {
+		if !ball_has(.Carried) && !ball_has(.Recalling) {
 			ball_ground_sensor := ball.translation + Vec2{0, ball.radius}
 			ball_collision, ball_collided := circle_level_collide(
 				ball.translation,
@@ -212,7 +216,7 @@ player_ball_level_collision :: proc() {
 		player.state_flags -= {.Grounded}
 	}
 
-	if ball_on_ground {
+	if ball_on_ground && !ball_has(.No_Gravity) && !ball_has(.Recalling) {
 		ball.state_flags += {.Grounded}
 	} else {
 		ball.state_flags -= {.Grounded}
@@ -228,21 +232,27 @@ player_ball_collision :: proc() {
 		// Center - straight up with the characters x momentum
 		player_head := player.translation - {0, player.radius / 2}
 		ball_above_head := ball.translation.y < player_head.y
-		if l.distance(player_head, ball.translation) < player.radius + ball.radius {
-			ball_magnitude := l.length(ball.velocity)
-			player_magnitude := l.length(player.velocity)
-			head_normal := l.normalize0(ball.translation - player_head)
-			ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
-			player.flag_timers[.Ignore_Ball] = 0.2
-		}
 		player_feet := player.translation + {0, player.radius / 2}
-		if l.distance(player_feet, ball.translation) < player.radius + ball.radius {
-			if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
-				catch_ball()
-			} else {
-				player.velocity.y = jump_speed
-				player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
+		if !ball_has(.Recalling) {
+			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
+				ball_magnitude := l.length(ball.velocity)
+				player_magnitude := l.length(player.velocity)
+				head_normal := l.normalize0(ball.translation - player_head)
+				ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
 				player.flag_timers[.Ignore_Ball] = 0.2
+			}
+			if l.distance(player_feet, ball.translation) < player.radius + ball.radius {
+				if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
+					catch_ball()
+				} else {
+					player.velocity.y = jump_speed
+					player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
+					player.flag_timers[.Ignore_Ball] = 0.2
+				}
+			}
+		} else {
+			if l.distance(player_feet, ball.translation) < player.radius + ball.radius {
+				catch_ball()
 			}
 		}
 	}

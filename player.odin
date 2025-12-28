@@ -176,12 +176,16 @@ player_kick :: proc() {
 			switch player.kick_angle {
 			case .Up:
 				ball_angle = Vec2{0, -1}
+				ball.translation = player.foot_position
 			case .Forward:
-				ball_angle = Vec2{player.facing, 0} //-0.4}
+				ball_angle = Vec2{player.facing, -0.25} //-0.4}
+				ball.flag_timers[.No_Gravity] = 0.3
+				ball.translation = player.foot_position - {0, 3}
 			case .Down:
 				ball_angle = Vec2{player.facing * 0.4, -0.9}
+				ball.flag_timers[.No_Gravity] = 0.15
+				ball.translation = player.foot_position
 			}
-			ball.translation = player.foot_position
 
 			ball.state_flags -= {.Carried}
 			player.has_ball = false
@@ -192,22 +196,25 @@ player_kick :: proc() {
 			// - Low shot (Grounded, Down)
 			// - Straight down shot (Airborne, Down)
 			player.flag_timers[.Ignore_Ball] = 0.2
+			player.flag_timers[.No_Badge] = 0.5
 			ball.spin = player.facing
 			consume_action(.Kick)
 		}
 	}
 }
 
-player_action :: proc() {
+player_badge_action :: proc() {
 	player := &world.player
 	ball := &world.ball
-	if is_action_buffered(.Badge) && .No_Badge not_in player.timed_state_flags {
+	if is_action_buffered(.Badge) && !player_has(.No_Badge) {
 		switch player.badge_type {
 		case .None:
 		case .Striker:
-			player.flag_timers[.No_Badge] = 1
-			ball.state_flags += {.Recalling}
-			consume_action(.Badge)
+			if !player.has_ball {
+				player.flag_timers[.No_Badge] = 1
+				ball.state_flags += {.Recalling}
+				consume_action(.Badge)
+			}
 		case .Sisyphus:
 		case .Ghost:
 		}
@@ -227,10 +234,18 @@ player_jump :: proc() {
 	}
 }
 
+player_controls :: proc() {
+	player_movement()
+	player_jump()
+	player_kick()
+	player_badge_action()
+}
+
 catch_ball :: proc() {
 	player := &world.player
 	ball := &world.ball
 	ball.state_flags += {.Carried}
+	ball.state_flags -= {.Recalling}
 	ball.velocity = Vec2{0, 0}
 	player.has_ball = true
 }
