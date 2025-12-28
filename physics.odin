@@ -54,10 +54,11 @@ manage_player_ball_velocity :: proc(delta: f32) {
 }
 
 apply_player_ball_velocity :: proc(delta: f32) {
+	player := &world.player
 	ball := &world.ball
-	world.player.translation += world.player.velocity * delta
+	player.translation += player.velocity * delta
 	if !ball_has(.Carried) && !ball_has(.Recalling) {
-		world.ball.translation += world.ball.velocity * delta
+		ball.translation += ball.velocity * delta
 	}
 }
 
@@ -76,9 +77,12 @@ physics_step :: proc() {
 // Collision
 
 Level_Collider :: struct {
-	max:   Vec2,
-	min:   Vec2,
-	flags: bit_set[Collider_Flag;u8],
+	using aabb: AABB,
+	flags:      bit_set[Collider_Flag;u8],
+}
+
+AABB :: struct {
+	min, max: Vec2,
 }
 
 Collider_Flag :: enum u8 {
@@ -92,7 +96,7 @@ Collision :: struct {
 	mtv:    Vec2,
 }
 
-collider_nearest_point :: proc(c: Level_Collider, v: Vec2) -> Vec2 {
+aabb_nearest_point :: proc(c: AABB, v: Vec2) -> Vec2 {
 	return l.clamp(v, c.min, c.max)
 }
 
@@ -104,7 +108,7 @@ circle_level_collide :: proc(
 	collision: Collision,
 	ok: bool,
 ) {
-	nearest_point := collider_nearest_point(collider, translation)
+	nearest_point := aabb_nearest_point(collider.aabb, translation)
 	if l.distance(nearest_point, translation) < radius {
 		collision_vector := translation - nearest_point
 		collision.normal = l.normalize0(collision_vector)
@@ -124,7 +128,7 @@ circle_sensor_level_collider_overlap :: proc(
 	overlap: bool,
 ) {
 	if collider.flags <= collider_mask {
-		nearest_point := collider_nearest_point(collider, translation)
+		nearest_point := aabb_nearest_point(collider.aabb, translation)
 		overlap = l.distance(nearest_point, translation) < radius
 	}
 	return
@@ -147,7 +151,7 @@ ball_resolve_level_collision :: proc(ball: ^Ball, collision: Collision) {
 	x_dot := math.abs(l.dot(collision.normal, Vec2{1, 0}))
 	y_dot := math.abs(l.dot(collision.normal, Vec2{0, 1}))
 	if x_dot > 0.7 {
-		ball.velocity.x *= -1
+		ball.velocity.x *= -0.9
 		ball.spin *= -1
 	}
 	if y_dot > 0.7 {
@@ -233,6 +237,10 @@ player_ball_collision :: proc() {
 		player_head := player.translation - {0, player.radius / 2}
 		ball_above_head := ball.translation.y < player_head.y
 		player_feet := player.translation + {0, player.radius / 2}
+		player_bounce_box := AABB {
+			player.translation - {player.radius * 1.5, 0},
+			player.translation + (player.radius * 1.5),
+		}
 		if !ball_has(.Recalling) {
 			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
 				ball_magnitude := l.length(ball.velocity)
@@ -241,7 +249,8 @@ player_ball_collision :: proc() {
 				ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
 				player.flag_timers[.Ignore_Ball] = 0.2
 			}
-			if l.distance(player_feet, ball.translation) < player.radius + ball.radius {
+			ball_bounce_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
+			if l.distance(ball_bounce_nearest, ball.translation) < ball.radius {
 				if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
 					catch_ball()
 				} else {

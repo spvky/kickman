@@ -143,7 +143,6 @@ ball_has :: proc(flag: Ball_Master_State) -> (contains: bool) {
 	return contains
 }
 
-
 manage_player_ball_timed_state_flags :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
@@ -178,8 +177,8 @@ player_kick :: proc() {
 				ball_angle = Vec2{0, -1}
 				ball.translation = player.foot_position
 			case .Forward:
-				ball_angle = Vec2{player.facing, -0.25} //-0.4}
-				ball.flag_timers[.No_Gravity] = 0.3
+				ball_angle = Vec2{player.facing, 0} //-0.4}
+				ball.flag_timers[.No_Gravity] = 0.15
 				ball.translation = player.foot_position - {0, 3}
 			case .Down:
 				ball_angle = Vec2{player.facing * 0.4, -0.9}
@@ -189,13 +188,13 @@ player_kick :: proc() {
 
 			ball.state_flags -= {.Carried}
 			player.has_ball = false
-			ball.velocity = (200 * ball_angle) + player.velocity
+			ball.velocity = (200 * ball_angle) + {player.velocity.x, 0}
 			// Instead of the movement direction system, hone some specific angles:
 			// - Heel kick up (Up)
 			// - Normal Shot (Forward/Neutral)
 			// - Low shot (Grounded, Down)
 			// - Straight down shot (Airborne, Down)
-			player.flag_timers[.Ignore_Ball] = 0.2
+			player.flag_timers[.Ignore_Ball] = 0.1
 			player.flag_timers[.No_Badge] = 0.5
 			ball.spin = player.facing
 			consume_action(.Kick)

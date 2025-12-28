@@ -23,7 +23,9 @@ render_scene_to_texture :: proc() {
 	rl.ClearBackground({255, 229, 180, 255})
 	draw_current_room()
 	draw_player_and_ball()
-	draw_level_collision()
+	if ODIN_DEBUG {
+		draw_level_collision()
+	}
 	rl.EndMode2D()
 	if world.render_mode == .Scaled {
 		rl.EndTextureMode()
@@ -72,8 +74,14 @@ draw_current_room :: proc() {
 draw_player_and_ball :: proc() {
 	player := world.player
 	ball := world.ball
+	player_bounce_box := AABB {
+		player.translation - {player.radius * 1.5, 0},
+		player.translation + (player.radius * 1.5),
+	}
+	box_extents := player_bounce_box.max - player_bounce_box.min
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
+	rl.DrawRectangleV(player_bounce_box.min, box_extents, {255, 255, 255, 100})
 	if ball_has(.Carried) {
 		rl.DrawCircleV(player.foot_position, ball.radius, rl.WHITE)
 	} else {
