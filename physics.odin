@@ -239,7 +239,7 @@ player_ball_collision :: proc() {
 		player_feet := player.translation + {0, player.radius / 2}
 		player_bounce_box := AABB {
 			player.translation - {player.radius * 1.5, 0},
-			player.translation + (player.radius * 1.5),
+			player.translation + ({player.radius * 1.5, player.radius * 2}),
 		}
 		if !ball_has(.Recalling) {
 			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
@@ -254,9 +254,12 @@ player_ball_collision :: proc() {
 				if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
 					catch_ball()
 				} else {
+					// Ball Jump
 					player.velocity.y = jump_speed
 					player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
 					player.flag_timers[.Ignore_Ball] = 0.2
+					ball_mag := l.length(ball.velocity)
+					ball.velocity = ball_mag * Vec2{0, 1}
 				}
 			}
 		} else {

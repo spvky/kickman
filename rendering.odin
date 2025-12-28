@@ -76,7 +76,7 @@ draw_player_and_ball :: proc() {
 	ball := world.ball
 	player_bounce_box := AABB {
 		player.translation - {player.radius * 1.5, 0},
-		player.translation + (player.radius * 1.5),
+		player.translation + ({player.radius * 1.5, player.radius * 2}),
 	}
 	box_extents := player_bounce_box.max - player_bounce_box.min
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
