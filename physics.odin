@@ -59,6 +59,7 @@ physics_step :: proc() {
 	manage_player_ball_velocity()
 	player_movement()
 	manage_ignore_ball(delta)
+	manage_player_timed_state_flags(delta)
 	player_jump()
 	player_kick()
 	apply_player_ball_gravity(delta)
@@ -182,6 +183,7 @@ player_ball_level_collision :: proc() {
 		}
 		if circle_sensor_level_collider_overlap(player_feet_sensor, 0.06, collider, {.Standable}) {
 			feet_on_ground = true
+			player.flag_timers[.Coyote] = 0.10
 		}
 
 		// Ball

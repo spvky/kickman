@@ -2,17 +2,18 @@ package main
 
 import "core:log"
 import "core:math"
+import "core:time"
 
 
 TILE_SIZE: f32 : 8
 // How far can the player jump horizontally (in pixels)
-MAX_JUMP_DISTANCE: f32 : 4 * TILE_SIZE
+MAX_JUMP_DISTANCE: f32 : 7 * TILE_SIZE
 // How long to reach jump peak (in seconds)
 TIME_TO_PEAK: f32 : 0.3
 // How long to reach height we jumped from (in seconds)
 TIME_TO_DESCENT: f32 : 0.25
 // How many pixels high can we jump
-JUMP_HEIGHT: f32 : 3 * TILE_SIZE
+JUMP_HEIGHT: f32 : 3.25 * TILE_SIZE
 
 max_speed := calculate_max_speed()
 jump_speed := calulate_jump_speed()
@@ -36,16 +37,18 @@ calculate_max_speed :: proc "c" () -> f32 {
 }
 
 Player :: struct {
-	using rigidbody: Rigidbody,
+	using rigidbody:   Rigidbody,
 	// TODO: replace input direction with Kick angles, define the kick angles for the Striker Badge
-	kick_angle:      Kick_Angle,
-	foot_position:   Vec2,
-	movement_delta:  f32,
-	facing:          f32,
-	carry_pos:       f32,
-	ignore_ball:     f32,
-	state_flags:     bit_set[Player_State;u8],
-	has_ball:        bool,
+	kick_angle:        Kick_Angle,
+	foot_position:     Vec2,
+	movement_delta:    f32,
+	facing:            f32,
+	carry_pos:         f32,
+	ignore_ball:       f32,
+	state_flags:       bit_set[Player_State;u8],
+	timed_state_flags: bit_set[Player_Timed_State;u8],
+	flag_timers:       [Player_Timed_State]f32,
+	has_ball:          bool,
 }
 
 Kick_Angle :: enum u8 {
@@ -57,6 +60,11 @@ Kick_Angle :: enum u8 {
 Player_State :: enum u8 {
 	Grounded,
 	DoubleJump,
+}
+
+Player_Timed_State :: enum u8 {
+	Coyote,
+	Ignore_Ball,
 }
 
 Ball :: struct {
@@ -71,10 +79,24 @@ Ball_State :: enum u8 {
 	Grounded,
 }
 
+
 manage_ignore_ball :: proc(delta: f32) {
 	player := &world.player
 	if player.ignore_ball > 0 {
 		player.ignore_ball = math.clamp(player.ignore_ball - delta, 0, 5)
+	}
+}
+
+manage_player_timed_state_flags :: proc(delta: f32) {
+	player := &world.player
+	for v in Player_Timed_State {
+		timer := &player.flag_timers[v]
+		timer^ = math.clamp(timer^ - delta, 0, 10)
+		if timer^ > 0.0 {
+			player.timed_state_flags += {v}
+		} else {
+			player.timed_state_flags -= {v}
+		}
 	}
 }
 
@@ -110,10 +132,12 @@ player_kick :: proc() {
 
 
 player_jump :: proc() {
+
 	player := &world.player
 	if is_action_buffered(.Jump) {
-		if .Grounded in player.state_flags {
+		if .Grounded in player.state_flags || .Coyote in player.timed_state_flags {
 			player.velocity.y = jump_speed
+			player.timed_state_flags -= {.Coyote}
 			consume_action(.Jump)
 			return
 		}
