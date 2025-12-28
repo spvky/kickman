@@ -25,7 +25,7 @@ init_world :: proc() {
 	world.player.has_ball = true
 	world.player.facing = 1
 	world.ball.radius = 2
-	world.ball.carried = true
+	world.ball.state_flags += {.Carried}
 	world.level_collision = make([dynamic]Level_Collider, 0, 16)
 	world.current_room = Room_Tag{.tutorial, 0}
 	world.render_mode = .Scaled

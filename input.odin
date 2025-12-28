@@ -17,6 +17,7 @@ Input_Action :: enum {
 	Jump,
 	Dash,
 	Kick,
+	Badge,
 }
 
 update_buffer :: proc() {
@@ -89,4 +90,5 @@ poll_input :: proc() {
 	update_buffer()
 	if rl.IsKeyPressed(.SPACE) do buffer_action(.Jump)
 	if rl.IsKeyPressed(.K) do buffer_action(.Kick)
+	if rl.IsKeyPressed(.J) do buffer_action(.Badge)
 }

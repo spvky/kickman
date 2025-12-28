@@ -44,11 +44,18 @@ Player :: struct {
 	movement_delta:    f32,
 	facing:            f32,
 	carry_pos:         f32,
-	ignore_ball:       f32,
 	state_flags:       bit_set[Player_State;u8],
 	timed_state_flags: bit_set[Player_Timed_State;u8],
 	flag_timers:       [Player_Timed_State]f32,
+	badge_type:        Player_Badge,
 	has_ball:          bool,
+}
+
+Player_Badge :: enum u8 {
+	None,
+	Striker,
+	Sisyphus,
+	Ghost,
 }
 
 Kick_Angle :: enum u8 {
@@ -59,36 +66,83 @@ Kick_Angle :: enum u8 {
 
 Player_State :: enum u8 {
 	Grounded,
-	DoubleJump,
+	Double_Jump,
 }
 
 Player_Timed_State :: enum u8 {
 	Coyote,
 	Ignore_Ball,
+	No_Badge,
+}
+
+Player_Master_State :: enum u16 {
+	Grounded,
+	Double_Jump,
+	Coyote,
+	Ignore_Ball,
+	No_Badge,
 }
 
 Ball :: struct {
-	using rigidbody: Rigidbody,
-	ignore_player:   f32,
-	carried:         bool,
-	spin:            f32,
-	state_flags:     bit_set[Ball_State;u8],
+	using rigidbody:   Rigidbody,
+	ignore_player:     f32,
+	spin:              f32,
+	state_flags:       bit_set[Ball_State;u8],
+	timed_state_flags: bit_set[Ball_Timed_State;u8],
+	flag_timers:       [Ball_Timed_State]f32,
 }
 
 Ball_State :: enum u8 {
+	Carried,
 	Grounded,
+	Recalling,
 }
 
+Ball_Timed_State :: enum u8 {
+	No_Gravity,
+}
 
-manage_ignore_ball :: proc(delta: f32) {
-	player := &world.player
-	if player.ignore_ball > 0 {
-		player.ignore_ball = math.clamp(player.ignore_ball - delta, 0, 5)
+Ball_Master_State :: enum u16 {
+	Carried,
+	Grounded,
+	Recalling,
+	No_Gravity,
+}
+
+player_has :: proc(player: ^Player, flag: Player_Master_State) -> (contains: bool) {
+	switch flag {
+	case .Grounded:
+		contains = .Grounded in player.state_flags
+	case .Double_Jump:
+		contains = .Double_Jump in player.state_flags
+	case .Coyote:
+		contains = .Coyote in player.timed_state_flags
+	case .Ignore_Ball:
+		contains = .Ignore_Ball in player.timed_state_flags
+	case .No_Badge:
+		contains = .No_Badge in player.timed_state_flags
 	}
+	return contains
 }
 
-manage_player_timed_state_flags :: proc(delta: f32) {
+ball_has :: proc(ball: ^Ball, flag: Ball_Master_State) -> (contains: bool) {
+	switch flag {
+	case .Carried:
+		contains = .Carried in ball.state_flags
+	case .Grounded:
+		contains = .Grounded in ball.state_flags
+	case .Recalling:
+		contains = .Recalling in ball.state_flags
+	case .No_Gravity:
+		contains = .No_Gravity in ball.timed_state_flags
+	}
+	return contains
+}
+
+
+manage_player_ball_timed_state_flags :: proc(delta: f32) {
 	player := &world.player
+	ball := &world.ball
 	for v in Player_Timed_State {
 		timer := &player.flag_timers[v]
 		timer^ = math.clamp(timer^ - delta, 0, 10)
@@ -98,24 +152,34 @@ manage_player_timed_state_flags :: proc(delta: f32) {
 			player.timed_state_flags -= {v}
 		}
 	}
+	for v in Ball_Timed_State {
+		timer := &ball.flag_timers[v]
+		timer^ = math.clamp(timer^ - delta, 0, 10)
+		if timer^ > 0.0 {
+			ball.timed_state_flags += {v}
+		} else {
+			ball.timed_state_flags -= {v}
+		}
+	}
 }
 
 player_kick :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if is_action_buffered(.Kick) {
-		if player.has_ball && ball.carried {
+		if player.has_ball && ball_has(ball, .Carried) {
 			ball_angle: Vec2
 			switch player.kick_angle {
 			case .Up:
 				ball_angle = Vec2{0, -1}
 			case .Forward:
-				ball_angle = Vec2{player.facing, -0.4}
+				ball_angle = Vec2{player.facing, 0} //-0.4}
 			case .Down:
 				ball_angle = Vec2{player.facing * 0.4, -0.9}
 			}
 			ball.translation = player.foot_position
-			ball.carried = false
+
+			ball.state_flags -= {.Carried}
 			player.has_ball = false
 			ball.velocity = (200 * ball_angle) + player.velocity
 			// Instead of the movement direction system, hone some specific angles:
@@ -123,16 +187,31 @@ player_kick :: proc() {
 			// - Normal Shot (Forward/Neutral)
 			// - Low shot (Grounded, Down)
 			// - Straight down shot (Airborne, Down)
-			player.ignore_ball = 0.2
+			player.flag_timers[.Ignore_Ball] = 0.2
 			ball.spin = player.facing
 			consume_action(.Kick)
 		}
 	}
 }
 
+player_action :: proc() {
+	player := &world.player
+	ball := &world.ball
+	if is_action_buffered(.Badge) && .No_Badge not_in player.timed_state_flags {
+		switch player.badge_type {
+		case .None:
+		case .Striker:
+			player.flag_timers[.No_Badge] = 1
+			ball.state_flags += {.Recalling}
+			consume_action(.Badge)
+		case .Sisyphus:
+		case .Ghost:
+		}
+	}
+}
+
 
 player_jump :: proc() {
-
 	player := &world.player
 	if is_action_buffered(.Jump) {
 		if .Grounded in player.state_flags || .Coyote in player.timed_state_flags {
@@ -147,7 +226,7 @@ player_jump :: proc() {
 catch_ball :: proc() {
 	player := &world.player
 	ball := &world.ball
-	ball.carried = true
+	ball_has(ball, .Carried)
 	ball.velocity = Vec2{0, 0}
 	player.has_ball = true
 }
