@@ -74,7 +74,7 @@ draw_player_and_ball :: proc() {
 	ball := world.ball
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
-	if ball_has(&ball, .Carried) {
+	if ball_has(.Carried) {
 		rl.DrawCircleV(player.foot_position, ball.radius, rl.WHITE)
 	} else {
 		rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)

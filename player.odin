@@ -109,32 +109,36 @@ Ball_Master_State :: enum u16 {
 	No_Gravity,
 }
 
-player_has :: proc(player: ^Player, flag: Player_Master_State) -> (contains: bool) {
+// Check if the player has the passed state flag
+@(require_results)
+player_has :: proc(flag: Player_Master_State) -> (contains: bool) {
 	switch flag {
 	case .Grounded:
-		contains = .Grounded in player.state_flags
+		contains = .Grounded in world.player.state_flags
 	case .Double_Jump:
-		contains = .Double_Jump in player.state_flags
+		contains = .Double_Jump in world.player.state_flags
 	case .Coyote:
-		contains = .Coyote in player.timed_state_flags
+		contains = .Coyote in world.player.timed_state_flags
 	case .Ignore_Ball:
-		contains = .Ignore_Ball in player.timed_state_flags
+		contains = .Ignore_Ball in world.player.timed_state_flags
 	case .No_Badge:
-		contains = .No_Badge in player.timed_state_flags
+		contains = .No_Badge in world.player.timed_state_flags
 	}
 	return contains
 }
 
-ball_has :: proc(ball: ^Ball, flag: Ball_Master_State) -> (contains: bool) {
+// Check if the ball has the passed state flag
+@(require_results)
+ball_has :: proc(flag: Ball_Master_State) -> (contains: bool) {
 	switch flag {
 	case .Carried:
-		contains = .Carried in ball.state_flags
+		contains = .Carried in world.ball.state_flags
 	case .Grounded:
-		contains = .Grounded in ball.state_flags
+		contains = .Grounded in world.ball.state_flags
 	case .Recalling:
-		contains = .Recalling in ball.state_flags
+		contains = .Recalling in world.ball.state_flags
 	case .No_Gravity:
-		contains = .No_Gravity in ball.timed_state_flags
+		contains = .No_Gravity in world.ball.timed_state_flags
 	}
 	return contains
 }
@@ -167,7 +171,7 @@ player_kick :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if is_action_buffered(.Kick) {
-		if player.has_ball && ball_has(ball, .Carried) {
+		if player.has_ball && ball_has(.Carried) {
 			ball_angle: Vec2
 			switch player.kick_angle {
 			case .Up:
@@ -226,7 +230,7 @@ player_jump :: proc() {
 catch_ball :: proc() {
 	player := &world.player
 	ball := &world.ball
-	ball_has(ball, .Carried)
+	ball.state_flags += {.Carried}
 	ball.velocity = Vec2{0, 0}
 	player.has_ball = true
 }

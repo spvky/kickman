@@ -21,7 +21,7 @@ apply_player_ball_gravity :: proc(delta: f32) {
 		player.velocity.y += falling_gravity * delta
 	}
 
-	if !ball_has(ball, .Carried) && !ball_has(ball, .Recalling) && !ball_has(ball, .No_Gravity) {
+	if !ball_has(.Carried) && !ball_has(.Recalling) && !ball_has(.No_Gravity) {
 		if ball.velocity.y < 0 {
 			ball.velocity.y += rising_gravity * delta
 		} else {
@@ -50,7 +50,7 @@ manage_player_ball_velocity :: proc() {
 apply_player_ball_velocity :: proc(delta: f32) {
 	ball := &world.ball
 	world.player.translation += world.player.velocity * delta
-	if !ball_has(ball, .Carried) {
+	if !ball_has(.Carried) {
 		world.ball.translation += world.ball.velocity * delta
 	}
 }
@@ -188,7 +188,7 @@ player_ball_level_collision :: proc() {
 		}
 
 		// Ball
-		if !ball_has(ball, .Carried) {
+		if !ball_has(.Carried) {
 			ball_ground_sensor := ball.translation + Vec2{0, ball.radius}
 			ball_collision, ball_collided := circle_level_collide(
 				ball.translation,
@@ -222,7 +222,7 @@ player_ball_level_collision :: proc() {
 player_ball_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
-	if !player_has(player, .Ignore_Ball) && !ball_has(ball, .Carried) {
+	if !player_has(.Ignore_Ball) && !ball_has(.Carried) {
 		// Header
 		// Define specific head angles based on how close the ball is to the center of the player:
 		// Center - straight up with the characters x momentum
@@ -237,7 +237,7 @@ player_ball_collision :: proc() {
 		}
 		player_feet := player.translation + {0, player.radius / 2}
 		if l.distance(player_feet, ball.translation) < player.radius + ball.radius {
-			if .Grounded in player.state_flags {
+			if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
 				catch_ball()
 			} else {
 				player.velocity.y = jump_speed
