@@ -83,7 +83,7 @@ draw_player_and_ball :: proc() {
 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
 	rl.DrawRectangleV(player_bounce_box.min, box_extents, {255, 255, 255, 100})
 	if ball_has(.Carried) {
-		rl.DrawCircleV(player.foot_position, ball.radius, rl.WHITE)
+		rl.DrawCircleV(player_foot_position(), ball.radius, rl.WHITE)
 	} else {
 		rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
 	}

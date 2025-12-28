@@ -40,7 +40,6 @@ Player :: struct {
 	using rigidbody:   Rigidbody,
 	// TODO: replace input direction with Kick angles, define the kick angles for the Striker Badge
 	kick_angle:        Kick_Angle,
-	foot_position:     Vec2,
 	movement_delta:    f32,
 	facing:            f32,
 	carry_pos:         f32,
@@ -49,6 +48,14 @@ Player :: struct {
 	flag_timers:       [Player_Timed_State]f32,
 	badge_type:        Player_Badge,
 	has_ball:          bool,
+}
+
+player_foot_position :: proc(direction: f32 = 1) -> Vec2 {
+	player := &world.player
+	return(
+		player.translation +
+		Vec2{player.facing * direction * (player.radius * 0.75), player.radius} \
+	)
 }
 
 Player_Badge :: enum u8 {
@@ -172,29 +179,36 @@ player_kick :: proc() {
 	if is_action_buffered(.Kick) {
 		if player.has_ball && ball_has(.Carried) {
 			ball_angle: Vec2
+			unscaled_velo: Vec2
+			ignore_duration: f32
 			switch player.kick_angle {
 			case .Up:
 				ball_angle = Vec2{0, -1}
-				ball.translation = player.foot_position
+				ball.translation = player_foot_position(-1)
+				unscaled_velo = {player.facing * player.radius * 2.5, 0}
+				ignore_duration = 0.2
 			case .Forward:
 				ball_angle = Vec2{player.facing, 0} //-0.4}
 				ball.flag_timers[.No_Gravity] = 0.15
-				ball.translation = player.foot_position - {0, 3}
+				ball.translation = player_foot_position() - {0, 3}
+				ignore_duration = 0.1
 			case .Down:
 				ball_angle = Vec2{player.facing * 0.4, -0.9}
 				ball.flag_timers[.No_Gravity] = 0.15
-				ball.translation = player.foot_position
+				ball.translation = player_foot_position()
+				ignore_duration = 0.2
 			}
 
 			ball.state_flags -= {.Carried}
 			player.has_ball = false
-			ball.velocity = (200 * ball_angle) + {player.velocity.x, 0}
+
+			ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
 			// Instead of the movement direction system, hone some specific angles:
 			// - Heel kick up (Up)
 			// - Normal Shot (Forward/Neutral)
 			// - Low shot (Grounded, Down)
 			// - Straight down shot (Airborne, Down)
-			player.flag_timers[.Ignore_Ball] = 0.1
+			player.flag_timers[.Ignore_Ball] = ignore_duration
 			player.flag_timers[.No_Badge] = 0.5
 			ball.spin = player.facing
 			consume_action(.Kick)

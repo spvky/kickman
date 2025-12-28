@@ -53,6 +53,7 @@ is_action_buffered :: proc(action: Input_Action) -> bool {
 }
 
 poll_input :: proc() {
+	player := &world.player
 	direction: Vec2
 	facing := world.player.facing
 	if rl.IsKeyDown(.A) {
@@ -81,12 +82,9 @@ poll_input :: proc() {
 	}
 
 
-	world.player.movement_delta = direction.x
-	world.player.kick_angle = kick_angle
-	world.player.facing = facing
-	world.player.foot_position =
-		world.player.translation +
-		Vec2{world.player.facing * (world.player.radius * 0.75), world.player.radius}
+	player.movement_delta = direction.x
+	player.kick_angle = kick_angle
+	player.facing = facing
 	update_buffer()
 	if rl.IsKeyPressed(.SPACE) do buffer_action(.Jump)
 	if rl.IsKeyPressed(.K) do buffer_action(.Kick)
