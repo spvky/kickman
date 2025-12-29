@@ -105,6 +105,6 @@ poll_input :: proc() {
 	if rl.IsKeyReleased(.SPACE) do release_action(.Jump)
 	if rl.IsKeyReleased(.K) do release_action(.Kick)
 	if rl.IsKeyReleased(.J) do release_action(.Badge)
-	if rl.IsKeyReleased(.H) do release_action(.Dash)
+	// if rl.IsKeyReleased(.H) do release_action(.Dash)
 
 }

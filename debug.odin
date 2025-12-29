@@ -20,13 +20,14 @@ player_debug :: proc() {
 	)
 	rl.DrawText(strings.clone_to_cstring(player_string), 20, 100, 16, rl.YELLOW)
 	ball_string := fmt.tprintf(
-		"Ball:\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tFlags: %v\n\tTimed Flags: %v",
+		"Ball:\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tSpin: %.2f\n\tFlags: %v\n\tTimed Flags: %v",
 		ball.translation.x,
 		ball.translation.y,
 		ball.velocity.x,
 		ball.velocity.y,
+		ball.spin,
 		ball.state_flags,
 		ball.timed_state_flags,
 	)
-	rl.DrawText(strings.clone_to_cstring(ball_string), 500, 100, 16, rl.YELLOW)
+	rl.DrawText(strings.clone_to_cstring(ball_string), 800, 100, 16, rl.YELLOW)
 }

@@ -24,7 +24,6 @@ init_world :: proc() {
 	world.player.translation = {18, 10}
 	world.player.has_ball = true
 	world.player.facing = 1
-	world.player.state_flags = {.Dashing}
 	world.player.badge_type = .Striker
 	world.ball.radius = 2
 	world.ball.state_flags += {.Carried}

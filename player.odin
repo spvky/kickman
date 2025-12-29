@@ -46,7 +46,6 @@ calculate_dash_speed :: proc "c" () -> f32 {
 
 Player :: struct {
 	using rigidbody:   Rigidbody,
-	// TODO: replace input direction with Kick angles, define the kick angles for the Striker Badge
 	kick_angle:        Kick_Angle,
 	movement_delta:    f32,
 	facing:            f32,
@@ -112,6 +111,7 @@ Ball_State :: enum u8 {
 	Carried,
 	Grounded,
 	Recalling,
+	Revved,
 }
 
 Ball_Timed_State :: enum u8 {
@@ -122,6 +122,7 @@ Ball_Master_State :: enum u16 {
 	Carried,
 	Grounded,
 	Recalling,
+	Revved,
 	No_Gravity,
 }
 
@@ -157,6 +158,8 @@ ball_has :: proc(flag: Ball_Master_State) -> (contains: bool) {
 		contains = .Grounded in world.ball.state_flags
 	case .Recalling:
 		contains = .Recalling in world.ball.state_flags
+	case .Revved:
+		contains = .Revved in world.ball.state_flags
 	case .No_Gravity:
 		contains = .No_Gravity in world.ball.timed_state_flags
 	}
@@ -240,24 +243,29 @@ player_kick :: proc() {
 			case .Up:
 				ball_angle = Vec2{0, -1}
 				ball.translation = player_foot_position(-1)
-				unscaled_velo = {player.facing * player.radius * 2.5, 0}
+				ball.spin = player.facing
+				unscaled_velo = {player.facing * player.radius * 2.5, -50}
 				ignore_duration = 0.2
+				ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
 			case .Forward:
 				ball_angle = Vec2{player.facing, 0} //-0.4}
 				ball.flag_timers[.No_Gravity] = 0.15
 				ball.translation = player_foot_position() - {0, 3}
+				ball.spin = player.facing
 				ignore_duration = 0.1
+				ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
 			case .Down:
-				ball_angle = Vec2{player.facing * 0.4, -0.9}
-				ball.flag_timers[.No_Gravity] = 0.15
+				ball_angle = Vec2{-player.facing * 0.1, -0.9}
+				ball.spin = player.facing * 7
+				ball.flag_timers[.No_Gravity] = 0.2
 				ball.translation = player_foot_position()
-				ignore_duration = 0.2
+				ignore_duration = 0.5
+				ball.velocity = {-player.facing * 20, -150}
 			}
 
 			ball.state_flags -= {.Carried}
 			player.has_ball = false
 
-			ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
 			// Instead of the movement direction system, hone some specific angles:
 			// - Heel kick up (Up)
 			// - Normal Shot (Forward/Neutral)
@@ -265,7 +273,6 @@ player_kick :: proc() {
 			// - Straight down shot (Airborne, Down)
 			player.flag_timers[.Ignore_Ball] = ignore_duration
 			player.flag_timers[.No_Badge] = 0.5
-			ball.spin = player.facing
 			consume_action(.Kick)
 		}
 	}
@@ -302,8 +309,8 @@ player_jump :: proc() {
 	}
 }
 
-player_controls :: proc() {
-	player_movement()
+player_controls :: proc(delta: f32) {
+	player_movement(delta)
 	player_jump()
 	player_kick()
 	player_badge_action()

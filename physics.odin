@@ -30,11 +30,13 @@ apply_player_ball_gravity :: proc(delta: f32) {
 	}
 }
 
-player_movement :: proc() {
+player_movement :: proc(delta: f32) {
 	player := &world.player
 	if player.movement_delta != 0 {
 		if player_has(.Dashing) {
-			player.velocity.x = dash_speed * player.movement_delta
+			if math.abs(player.velocity.x) < dash_speed {
+				player.velocity.x += dash_speed * player.movement_delta * delta
+			}
 		} else {
 			player.velocity.x = max_speed * player.movement_delta
 		}
@@ -106,7 +108,7 @@ physics_step :: proc() {
 	delta := rl.GetFrameTime()
 	manage_player_ball_velocity(delta)
 	manage_juice_values(delta)
-	player_controls()
+	player_controls(delta)
 	apply_player_ball_gravity(delta)
 	apply_player_ball_velocity(delta)
 	//Update timed flags before collision occurs
@@ -193,13 +195,13 @@ ball_resolve_level_collision :: proc(ball: ^Ball, collision: Collision) {
 	y_dot := math.abs(l.dot(collision.normal, Vec2{0, 1}))
 	if x_dot > 0.7 {
 		ball.velocity.x *= -0.9
-		ball.spin *= -1
+		ball.spin = -1 * math.sign(ball.spin)
 	}
 	if y_dot > 0.7 {
 		y_velo := ball.velocity.y
 		ball.velocity.y = y_velo * -0.6
 		// Roll based on spin if our x velo is low enough
-		if math.abs(ball.velocity.x) < 5 {
+		if math.abs(ball.velocity.x) < 25 {
 			ball.velocity.x = y_velo * 0.2 * ball.spin
 		}
 	}
@@ -294,13 +296,14 @@ player_ball_collision :: proc() {
 			if l.distance(ball_bounce_nearest, ball.translation) < ball.radius {
 				if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
 					catch_ball()
-				} else {
+				} else if player.velocity.y >= 0 {
 					// Ball Jump
-					player.velocity.y = jump_speed
+					ball.velocity.y = player.velocity.y
+					ball.velocity.x *= 0.3
+					player.velocity.y = jump_speed * 1.125
 					player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
 					player.flag_timers[.Ignore_Ball] = 0.2
-					ball_mag := l.length(ball.velocity)
-					ball.velocity = ball_mag * Vec2{0, 1}
+					// ball.velocity = ball_mag * Vec2{0, 1}
 				}
 			}
 		} else {

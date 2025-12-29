@@ -44,3 +44,15 @@ TODO: Tue 23 Dec 2025 01:19:44 AM EST
 * Start making tutorial stage
 
 More stuff
+
+
+Mon 29 Dec 2025 01:15:03 AM EST
+* Want to start refining the movement
+* Up/Forward kicks feel good at the moment
+* Unsure about dashing
+* Could make a simple tutorial level
+* Should add entity support with levers/buttons tomorrow
+* Maybe flesh out the bullet time kick I was thinking about
+- It could be activated with a button combo and have decently long startup
+- Should feel rewarding to find setups for it
+- Would be nice to clean up some of the physics code, I suspect theres more branching than their need to be
