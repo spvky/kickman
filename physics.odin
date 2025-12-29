@@ -33,7 +33,11 @@ apply_player_ball_gravity :: proc(delta: f32) {
 player_movement :: proc() {
 	player := &world.player
 	if player.movement_delta != 0 {
-		player.velocity.x = max_speed * player.movement_delta
+		if player_has(.Dashing) {
+			player.velocity.x = dash_speed * player.movement_delta
+		} else {
+			player.velocity.x = max_speed * player.movement_delta
+		}
 	} else {
 		// This will eventually only zero out x velocity when able to move
 		player.velocity.x = 0

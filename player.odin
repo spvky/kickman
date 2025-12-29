@@ -7,7 +7,9 @@ import "core:time"
 
 TILE_SIZE: f32 : 8
 // How far can the player jump horizontally (in pixels)
-MAX_JUMP_DISTANCE: f32 : 7 * TILE_SIZE
+JUMP_DISTANCE: f32 : 7 * TILE_SIZE
+// How far can the player jump horizontally while_dashing
+DASH_JUMP_DISTANCE: f32 : 14 * TILE_SIZE
 // How long to reach jump peak (in seconds)
 TIME_TO_PEAK: f32 : 0.3
 // How long to reach height we jumped from (in seconds)
@@ -15,7 +17,8 @@ TIME_TO_DESCENT: f32 : 0.25
 // How many pixels high can we jump
 JUMP_HEIGHT: f32 : 3.25 * TILE_SIZE
 
-max_speed := calculate_max_speed()
+max_speed := calculate_speed()
+dash_speed := calculate_dash_speed()
 jump_speed := calulate_jump_speed()
 rising_gravity := calculate_rising_gravity()
 falling_gravity := calculate_falling_gravity()
@@ -32,9 +35,14 @@ calculate_falling_gravity :: proc "c" () -> f32 {
 	return (2 * JUMP_HEIGHT) / math.pow(TIME_TO_DESCENT, 2)
 }
 
-calculate_max_speed :: proc "c" () -> f32 {
-	return MAX_JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
+calculate_speed :: proc "c" () -> f32 {
+	return JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
 }
+
+calculate_dash_speed :: proc "c" () -> f32 {
+	return DASH_JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
+}
+
 
 Player :: struct {
 	using rigidbody:   Rigidbody,
