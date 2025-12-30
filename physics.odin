@@ -214,17 +214,15 @@ player_ball_level_collision :: proc() {
 
 	for collider in assets.room_collision[world.current_room].room_collision {
 		// Player
-		head_collision, head_collided := circle_level_collide(
-			player.translation - {0, player.radius / 2},
-			player.radius,
-			collider,
-		)
-		if player_has(.Riding) {
+
+		if !player_has(.Riding) {
+			head_collision, head_collided := circle_level_collide(
+				player.translation - {0, player.radius / 2},
+				player.radius,
+				collider,
+			)
 			if head_collided {
 				//TODO: Head collision while riding
-			}
-		} else {
-			if head_collided {
 				player_resolve_level_collision(player, head_collision)
 			}
 
@@ -245,6 +243,7 @@ player_ball_level_collision :: proc() {
 				feet_on_ground = true
 			}
 		}
+
 
 		// Ball
 		if !ball_has(.Carried) && !ball_has(.Recalling) {
