@@ -20,7 +20,7 @@ render_scene_to_texture :: proc() {
 		world.camera.zoom = 4.8
 	}
 	rl.BeginMode2D(world.camera)
-	rl.ClearBackground({255, 229, 180, 255})
+	rl.ClearBackground({33, 38, 63, 255})
 	draw_current_room()
 	draw_player_and_ball()
 	if ODIN_DEBUG {
