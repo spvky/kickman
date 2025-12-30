@@ -33,7 +33,6 @@ render_scene_to_texture :: proc() {
 }
 
 render_to_screen :: proc() {
-
 	render_scene_to_texture()
 	if world.render_mode == .Scaled {
 		WINDOW_HEIGHT = rl.GetScreenWidth()

@@ -1,5 +1,6 @@
 package main
 
+import "core:bytes"
 import "core:log"
 import "core:math"
 import l "core:math/linalg"
@@ -15,10 +16,12 @@ apply_player_ball_gravity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
 
-	if player.velocity.y < 0 {
-		player.velocity.y += rising_gravity * delta
-	} else {
-		player.velocity.y += falling_gravity * delta
+	if !player_has(.Riding) {
+		if player.velocity.y < 0 {
+			player.velocity.y += rising_gravity * delta
+		} else {
+			player.velocity.y += falling_gravity * delta
+		}
 	}
 
 	if !ball_has(.Carried) && !ball_has(.Recalling) && !ball_has(.No_Gravity) {
@@ -32,16 +35,9 @@ apply_player_ball_gravity :: proc(delta: f32) {
 
 player_movement :: proc(delta: f32) {
 	player := &world.player
-	if player.movement_delta != 0 {
-		if player_has(.Dashing) {
-			if math.abs(player.velocity.x) < dash_speed {
-				player.velocity.x += dash_speed * player.movement_delta * delta
-			}
-		} else {
-			player.velocity.x = max_speed * player.movement_delta
-		}
-	} else {
-		// This will eventually only zero out x velocity when able to move
+	if player.movement_delta != 0 && !player_has(.Riding) && !player_has(.No_Move) {
+		player.velocity.x = max_speed * player.movement_delta
+	} else if !player_has(.No_Move) {
 		player.velocity.x = 0
 	}
 }
@@ -53,8 +49,6 @@ manage_player_ball_velocity :: proc(delta: f32) {
 		player_feet := player.translation + {0, player.radius / 2}
 		ball.translation = math.lerp(ball.translation, player_feet, delta * 10)
 	} else if ball_has(.Carried) {
-
-		// time := f32(rl.GetTime())
 		if player_has(.Grounded) {
 			if player_has(.Walking) {
 				dribble_position :=
@@ -69,19 +63,6 @@ manage_player_ball_velocity :: proc(delta: f32) {
 							0,
 						}
 				ball.translation = math.lerp(ball.translation, dribble_position, delta * 50)
-			} else if player_has(.Dashing) {
-				dribble_position :=
-					player_foot_position() +
-					{
-							player.facing *
-							math.abs(
-								math.sin(player.juice_values[.Dribble_Timer] * 4) *
-								player.radius *
-								3,
-							),
-							0,
-						}
-				ball.translation = math.lerp(ball.translation, dribble_position, delta * 50)
 			} else {
 				ball.translation = math.lerp(ball.translation, player_foot_position(), delta * 80)
 			}
@@ -90,7 +71,11 @@ manage_player_ball_velocity :: proc(delta: f32) {
 		}
 	} else {
 		if ball_has(.Grounded) {
-			ball.velocity *= 0.999
+			if ball_has(.Revved) || player_has(.Riding) {
+				ball.velocity *= 0.9999
+			} else {
+				ball.velocity *= 0.999
+			}
 		}
 	}
 }
@@ -98,7 +83,12 @@ manage_player_ball_velocity :: proc(delta: f32) {
 apply_player_ball_velocity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
-	player.translation += player.velocity * delta
+	if player_has(.Riding) {
+		player.translation = ball.translation - {0, player.radius * 2}
+		player.facing = math.sign(ball.spin)
+	} else {
+		player.translation += player.velocity * delta
+	}
 	if !ball_has(.Carried) && !ball_has(.Recalling) {
 		ball.translation += ball.velocity * delta
 	}
@@ -199,11 +189,19 @@ ball_resolve_level_collision :: proc(ball: ^Ball, collision: Collision) {
 	}
 	if y_dot > 0.7 {
 		y_velo := ball.velocity.y
-		ball.velocity.y = y_velo * -0.6
-		// Roll based on spin if our x velo is low enough
-		if math.abs(ball.velocity.x) < 25 {
-			ball.velocity.x = y_velo * 0.2 * ball.spin
+		if ball_has(.Revved) {
+			ball.velocity.y = y_velo * -0.3
+		} else {
+			ball.velocity.y = y_velo * -0.6
 		}
+		// Roll based on spin if our x velo is low enough
+		if math.abs(ball.velocity.x) < 25 && !ball_has(.Revved) {
+			ball.velocity.x = y_velo * 0.2 * ball.spin
+		} else if ball_has(.Revved) && !ball_has(.Bounced) {
+			// If Revved and hasn't bounced yet apply rev speed
+			ball.velocity.x = 300 * ball.spin
+		}
+		ball.state_flags += {.Bounced}
 	}
 }
 
@@ -216,26 +214,32 @@ player_ball_level_collision :: proc() {
 
 	for collider in assets.room_collision[world.current_room].room_collision {
 		// Player
-		head_collision, head_collided := circle_level_collide(
-			player.translation - {0, player.radius / 2},
-			player.radius,
-			collider,
-		)
-		if head_collided {
-			player_resolve_level_collision(player, head_collision)
-		}
+		if !player_has(.Riding) {
+			head_collision, head_collided := circle_level_collide(
+				player.translation - {0, player.radius / 2},
+				player.radius,
+				collider,
+			)
+			if head_collided {
+				player_resolve_level_collision(player, head_collision)
+			}
 
-		feet_collision, feet_collided := circle_level_collide(
-			player.translation + {0, player.radius / 2},
-			player.radius,
-			collider,
-		)
-		if feet_collided {
-			player_resolve_level_collision(player, feet_collision)
-		}
-		if circle_sensor_level_collider_overlap(player_feet_sensor, 0.06, collider, {.Standable}) {
-			feet_on_ground = true
-			player.flag_timers[.Coyote] = 0.10
+			feet_collision, feet_collided := circle_level_collide(
+				player.translation + {0, player.radius / 2},
+				player.radius,
+				collider,
+			)
+			if feet_collided {
+				player_resolve_level_collision(player, feet_collision)
+			}
+			if circle_sensor_level_collider_overlap(
+				player_feet_sensor,
+				0.06,
+				collider,
+				{.Standable},
+			) {
+				feet_on_ground = true
+			}
 		}
 
 		// Ball
@@ -259,12 +263,14 @@ player_ball_level_collision :: proc() {
 	}
 	if feet_on_ground {
 		player.state_flags += {.Grounded, .Double_Jump}
+		player.flag_timers[.Coyote] = 0.10
 	} else {
 		player.state_flags -= {.Grounded}
 	}
 
 	if ball_on_ground && !ball_has(.No_Gravity) && !ball_has(.Recalling) {
 		ball.state_flags += {.Grounded}
+		ball.flag_timers[.Coyote] = 0.10
 	} else {
 		ball.state_flags -= {.Grounded}
 	}
@@ -273,7 +279,7 @@ player_ball_level_collision :: proc() {
 player_ball_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
-	if !player_has(.Ignore_Ball) && !ball_has(.Carried) {
+	if !player_has(.Ignore_Ball) && !ball_has(.Carried) && !player_has(.Riding) {
 		// Header
 		// Define specific head angles based on how close the ball is to the center of the player:
 		// Center - straight up with the characters x momentum
@@ -285,16 +291,25 @@ player_ball_collision :: proc() {
 			player.translation + ({player.radius * 1.5, player.radius * 2}),
 		}
 		if !ball_has(.Recalling) {
-			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
-				ball_magnitude := l.length(ball.velocity)
-				player_magnitude := l.length(player.velocity)
-				head_normal := l.normalize0(ball.translation - player_head)
-				ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
-				player.flag_timers[.Ignore_Ball] = 0.2
+			// Headers
+			if !ball_has(.Revved) {
+				if l.distance(player_head, ball.translation) < player.radius + ball.radius {
+					ball_magnitude := l.length(ball.velocity)
+					player_magnitude := l.length(player.velocity)
+					head_normal := l.normalize0(ball.translation - player_head)
+					ball.velocity =
+						((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
+					player.flag_timers[.Ignore_Ball] = 0.2
+				}
 			}
-			ball_bounce_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
-			if l.distance(ball_bounce_nearest, ball.translation) < ball.radius {
-				if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
+
+			ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
+			// Ball Touching feet
+			if l.distance(ball_feet_nearest, ball.translation) < ball.radius {
+				if ball_has(.Revved) {
+					player.state_flags += {.Riding}
+					ball.state_flags -= {.Revved}
+				} else if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
 					catch_ball()
 				} else if player.velocity.y >= 0 {
 					// Ball Jump

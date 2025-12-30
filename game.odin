@@ -25,7 +25,7 @@ init_world :: proc() {
 	world.player.has_ball = true
 	world.player.facing = 1
 	world.player.badge_type = .Striker
-	world.ball.radius = 2
+	world.ball.radius = 3
 	world.ball.state_flags += {.Carried}
 	world.level_collision = make([dynamic]Level_Collider, 0, 16)
 	world.current_room = Room_Tag{.tutorial, 0}
