@@ -1,6 +1,7 @@
 package level_write
 
 import ldtk "../ldtk"
+import "core:encoding/json"
 import "core:fmt"
 import "core:os"
 import "core:time"
@@ -19,6 +20,31 @@ Binary_Room :: struct {
 	collision: [dynamic]Binary_Collider,
 }
 
+Binary_Transition :: struct {
+	tag:                 Room_Tag,
+	transition_position: [2]f32,
+}
+
+Temp_Binary_Transition :: struct {
+	// Need position
+	min:               [2]int,
+	max:               [2]int,
+	tag:               Room_Tag,
+	transition_entity: string,
+	level_index:       int,
+}
+
+// Duplicating for now to avoid circular dep
+Room_Tag :: struct {
+	region_tag: Region_Tag,
+	room_index: u8,
+}
+
+Region_Tag :: enum {
+	tutorial,
+}
+////////////////////////////////////////////
+
 main :: proc() {
 	fmt.printfln("ColliderSize %v", size_of(Binary_Collider))
 	start_time := time.now()
@@ -32,6 +58,7 @@ main :: proc() {
 
 			write_region_to_file(region)
 			fmt.printfln("Levels Count: %v", len(world.levels))
+			transitions_map := make(map[string]Temp_Binary_Transition, 16)
 
 
 			for level, i in world.levels {
@@ -47,7 +74,7 @@ main :: proc() {
 						layer_height = layer.c_height
 						collision_csv = layer.int_grid_csv
 					}
-					if layer.identifier == "invisible_entities" {
+					if layer.identifier == "entities" {
 						invisible_entities = layer.entity_instances
 					}
 				}
@@ -142,11 +169,50 @@ main :: proc() {
 				room.collision = colliders
 
 				for entity in invisible_entities {
+					switch entity.identifier {
+					// Binary_Transition
+					case "room_transition":
+						transition: Temp_Binary_Transition
+						transition.level_index = i
+						transition.min = entity.px
+						transition.max = {entity.px.x + entity.width, entity.px.y + entity.height}
+						fmt.printfln("\n%v", entity.iid)
+						for fi in entity.field_instances {
+							if raw_value, exists := fi.value.?; exists {
+								switch fi.identifier {
+								case "room_index":
+									room_index := u8(raw_value.(i64))
+									transition.tag.room_index = room_index
+								// fmt.printfln("(%v)%v: %v", fi.type, fi.identifier, fi.value)
+								case "region_tag":
+									region_string := raw_value.(string)
+									region_tag: Region_Tag
+									switch region_string {
+									case "tutorial":
+										region_tag = .tutorial
+									}
+									transition.tag.region_tag = region_tag
+								// fmt.printfln("(%v)%v: %v", fi.type, fi.identifier, fi.value)
+								case "other_exit":
+									// TODO: Unpack the json value
+									value := raw_value.(json.Object)
+									entity_id := value["entityIid"].(string)
+									transition.transition_entity = entity_id
+								// fmt.printfln("other_exit: %v", entity_id)
+								}
+							}
+						}
+						fmt.printfln("Transitions: %v", transition)
+						transitions_map[entity.iid] = transition
+					// append(&region_room_transitions, transition)
+					}
+					//////////////////////
 
 				}
 
 				append(&region.rooms, room)
 			}
+			fmt.printfln("Transition Map: %v", transitions_map)
 			write_rooms_to_file(&region)
 		}
 		// After parsing all rooms, write the region to file in binary

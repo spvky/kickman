@@ -43,7 +43,7 @@
 	"defs": { "layers": [
 		{
 			"__type": "Entities",
-			"identifier": "entities",
+			"identifier": "invisible_entities",
 			"type": "Entities",
 			"uid": 123,
 			"doc": null,

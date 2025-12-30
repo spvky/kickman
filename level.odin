@@ -1,8 +1,5 @@
 package main
 
-import lr "./level_read"
-import lw "./level_write"
-
 
 build_level :: proc() {
 	append(
