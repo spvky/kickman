@@ -266,7 +266,7 @@ player_kick :: proc() {
 				case .Forward:
 					ball_angle = Vec2{player.facing, 0} //-0.4}
 					ball.flag_timers[.No_Gravity] = 0.15
-					ball.translation = player_foot_position() - {0, 3}
+					ball.translation = player_foot_position() - {0, 2}
 					ball.spin = player.facing
 					player.flag_timers[.Ignore_Ball] = 0.1
 					ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
