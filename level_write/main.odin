@@ -38,14 +38,19 @@ main :: proc() {
 				room: Binary_Room
 				layer_width, layer_height: int
 				collision_csv: []int
+				invisible_entities: []ldtk.Entity_Instance
+				level_name := fmt.tprintf("%v_%02d", region.name, i)
+
 				for layer in level.layer_instances {
 					if layer.identifier == "collision_layer" {
 						layer_width = layer.c_width
 						layer_height = layer.c_height
 						collision_csv = layer.int_grid_csv
 					}
+					if layer.identifier == "invisible_entities" {
+						invisible_entities = layer.entity_instances
+					}
 				}
-				fmt.printfln("Int Grid length: %v", len(collision_csv))
 				checked: [dynamic]bool = make(
 					[dynamic]bool,
 					layer_height * layer_width,
@@ -54,6 +59,7 @@ main :: proc() {
 				colliders := make([dynamic]Binary_Collider, 0, 8)
 				collider_id: int
 
+				// Collision_Layer
 				for y in 0 ..< layer_height {
 					for x in 0 ..< layer_width {
 						if !is_checked(checked, layer_width, x, y) {
@@ -115,11 +121,13 @@ main :: proc() {
 									min = {starting_x, starting_y},
 									max = {ending_x, ending_y},
 								}
-								fmt.printfln(
-									"Appending collider %v with ID %v",
-									collider,
-									collider_id,
-								)
+								if ODIN_DEBUG {
+									fmt.printfln(
+										"Appending collider %v with ID %v",
+										collider,
+										collider_id,
+									)
+								}
 								append(&colliders, collider)
 
 
@@ -130,8 +138,13 @@ main :: proc() {
 						}
 					}
 				}
-				fmt.printfln("Colliders found %v", len(colliders))
+				fmt.printfln("%v: Colliders found %v", level_name, len(colliders))
 				room.collision = colliders
+
+				for entity in invisible_entities {
+
+				}
+
 				append(&region.rooms, room)
 			}
 			write_rooms_to_file(&region)
@@ -161,29 +174,42 @@ write_region_to_file :: proc(region: Binary_Region) {
 write_rooms_to_file :: proc(region: ^Binary_Region) {
 	file_permissions := 0o644
 	file_flags := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
-	dir_path := "../assets/levels/collision/"
+	collision_dir := "../assets/levels/collision/"
+	invis_entities_dir := "../assets/levels/entities/"
 	for room, i in region.rooms {
 		level_name := fmt.tprintf("%v_%02d", region.name, i)
-		path := fmt.tprintf("%v%v.col", dir_path, level_name)
-		file, err := os.open(path, file_flags, file_permissions)
-		if err != nil {
-			fmt.eprintln("Error opening file:", err)
+
+		// Write Collision File
+		collision_path := fmt.tprintf("%v%v.col", collision_dir, level_name)
+		collision_file, col_err := os.open(collision_path, file_flags, file_permissions)
+		if col_err != nil {
+			fmt.eprintln("Error opening file:", col_err)
 		}
-		defer os.close(file)
+		defer os.close(collision_file)
 
 
-		// // Write the path to the levels png and its len
 		collision_len := len(room.collision) * size_of(Binary_Collider)
 		collision_len_bytes := transmute([8]u8)collision_len
 
 		// Write our ints first
-		os.write(file, collision_len_bytes[:])
-		// Write dynamic data
-		n, write_err := os.write_ptr(file, raw_data(room.collision), collision_len)
+		n, write_err := os.write(collision_file, collision_len_bytes[:])
 		if write_err != nil {
 			fmt.eprintln("Error writing to file:", write_err)
 		}
-		fmt.printfln("Successfully wrote %v bytes to %v", n, path)
+		// Write dynamic data
+		n, write_err = os.write_ptr(collision_file, raw_data(room.collision), collision_len)
+		if write_err != nil {
+			fmt.eprintln("Error writing to file:", write_err)
+		}
+		fmt.printfln("Successfully wrote %v bytes to %v", n, collision_path)
+
+		// Write Invisible Entities File
+		invis_entity_path := fmt.tprintf("%v%v_invis.ent", invis_entities_dir, level_name)
+		invis_entities_file, invis_err := os.open(invis_entity_path, file_flags, file_permissions)
+		if invis_err != nil {
+			fmt.eprintln("Error opening file:", invis_err)
+		}
+		defer os.close(invis_entities_file)
 	}
 }
 

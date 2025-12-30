@@ -2,7 +2,6 @@ package main
 
 import "core:log"
 import "core:math"
-import "core:time"
 
 
 TILE_SIZE: f32 : 8
