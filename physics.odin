@@ -15,7 +15,7 @@ apply_player_ball_gravity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
 
-	if !player_has(.Riding) {
+	if player_lacks(.Riding) {
 		if player.velocity.y < 0 {
 			player.velocity.y += rising_gravity * delta
 		} else {
@@ -23,7 +23,7 @@ apply_player_ball_gravity :: proc(delta: f32) {
 		}
 	}
 
-	if !ball_has(.Carried) && !ball_has(.Recalling) && !ball_has(.No_Gravity) {
+	if ball_lacks(.Carried, .Recalling, .No_Gravity) {
 		if ball.velocity.y < 0 {
 			ball.velocity.y += rising_gravity * delta
 		} else {
@@ -34,9 +34,10 @@ apply_player_ball_gravity :: proc(delta: f32) {
 
 player_movement :: proc(delta: f32) {
 	player := &world.player
-	if player.movement_delta != 0 && !player_has(.Riding) && !player_has(.No_Move) {
+	if player.movement_delta != 0 && player_lacks(.Riding, .No_Move) {
+		player.facing = player.movement_delta
 		player.velocity.x = max_speed * player.movement_delta
-	} else if !player_has(.No_Move) {
+	} else if player_lacks(.No_Move) {
 		player.velocity.x = 0
 	}
 }
@@ -88,7 +89,7 @@ apply_player_ball_velocity :: proc(delta: f32) {
 	} else {
 		player.translation += player.velocity * delta
 	}
-	if !ball_has(.Carried) && !ball_has(.Recalling) {
+	if ball_lacks(.Carried, .Recalling) {
 		ball.translation += ball.velocity * delta
 	}
 }
@@ -215,9 +216,9 @@ ball_resolve_level_collision :: proc(ball: ^Ball, collision: Collision) {
 			ball.velocity.y = y_velo * -0.6
 		}
 		// Roll based on spin if our x velo is low enough
-		if math.abs(ball.velocity.x) < 25 && !ball_has(.Revved) {
+		if math.abs(ball.velocity.x) < 25 && ball_lacks(.Revved) {
 			ball.velocity.x = y_velo * 0.2 * ball.spin
-		} else if ball_has(.Revved) && !ball_has(.Bounced) {
+		} else if ball_has(.Revved) && ball_lacks(.Bounced) {
 			// If Revved and hasn't bounced yet apply rev speed
 			ball.velocity.x = 300 * ball.spin
 		}
@@ -230,7 +231,7 @@ player_ball_transition_collision :: proc() {
 	ball := &world.ball
 	for transition in assets.room_transitions[world.current_room] {
 		// Player Collision
-		if !player_has(.No_Transition) {
+		if player_lacks(.No_Transition) {
 			if _, player_collided := circle_aabb_collide(
 				player.translation,
 				player.radius / 2,
@@ -255,7 +256,7 @@ player_ball_transition_collision :: proc() {
 					translation_ptr.x = transition.transition_position.x + x_offset
 				}
 
-				if !player_has(.Riding) {
+				if player_lacks(.Riding) {
 					catch_ball()
 				}
 
@@ -265,7 +266,7 @@ player_ball_transition_collision :: proc() {
 		}
 
 		//Ball
-		if !player_has(.Riding) {
+		if player_lacks(.Riding) {
 			if collision, ball_collided := circle_aabb_collide(
 				ball.translation,
 				ball.radius,
@@ -287,7 +288,7 @@ player_ball_level_collision :: proc() {
 	for collider in assets.room_collision[world.current_room] {
 		// Player
 
-		if !player_has(.Riding) {
+		if player_lacks(.Riding) {
 			head_collision, head_collided := circle_level_collide(
 				player.translation - {0, player.radius / 2},
 				player.radius,
@@ -317,7 +318,7 @@ player_ball_level_collision :: proc() {
 		}
 
 		// Ball
-		if !ball_has(.Carried) && !ball_has(.Recalling) {
+		if ball_lacks(.Carried, .Recalling) {
 			ball_ground_sensor := ball.translation + Vec2{0, ball.radius}
 			ball_collision, ball_collided := circle_level_collide(
 				ball.translation,
@@ -342,7 +343,7 @@ player_ball_level_collision :: proc() {
 		player.state_flags -= {.Grounded}
 	}
 
-	if ball_on_ground && !ball_has(.No_Gravity) && !ball_has(.Recalling) {
+	if ball_on_ground && ball_lacks(.No_Gravity, .Recalling) {
 		ball.state_flags += {.Grounded}
 		ball.flag_timers[.Coyote] = 0.10
 	} else {
@@ -370,6 +371,7 @@ player_ball_collision :: proc() {
 				head_normal := l.normalize0(ball.translation - player_head)
 				ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
 				player.flag_timers[.Ignore_Ball] = 0.2
+				ball.state_flags += {.Bounced}
 				return
 			}
 		}

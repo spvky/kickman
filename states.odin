@@ -57,99 +57,170 @@ Player_Ball_Interaction :: enum u8 {
 	Catch,
 }
 
-// Check if the player has the passed state flag
 @(require_results)
-player_has_single :: proc(flag: Player_Master_State) -> (contains: bool) {
-	switch flag {
-	case .Grounded:
-		contains = .Grounded in world.player.state_flags
-	case .Double_Jump:
-		contains = .Double_Jump in world.player.state_flags
-	case .Walking:
-		contains = .Walking in world.player.state_flags
-	case .Riding:
-		contains = .Riding in world.player.state_flags
-	case .Coyote:
-		contains = .Coyote in world.player.timed_state_flags
-	case .Ignore_Ball:
-		contains = .Ignore_Ball in world.player.timed_state_flags
-	case .No_Badge:
-		contains = .No_Badge in world.player.timed_state_flags
-	case .No_Move:
-		contains = .No_Move in world.player.timed_state_flags
-	case .No_Transition:
-		contains = .No_Transition in world.player.timed_state_flags
-	}
-	return contains
-}
-
-@(require_results)
-player_has_multiple :: proc(set: bit_set[Player_Master_State]) -> bool {
+player_has :: proc(set: ..Player_Master_State) -> bool {
 	player := &world.player
 
-	p_static: bit_set[Player_State;u8]
-	p_timed: bit_set[Player_Timed_State;u8]
+	static: bit_set[Player_State;u8]
+	timed: bit_set[Player_Timed_State;u8]
 
 	for v in set {
 		switch v {
 		case .Grounded:
-			p_static += {.Grounded}
+			static += {.Grounded}
 		case .Double_Jump:
-			p_static += {.Double_Jump}
+			static += {.Double_Jump}
 		case .Walking:
-			p_static += {.Walking}
+			static += {.Walking}
 		case .Riding:
-			p_static += {.Riding}
+			static += {.Riding}
 		case .Coyote:
-			p_timed += {.Coyote}
+			timed += {.Coyote}
 		case .Ignore_Ball:
-			p_timed += {.Ignore_Ball}
+			timed += {.Ignore_Ball}
 		case .No_Badge:
-			p_timed += {.No_Badge}
+			timed += {.No_Badge}
 		case .No_Move:
-			p_timed += {.No_Move}
+			timed += {.No_Move}
 		case .No_Transition:
-			p_timed += {.No_Transition}
+			timed += {.No_Transition}
 		}
 	}
-
-	return p_static <= player.state_flags && p_timed <= player.timed_state_flags
-
+	return static <= player.state_flags && timed <= player.timed_state_flags
 }
 
-player_has :: proc {
-	player_has_single,
-// player_has_multiple,
-}
-
-// Check if the ball has the passed state flag
 @(require_results)
-ball_has_single :: proc(flag: Ball_Master_State) -> (contains: bool) {
-	switch flag {
-	case .Carried:
-		contains = .Carried in world.ball.state_flags
-	case .Grounded:
-		contains = .Grounded in world.ball.state_flags
-	case .Recalling:
-		contains = .Recalling in world.ball.state_flags
-	case .Revved:
-		contains = .Revved in world.ball.state_flags
-	case .Bounced:
-		contains = .Bounced in world.ball.state_flags
-	case .No_Gravity:
-		contains = .No_Gravity in world.ball.timed_state_flags
-	case .Coyote:
-		contains = .Coyote in world.ball.timed_state_flags
+player_lacks :: proc(set: ..Player_Master_State) -> (lacks: bool) {
+	player := &world.player
+	lacks = true
+
+	for v in set {
+		switch v {
+		case .Grounded:
+			if .Grounded in player.state_flags {
+				lacks = false
+				return
+			}
+		case .Double_Jump:
+			if .Double_Jump in player.state_flags {
+				lacks = false
+				return
+			}
+		case .Walking:
+			if .Walking in player.state_flags {
+				lacks = false
+				return
+			}
+		case .Riding:
+			if .Riding in player.state_flags {
+				lacks = false
+				return
+			}
+		case .Coyote:
+			if .Coyote in player.timed_state_flags {
+				lacks = false
+				return
+			}
+		case .Ignore_Ball:
+			if .Ignore_Ball in player.timed_state_flags {
+				lacks = false
+				return
+			}
+		case .No_Badge:
+			if .No_Badge in player.timed_state_flags {
+				lacks = false
+				return
+			}
+		case .No_Move:
+			if .No_Move in player.timed_state_flags {
+				lacks = false
+				return
+			}
+		case .No_Transition:
+			if .No_Transition in player.timed_state_flags {
+				lacks = false
+				return
+			}
+		}
 	}
-	return contains
+	return lacks
 }
 
-ball_has :: proc {
-	ball_has_single,
+@(require_results)
+ball_has :: proc(set: ..Ball_Master_State) -> bool {
+	ball := &world.ball
+
+	static: bit_set[Ball_State;u8]
+	timed: bit_set[Ball_Timed_State;u8]
+
+	for v in set {
+		switch v {
+		case .Carried:
+			static += {.Carried}
+		case .Grounded:
+			static += {.Grounded}
+		case .Recalling:
+			static += {.Recalling}
+		case .Revved:
+			static += {.Revved}
+		case .Bounced:
+			static += {.Bounced}
+		case .No_Gravity:
+			timed += {.No_Gravity}
+		case .Coyote:
+			timed += {.Coyote}
+		}
+	}
+	return static <= ball.state_flags && timed <= ball.timed_state_flags
 }
 
+@(require_results)
+ball_lacks :: proc(set: ..Ball_Master_State) -> (lacks: bool) {
+	ball := &world.ball
+	lacks = true
+	for v in set {
+		switch v {
+		case .Carried:
+			if .Carried in ball.state_flags {
+				lacks = false
+				return
+			}
+		case .Grounded:
+			if .Grounded in ball.state_flags {
+				lacks = false
+				return
+			}
+		case .Recalling:
+			if .Recalling in ball.state_flags {
+				lacks = false
+				return
+			}
+		case .Revved:
+			if .Revved in ball.state_flags {
+				lacks = false
+				return
+			}
+		case .Bounced:
+			if .Bounced in ball.state_flags {
+				lacks = false
+				return
+			}
+		case .No_Gravity:
+			if .No_Gravity in ball.timed_state_flags {
+				lacks = false
+				return
+			}
+		case .Coyote:
+			if .Coyote in ball.timed_state_flags {
+				lacks = false
+				return
+			}
+		}
+	}
+	return
+}
 player_ball_can_interact :: proc() -> bool {
-	return !player_has(.Ignore_Ball) || !player_has(.Riding) || !ball_has(.Carried)
+	return player_lacks(.Ignore_Ball) || player_lacks(.Riding) || ball_lacks(.Carried)
 }
 
 player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
@@ -158,23 +229,15 @@ player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 	if player_has(.Ignore_Ball) || player_has(.Riding) || ball_has(.Carried) do return
 	switch i {
 	case .Catch:
-		able = !ball_has(.Revved) && (player_has(.Grounded) || ball_has(.Recalling))
+		able = ball_lacks(.Revved) && (player_has(.Grounded) || ball_has(.Recalling))
 	case .Header:
-		able = !ball_has(.Revved) && !ball_has(.Recalling)
+		able = ball_lacks(.Revved, .Recalling)
 	case .Ride:
-		able = ball_has(.Revved) && ball_has(.Bounced) && !ball_has(.Recalling)
+		able = ball_has(.Revved, .Bounced) && ball_lacks(.Recalling)
 	case .Bounce:
-		able =
-			!player_has(.Grounded) &&
-			!ball_has(.Revved) &&
-			!ball_has(.Recalling) &&
-			player.velocity.y > 0
+		able = player_lacks(.Grounded) && ball_lacks(.Revved, .Recalling) && player.velocity.y > 0
 	case .Recall:
-		able =
-			ball_has(.Bounced) &&
-			!player_has(.Riding) &&
-			!ball_has(.Carried) &&
-			!player_has(.No_Badge)
+		able = ball_has(.Bounced) && player_lacks(.Riding, .No_Badge) && ball_lacks(.Carried)
 	}
 	return
 }
