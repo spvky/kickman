@@ -16,7 +16,8 @@ SCREEN_HEIGHT :: 224
 Assets :: struct {
 	gameplay_texture: rl.RenderTexture,
 	room_textures:    map[Room_Tag]rl.Texture2D,
-	room_collision:   map[Room_Tag]Room_Collision,
+	room_collision:   map[Room_Tag][dynamic]Level_Collider,
+	room_transitions: map[Room_Tag][dynamic]Room_Transition,
 }
 
 assets: Assets
@@ -24,8 +25,12 @@ assets: Assets
 init_assets :: proc() {
 	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
 	assets.room_textures = make(map[Room_Tag]rl.Texture2D, 10)
-	assets.room_collision = make(map[Room_Tag]Room_Collision, 10)
+	assets.room_collision = make(map[Room_Tag][dynamic]Level_Collider, 10)
+	assets.room_transitions = make(map[Room_Tag][dynamic]Room_Transition, 4)
 	load_region_data(.tutorial)
+	for k, i in assets.room_transitions {
+		fmt.printfln("%v: %v", k, i)
+	}
 }
 
 load_region_data :: proc(tag: Region_Tag) {
@@ -79,10 +84,35 @@ load_region_data :: proc(tag: Region_Tag) {
 			append(&collision, collider)
 		}
 
-		assets.room_textures[room_tag] = texture
-		assets.room_collision[room_tag] = {
-			room_collision = collision,
+
+		// Room Transitions
+		transition_path := fmt.tprintf(
+			"assets/levels/entities/%v_%02d_invis.ent",
+			tag,
+			room_tag.room_index,
+		)
+		transition_binary, transition_ok := lr.read_room_transitions_from_file(transition_path)
+		if !transition_ok {
+			fmt.printfln("Failed to read transitions for %v", transition_path)
+			return
 		}
+
+		transitions := make([dynamic]Room_Transition, 0, len(transition_binary.transitions))
+
+		for t in transition_binary.transitions {
+			transition: Room_Transition
+			//TODO: move types to shared module
+			transition.tag.region_tag = .tutorial
+			transition.tag.room_index = t.tag.room_index
+			transition.transition_position = t.transition_position
+			transition.min = t.min
+			transition.max = t.max
+			append(&transitions, transition)
+		}
+
+		assets.room_textures[room_tag] = texture
+		assets.room_collision[room_tag] = collision
+		assets.room_transitions[room_tag] = transitions
 	}
 	end_time := time.now()
 	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))

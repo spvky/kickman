@@ -17,12 +17,15 @@ Binary_Region :: struct {
 }
 
 Binary_Room :: struct {
-	collision: [dynamic]Binary_Collider,
+	collision:   [dynamic]Binary_Collider,
+	transitions: [dynamic]Binary_Transition,
 }
 
 Binary_Transition :: struct {
 	tag:                 Room_Tag,
 	transition_position: [2]f32,
+	min:                 [2]f32,
+	max:                 [2]f32,
 }
 
 Temp_Binary_Transition :: struct {
@@ -40,7 +43,7 @@ Room_Tag :: struct {
 	room_index: u8,
 }
 
-Region_Tag :: enum {
+Region_Tag :: enum u8 {
 	tutorial,
 }
 ////////////////////////////////////////////
@@ -74,7 +77,7 @@ main :: proc() {
 						layer_height = layer.c_height
 						collision_csv = layer.int_grid_csv
 					}
-					if layer.identifier == "entities" {
+					if layer.type == .Entities {
 						invisible_entities = layer.entity_instances
 					}
 				}
@@ -84,6 +87,7 @@ main :: proc() {
 					allocator = context.temp_allocator,
 				)
 				colliders := make([dynamic]Binary_Collider, 0, 8)
+				room.transitions = make([dynamic]Binary_Transition, 0, 4)
 				collider_id: int
 
 				// Collision_Layer
@@ -204,6 +208,7 @@ main :: proc() {
 						}
 						fmt.printfln("Transitions: %v", transition)
 						transitions_map[entity.iid] = transition
+
 					// append(&region_room_transitions, transition)
 					}
 					//////////////////////
@@ -212,7 +217,31 @@ main :: proc() {
 
 				append(&region.rooms, room)
 			}
-			fmt.printfln("Transition Map: %v", transitions_map)
+
+			// Assign aabbs from entity refs
+			for iid, &temp_transition in transitions_map {
+				binary_transition: Binary_Transition
+				if t, ok := transitions_map[temp_transition.transition_entity]; ok {
+					center := (t.max + t.min) / 2
+					binary_transition.transition_position = {f32(center.x), f32(center.y)}
+					binary_transition.min = {
+						f32(temp_transition.min.x),
+						f32(temp_transition.min.y),
+					}
+					binary_transition.max = {
+						f32(temp_transition.max.x),
+						f32(temp_transition.max.y),
+					}
+					binary_transition.tag = temp_transition.tag
+					// Append to transitions
+					append(
+						&region.rooms[int(temp_transition.level_index)].transitions,
+						binary_transition,
+					)
+
+					// Use temp_transition.level_index to put into proper collection
+				}
+			}
 			write_rooms_to_file(&region)
 		}
 		// After parsing all rooms, write the region to file in binary
@@ -246,36 +275,61 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 		level_name := fmt.tprintf("%v_%02d", region.name, i)
 
 		// Write Collision File
-		collision_path := fmt.tprintf("%v%v.col", collision_dir, level_name)
-		collision_file, col_err := os.open(collision_path, file_flags, file_permissions)
-		if col_err != nil {
-			fmt.eprintln("Error opening file:", col_err)
+		{
+			collision_path := fmt.tprintf("%v%v.col", collision_dir, level_name)
+			collision_file, col_err := os.open(collision_path, file_flags, file_permissions)
+			if col_err != nil {
+				fmt.eprintln("Error opening file:", col_err)
+			}
+			defer os.close(collision_file)
+
+
+			collision_len := len(room.collision) * size_of(Binary_Collider)
+			collision_len_bytes := transmute([8]u8)collision_len
+
+			// Write our ints first
+			n, write_err := os.write(collision_file, collision_len_bytes[:])
+			if write_err != nil {
+				fmt.eprintln("Error writing to file:", write_err)
+			}
+			// Write dynamic data
+			n, write_err = os.write_ptr(collision_file, raw_data(room.collision), collision_len)
+			if write_err != nil {
+				fmt.eprintln("Error writing to file:", write_err)
+			}
+			fmt.printfln("Successfully wrote %v bytes to %v", n, collision_path)
 		}
-		defer os.close(collision_file)
-
-
-		collision_len := len(room.collision) * size_of(Binary_Collider)
-		collision_len_bytes := transmute([8]u8)collision_len
-
-		// Write our ints first
-		n, write_err := os.write(collision_file, collision_len_bytes[:])
-		if write_err != nil {
-			fmt.eprintln("Error writing to file:", write_err)
-		}
-		// Write dynamic data
-		n, write_err = os.write_ptr(collision_file, raw_data(room.collision), collision_len)
-		if write_err != nil {
-			fmt.eprintln("Error writing to file:", write_err)
-		}
-		fmt.printfln("Successfully wrote %v bytes to %v", n, collision_path)
-
 		// Write Invisible Entities File
-		invis_entity_path := fmt.tprintf("%v%v_invis.ent", invis_entities_dir, level_name)
-		invis_entities_file, invis_err := os.open(invis_entity_path, file_flags, file_permissions)
-		if invis_err != nil {
-			fmt.eprintln("Error opening file:", invis_err)
+		{
+			invis_entity_path := fmt.tprintf("%v%v_invis.ent", invis_entities_dir, level_name)
+			invis_entities_file, invis_err := os.open(
+				invis_entity_path,
+				file_flags,
+				file_permissions,
+			)
+			if invis_err != nil {
+				fmt.eprintln("Error opening file:", invis_err)
+			}
+			defer os.close(invis_entities_file)
+
+			transition_len := len(room.transitions) * size_of(Binary_Transition)
+			transition_len_bytes := transmute([8]u8)transition_len
+			n, write_err := os.write(invis_entities_file, transition_len_bytes[:])
+			if write_err != nil {
+				fmt.eprintln("Error writing to file:", write_err)
+			}
+			//Dynamic data
+			fmt.printfln("Transitions to Write: %v", room.transitions)
+			n, write_err = os.write_ptr(
+				invis_entities_file,
+				raw_data(room.transitions),
+				transition_len,
+			)
+			if write_err != nil {
+				fmt.eprintln("Error writing to file:", write_err)
+			}
+			fmt.printfln("Successfully wrote %v bytes to %v", n, invis_entity_path)
 		}
-		defer os.close(invis_entities_file)
 	}
 }
 

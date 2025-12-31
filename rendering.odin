@@ -88,7 +88,7 @@ draw_player_and_ball :: proc() {
 }
 
 draw_level_collision :: proc() {
-	for collider in assets.room_collision[world.current_room].room_collision {
+	for collider in assets.room_collision[world.current_room] {
 		extents := collider.max - collider.min
 		rl.DrawRectangleV(collider.min, extents, rl.RED)
 	}

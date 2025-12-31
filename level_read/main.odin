@@ -67,6 +67,45 @@ read_room_collision_from_file :: proc(
 	return
 }
 
+read_room_transitions_from_file :: proc(
+	filename: string,
+) -> (
+	room: lvl_write.Binary_Room,
+	success: bool,
+) {
+	file, read_err := os.open(filename)
+	if read_err != nil {
+		fmt.eprintfln("Failed to read %v: %v", filename, read_err)
+		return
+	}
+	defer os.close(file)
+
+	bytes_read: int
+	transition_len: int
+
+	// Read ints from the start of the file
+	bytes_read = read_int_from_file(file, &transition_len)
+	// Read dynamic data from the file
+	transition_raw := make(
+		[]lvl_write.Binary_Transition,
+		transition_len / size_of(lvl_write.Binary_Transition),
+		allocator = context.temp_allocator,
+	)
+	transition_bytes := slice.to_bytes(transition_raw)
+	bytes_read, read_err = os.read_full(file, transition_bytes)
+	if read_err != nil {
+		fmt.printfln("Failed to read %v: %v", filename, read_err)
+		return
+	}
+	transitions := slice.clone_to_dynamic(transition_raw, allocator = context.temp_allocator)
+
+	room.transitions = transitions
+
+
+	success = true
+	return
+}
+
 
 // Read int from passed file into the passed pointer
 read_int_from_file :: proc(file: os.Handle, destination: ^int) -> (bytes_read: int) {

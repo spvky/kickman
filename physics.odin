@@ -211,7 +211,7 @@ player_ball_level_collision :: proc() {
 	feet_on_ground, ball_on_ground: bool
 	falling := player.velocity.y > 0
 
-	for collider in assets.room_collision[world.current_room].room_collision {
+	for collider in assets.room_collision[world.current_room] {
 		// Player
 
 		if !player_has(.Riding) {
@@ -242,7 +242,6 @@ player_ball_level_collision :: proc() {
 				feet_on_ground = true
 			}
 		}
-
 
 		// Ball
 		if !ball_has(.Carried) && !ball_has(.Recalling) {

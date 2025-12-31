@@ -29,10 +29,13 @@ Region_Tag :: enum {
 	tutorial,
 }
 
-Room_Collision :: struct {
-	room_collision: [dynamic]Level_Collider,
-}
-
 Region :: struct {
 	tag: Region_Tag,
+}
+
+Room_Transition :: struct {
+	tag:                 Room_Tag,
+	transition_position: [2]f32,
+	min:                 [2]f32,
+	max:                 [2]f32,
 }
