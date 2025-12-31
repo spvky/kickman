@@ -353,10 +353,8 @@ player_ball_level_collision :: proc() {
 player_ball_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
-	if !player_has(.Ignore_Ball) && !ball_has(.Carried) && !player_has(.Riding) {
-		// Header
-		// Define specific head angles based on how close the ball is to the center of the player:
-		// Center - straight up with the characters x momentum
+	if player_ball_can_interact() {
+		// Calculate player hitboxes for ball interactions
 		player_head := player.translation - {0, player.radius / 2}
 		ball_above_head := ball.translation.y < player_head.y
 		player_feet := player.translation + {0, player.radius / 2}
@@ -364,41 +362,38 @@ player_ball_collision :: proc() {
 			player.translation - {player.radius * 1.5, 0},
 			player.translation + ({player.radius * 1.5, player.radius * 2}),
 		}
-		if !ball_has(.Recalling) {
-			// Headers
-			if !ball_has(.Revved) {
-				if l.distance(player_head, ball.translation) < player.radius + ball.radius {
-					ball_magnitude := l.length(ball.velocity)
-					player_magnitude := l.length(player.velocity)
-					head_normal := l.normalize0(ball.translation - player_head)
-					ball.velocity =
-						((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
-					player.flag_timers[.Ignore_Ball] = 0.2
-				}
+
+		if player_can(.Header) {
+			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
+				ball_magnitude := l.length(ball.velocity)
+				player_magnitude := l.length(player.velocity)
+				head_normal := l.normalize0(ball.translation - player_head)
+				ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
+				player.flag_timers[.Ignore_Ball] = 0.2
+				return
+			}
+		}
+		ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
+		feet_touching_ball := l.distance(ball_feet_nearest, ball.translation) < ball.radius
+
+		if feet_touching_ball {
+			if player_can(.Bounce) {
+				ball.velocity.y = player.velocity.y
+				ball.velocity.x *= 0.3 * player.facing
+				ball.spin = player.facing
+				player.velocity.y = jump_speed * 1.125
+				player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
+				player.flag_timers[.Ignore_Ball] = 0.2
+				return
 			}
 
-			ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
-			// Ball Touching feet
-			if l.distance(ball_feet_nearest, ball.translation) < ball.radius {
-				if ball_has(.Revved) && ball_has(.Bounced) {
-					player.state_flags += {.Riding}
-					ball.state_flags -= {.Revved}
-					return
-				} else if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
-					catch_ball()
-				} else if player.velocity.y >= 0 {
-					// Ball Jump
-					ball.velocity.y = player.velocity.y
-					ball.velocity.x *= 0.3
-					player.velocity.y = jump_speed * 1.125
-					player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
-					player.flag_timers[.Ignore_Ball] = 0.2
-					// ball.velocity = ball_mag * Vec2{0, 1}
-				}
+			if player_can(.Ride) {
+				player.state_flags += {.Riding}
+				ball.state_flags -= {.Revved}
+				return
 			}
-		} else {
-			if l.distance(player_feet, ball.translation) < player.radius + ball.radius &&
-			   ball_has(.Bounced) {
+
+			if player_can(.Catch) {
 				catch_ball()
 			}
 		}
