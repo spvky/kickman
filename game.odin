@@ -43,5 +43,6 @@ game_init :: proc() {
 game_update :: proc() {
 	poll_input()
 	physics_step()
+	camera_follow_player()
 	render()
 }

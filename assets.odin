@@ -16,6 +16,7 @@ SCREEN_HEIGHT :: 224
 Assets :: struct {
 	gameplay_texture: rl.RenderTexture,
 	room_textures:    map[Room_Tag]rl.Texture2D,
+	room_dimensions:  map[Room_Tag]Vec2,
 	room_collision:   map[Room_Tag][dynamic]Level_Collider,
 	room_transitions: map[Room_Tag][dynamic]Room_Transition,
 }
@@ -24,6 +25,7 @@ assets: Assets
 
 init_assets :: proc() {
 	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
+	assets.room_dimensions = make(map[Room_Tag]Vec2, 10)
 	assets.room_textures = make(map[Room_Tag]rl.Texture2D, 10)
 	assets.room_collision = make(map[Room_Tag][dynamic]Level_Collider, 10)
 	assets.room_transitions = make(map[Room_Tag][dynamic]Room_Transition, 4)
@@ -110,6 +112,8 @@ load_region_data :: proc(tag: Region_Tag) {
 			append(&transitions, transition)
 		}
 
+
+		assets.room_dimensions[room_tag] = Vec2{f32(texture.width), f32(texture.height)}
 		assets.room_textures[room_tag] = texture
 		assets.room_collision[room_tag] = collision
 		assets.room_transitions[room_tag] = transitions

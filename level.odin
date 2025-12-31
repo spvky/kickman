@@ -36,6 +36,5 @@ Region :: struct {
 Room_Transition :: struct {
 	tag:                 Room_Tag,
 	transition_position: [2]f32,
-	min:                 [2]f32,
-	max:                 [2]f32,
+	using aabb:          AABB,
 }

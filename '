@@ -103,7 +103,6 @@ physics_step :: proc() {
 	//Update timed flags before collision occurs
 	manage_player_ball_flags(delta)
 	player_ball_level_collision()
-	player_ball_transition_collision()
 	player_ball_collision()
 }
 
@@ -229,50 +228,18 @@ player_ball_transition_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
 	for transition in assets.room_transitions[world.current_room] {
-		// Player Collision
-		if !player_has(.No_Transition) {
-			if _, player_collided := circle_aabb_collide(
-				player.translation,
-				player.radius / 2,
-				transition.aabb,
-			); player_collided {
-				transition_extents := transition.max - transition.min
-				translation_ptr: ^Vec2
-
-				if player_has(.Riding) {
-					translation_ptr = &ball.translation
-				} else {
-					translation_ptr = &player.translation
-				}
-
-				if transition_extents.x < transition_extents.y {
-					y_offset := translation_ptr.y - (transition.max.y + transition.min.y) / 2
-					translation_ptr.x = transition.transition_position.x
-					translation_ptr.y = transition.transition_position.y + y_offset
-				} else {
-					x_offset := translation_ptr.x - (transition.max.x + transition.min.x) / 2
-					translation_ptr.y = transition.transition_position.y
-					translation_ptr.x = transition.transition_position.x + x_offset
-				}
-
-				if !player_has(.Riding) {
-					catch_ball()
-				}
-
-				world.current_room = transition.tag
-				player.flag_timers[.No_Transition] = 0.2
+		if _, player_collided := circle_aabb_collide(
+			player.translation,
+			player.radius / 2,
+			transition.aabb,
+		); player_collided {
+			if player_has(.Riding) {
+				ball.translation = transition.transition_position
+			} else {
+				player.translation = transition.transition_position
 			}
-		}
-
-		//Ball
-		if !player_has(.Riding) {
-			if collision, ball_collided := circle_aabb_collide(
-				ball.translation,
-				ball.radius,
-				transition.aabb,
-			); ball_collided {
-				ball_resolve_level_collision(ball, collision)
-			}
+			world.current_room = transition.tag
+			player.flag_timers[.No_Transition] = 0.2
 		}
 	}
 }

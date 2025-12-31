@@ -86,6 +86,7 @@ Player_Timed_State :: enum u8 {
 	Ignore_Ball,
 	No_Badge,
 	No_Move,
+	No_Transition,
 }
 
 Player_Master_State :: enum u16 {
@@ -97,6 +98,7 @@ Player_Master_State :: enum u16 {
 	Ignore_Ball,
 	No_Badge,
 	No_Move,
+	No_Transition,
 }
 
 Ball :: struct {
@@ -151,6 +153,8 @@ player_has :: proc(flag: Player_Master_State) -> (contains: bool) {
 		contains = .No_Badge in world.player.timed_state_flags
 	case .No_Move:
 		contains = .No_Move in world.player.timed_state_flags
+	case .No_Transition:
+		contains = .No_Transition in world.player.timed_state_flags
 	}
 	return contains
 }
@@ -347,5 +351,7 @@ catch_ball :: proc() {
 	ball.state_flags += {.Carried}
 	ball.state_flags -= {.Recalling, .Bounced}
 	ball.velocity = Vec2{0, 0}
+	ball.translation = player_foot_position()
 	player.has_ball = true
+
 }

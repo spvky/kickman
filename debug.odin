@@ -9,7 +9,7 @@ player_debug :: proc() {
 	ball := world.ball
 
 	player_string := fmt.tprintf(
-		"Player:\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tKick Angle: %v\n\tFlags: %v\n\tTimed Flags: %v",
+		"Player:\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tKick Angle: %v\n\tFlags: %v\n\tTimed Flags: %v\nCam Target: %v",
 		player.translation.x,
 		player.translation.y,
 		player.velocity.x,
@@ -17,6 +17,7 @@ player_debug :: proc() {
 		player.kick_angle,
 		player.state_flags,
 		player.timed_state_flags,
+		world.camera.target,
 	)
 	rl.DrawText(strings.clone_to_cstring(player_string), 20, 100, 16, rl.YELLOW)
 	ball_string := fmt.tprintf(
