@@ -380,9 +380,10 @@ player_ball_collision :: proc() {
 			ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
 			// Ball Touching feet
 			if l.distance(ball_feet_nearest, ball.translation) < ball.radius {
-				if ball_has(.Revved) {
+				if ball_has(.Revved) && ball_has(.Bounced) {
 					player.state_flags += {.Riding}
 					ball.state_flags -= {.Revved}
+					return
 				} else if player_has(.Grounded) || l.length(ball.velocity) <= 1 {
 					catch_ball()
 				} else if player.velocity.y >= 0 {
@@ -396,7 +397,8 @@ player_ball_collision :: proc() {
 				}
 			}
 		} else {
-			if l.distance(player_feet, ball.translation) < player.radius + ball.radius {
+			if l.distance(player_feet, ball.translation) < player.radius + ball.radius &&
+			   ball_has(.Bounced) {
 				catch_ball()
 			}
 		}

@@ -1,5 +1,6 @@
 package main
 
+import "core:math"
 import rl "vendor:raylib"
 
 Render_Mode :: enum {
@@ -75,7 +76,22 @@ draw_player_and_ball :: proc() {
 	ball := world.ball
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
-	rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
+	ball_color := rl.WHITE
+
+	if ball_has(.Revved) {
+		t := math.sin(ball.juice_values[.Rev_Flash] * 20)
+		white: [4]f32 = {255, 255, 255, 255}
+		red: [4]f32 = {255, 0, 0, 255}
+		float_color := math.lerp(white, red, t)
+
+		ball_color = rl.Color {
+			u8(float_color.r),
+			u8(float_color.g),
+			u8(float_color.b),
+			u8(float_color.a),
+		}
+	}
+	rl.DrawCircleV(ball.translation, ball.radius, ball_color)
 
 	if ODIN_DEBUG {
 		player_bounce_box := AABB {

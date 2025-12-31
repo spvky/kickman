@@ -108,6 +108,11 @@ Ball :: struct {
 	state_flags:       bit_set[Ball_State;u8],
 	timed_state_flags: bit_set[Ball_Timed_State;u8],
 	flag_timers:       [Ball_Timed_State]f32,
+	juice_values:      [Ball_Juice_Values]f32,
+}
+
+Ball_Juice_Values :: enum {
+	Rev_Flash,
 }
 
 Ball_State :: enum u8 {
@@ -131,6 +136,14 @@ Ball_Master_State :: enum u16 {
 	Bounced,
 	No_Gravity,
 	Coyote,
+}
+
+Player_Ball_Interaction :: enum u8 {
+	Catch,
+	Header,
+	Bounce,
+	Ride,
+	Recall,
 }
 
 // Check if the player has the passed state flag
@@ -194,6 +207,7 @@ player_foot_position :: proc(direction: f32 = 1) -> Vec2 {
 
 manage_juice_values :: proc(delta: f32) {
 	player := &world.player
+	ball := &world.ball
 	for v in Player_Juice_Values {
 		switch v {
 		case .Dribble_Timer:
@@ -202,6 +216,18 @@ manage_juice_values :: proc(delta: f32) {
 			// 2 radian
 			if dribble_timer^ > math.PI {
 				dribble_timer^ = 0
+			}
+		}
+	}
+
+	for v in Ball_Juice_Values {
+		switch v {
+		case .Rev_Flash:
+			rev_timer := &ball.juice_values[.Rev_Flash]
+			rev_timer^ += delta
+			// 2 radian
+			if rev_timer^ > math.PI {
+				rev_timer^ = 0
 			}
 		}
 	}
