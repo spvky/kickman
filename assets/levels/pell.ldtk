@@ -915,7 +915,7 @@
 			"showName": true,
 			"tilesetId": 9,
 			"tileRenderMode": "NineSlice",
-			"tileRect": { "tilesetUid": 9, "x": 24, "y": 8, "w": 16, "h": 24 },
+			"tileRect": { "tilesetUid": 9, "x": 0, "y": 72, "w": 24, "h": 24 },
 			"uiTileRect": null,
 			"nineSliceBorders": [1,1,1,1],
 			"maxCount": 0,
@@ -1042,7 +1042,7 @@
 			],
 			"cachedPixelData": {
 				"opaqueTiles": "011111111111110011111111111111111111110011110111111111111111111111111111111111111111100011110000",
-				"averageColors": "0000f334f334f334f234f334f334f334f564f444f344f555f445f3342a856764f344f234f334f334f334f445f544f434f344f234f234f334f224f667f334f534f334f555f556f764f544f544f654f654f334f335f334f5444875f654f434f334f235f335f334f544f334f224f654f555f335f334f334f224f854f334f335f445f335f348f335f534fc97f555f988f777f887f779f877f668fc86fbbafa99f555f668f679f669f347f424656345634463f335f224f347f2357765486567666666"
+				"averageColors": "0000f334f334f334f234f334f334f334f564f444f344f555f445f3342a856764f344f234f334f334f334f445f544f434f344f234f234f334f224f667f334f534f334f555f556f764f544f544f654f654f334f335f334f5444875f654f434f334f235f335f334f544f334f224f654f555f335f334f334f224f854f334f335f445f335f348f335f534fc97f555f988f777f555f445f555f668fc86fbbafa99f555f334f224f334f347f424656345634463f334f224f334f2357765486567666666"
 			}
 		}
 	], "enums": [{ "identifier": "region_tag", "uid": 120, "values": [ { "id": "tutorial", "tileRect": null, "color": 12470831 }, { "id": "big_field", "tileRect": null, "color": 14120515 } ], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] }], "externalEnums": [], "levelFields": [] },
@@ -1126,7 +1126,7 @@
 						},
 						{
 							"__identifier": "lever",
-							"__grid": [67,50],
+							"__grid": [72,50],
 							"__pivot": [0,0],
 							"__tags": ["trigger"],
 							"__tile": { "tilesetUid": 9, "x": 48, "y": 88, "w": 8, "h": 8 },
@@ -1135,23 +1135,23 @@
 							"width": 8,
 							"height": 8,
 							"defUid": 130,
-							"px": [268,200],
+							"px": [288,200],
 							"fieldInstances": [],
-							"__worldX": 668,
+							"__worldX": 688,
 							"__worldY": 200
 						},
 						{
 							"__identifier": "movable_block",
-							"__grid": [91,28],
+							"__grid": [90,28],
 							"__pivot": [0,0],
 							"__tags": ["collidable"],
-							"__tile": { "tilesetUid": 9, "x": 24, "y": 8, "w": 16, "h": 24 },
+							"__tile": { "tilesetUid": 9, "x": 0, "y": 72, "w": 24, "h": 24 },
 							"__smartColor": "#EAD4AA",
 							"iid": "f2620780-d380-11f0-b95e-c300301e4394",
-							"width": 36,
+							"width": 40,
 							"height": 48,
 							"defUid": 133,
-							"px": [364,112],
+							"px": [360,112],
 							"fieldInstances": [
 								{ "__identifier": "trigger", "__type": "EntityRef", "__value": {
 									"entityIid": "7a3198c0-d380-11f0-b95e-b9a65e30604d",
@@ -1170,7 +1170,7 @@
 									"params": ["90,17"]
 								} ] }
 							],
-							"__worldX": 764,
+							"__worldX": 760,
 							"__worldY": 112
 						}
 					]
@@ -2209,7 +2209,7 @@
 							"__grid": [186,104],
 							"__pivot": [0,0],
 							"__tags": ["collidable"],
-							"__tile": { "tilesetUid": 9, "x": 24, "y": 8, "w": 16, "h": 24 },
+							"__tile": { "tilesetUid": 9, "x": 0, "y": 72, "w": 24, "h": 24 },
 							"__smartColor": "#EAD4AA",
 							"iid": "334ac070-d380-11f0-b95e-91884fd86131",
 							"width": 16,
@@ -3535,6 +3535,9 @@
 						{ "px": [32,152], "src": [0,0], "f": 0, "t": null, "d": [111,1904], "a": 1 },
 						{ "px": [40,152], "src": [0,0], "f": 0, "t": null, "d": [111,1905], "a": 1 },
 						{ "px": [48,152], "src": [0,0], "f": 0, "t": null, "d": [111,1906], "a": 1 },
+						{ "px": [536,392], "src": [0,0], "f": 0, "t": null, "d": [111,4967], "a": 1 },
+						{ "px": [544,392], "src": [0,0], "f": 0, "t": null, "d": [111,4968], "a": 1 },
+						{ "px": [552,392], "src": [0,0], "f": 0, "t": null, "d": [111,4969], "a": 1 },
 						{ "px": [408,408], "src": [0,0], "f": 0, "t": null, "d": [111,5151], "a": 1 },
 						{ "px": [416,408], "src": [0,0], "f": 0, "t": null, "d": [111,5152], "a": 1 },
 						{ "px": [56,424], "src": [0,0], "f": 0, "t": null, "d": [111,5307], "a": 1 },

@@ -102,6 +102,7 @@ physics_step :: proc() {
 	player_controls(delta)
 	apply_player_ball_gravity(delta)
 	apply_player_ball_velocity(delta)
+	update_entities(delta)
 	//Update timed flags before collision occurs
 	manage_player_ball_flags(delta)
 	player_ball_level_collision()
@@ -112,7 +113,7 @@ physics_step :: proc() {
 
 // Collision
 
-Level_Collider :: struct {
+Collider :: struct {
 	using aabb: AABB,
 	flags:      bit_set[Collider_Flag;u8],
 }
@@ -159,7 +160,7 @@ circle_aabb_collide :: proc(
 circle_level_collide :: proc(
 	translation: Vec2,
 	radius: f32,
-	collider: Level_Collider,
+	collider: Collider,
 ) -> (
 	collision: Collision,
 	ok: bool,
@@ -178,7 +179,7 @@ circle_level_collide :: proc(
 circle_sensor_level_collider_overlap :: proc(
 	translation: Vec2,
 	radius: f32,
-	collider: Level_Collider,
+	collider: Collider,
 	collider_mask: bit_set[Collider_Flag;u8],
 ) -> (
 	overlap: bool,
@@ -378,6 +379,11 @@ player_ball_entity_collision :: proc() {
 				max = entity.pos + {8, 8},
 			}
 		case .Movable_Block:
+			data := entity.data.(tags.Movable_Block_Data)
+			bb := AABB {
+				min = entity.pos,
+				max = entity.pos + data.extents,
+			}
 		}
 	}
 }

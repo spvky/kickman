@@ -11,7 +11,6 @@ World :: struct {
 	player:          Player,
 	ball:            Ball,
 	current_room:    tags.Room_Tag,
-	level_collision: [dynamic]Level_Collider,
 	event_listeners: map[Event_Type][dynamic]Event_Callback,
 	event_queue:     queue.Queue(Event),
 	render_mode:     Render_Mode,
@@ -28,10 +27,8 @@ init_world :: proc() {
 	world.player.badge_type = .Striker
 	world.ball.radius = 3
 	world.ball.state_flags += {.Carried}
-	world.level_collision = make([dynamic]Level_Collider, 0, 16)
 	world.current_room = tags.Room_Tag{.tutorial, 0}
 	world.render_mode = .Scaled
-	build_level()
 }
 
 game_init :: proc() {

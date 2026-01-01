@@ -274,7 +274,7 @@ main :: proc() {
 						temp_data := te.data.(Temp_Movable_Block_Data)
 						data.extents = [2]f32{f32(temp_data.extents.x), f32(temp_data.extents.y)}
 						for p, i in temp_data.points {
-							data.positions[i] = [2]f32{f32(p.x), f32(p.y)}
+							data.positions[i] = [2]f32{f32(p.x * 4), f32(p.y * 4)}
 						}
 						for tte, i in temp_entities_array {
 							if tte.id == temp_data.trigger_ref {

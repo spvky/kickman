@@ -19,7 +19,7 @@ Assets :: struct {
 	raw_atlas:        rl.Texture2D,
 	room_textures:    map[tags.Room_Tag]rl.Texture2D,
 	room_dimensions:  map[tags.Room_Tag]Vec2,
-	room_collision:   map[tags.Room_Tag][dynamic]Level_Collider,
+	room_collision:   map[tags.Room_Tag][dynamic]Collider,
 	room_transitions: map[tags.Room_Tag][dynamic]Room_Transition,
 	room_entities:    map[tags.Room_Tag][dynamic]tags.Entity,
 }
@@ -31,7 +31,7 @@ init_assets :: proc() {
 	assets.raw_atlas = rl.LoadTexture("assets/cave_tiles.png")
 	assets.room_dimensions = make(map[tags.Room_Tag]Vec2, 10)
 	assets.room_textures = make(map[tags.Room_Tag]rl.Texture2D, 10)
-	assets.room_collision = make(map[tags.Room_Tag][dynamic]Level_Collider, 10)
+	assets.room_collision = make(map[tags.Room_Tag][dynamic]Collider, 10)
 	assets.room_transitions = make(map[tags.Room_Tag][dynamic]Room_Transition, 10)
 	assets.room_entities = make(map[tags.Room_Tag][dynamic]tags.Entity, 10)
 	load_region_data(.tutorial)
@@ -78,10 +78,10 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 			return
 		}
 
-		collision := make([dynamic]Level_Collider, 0, len(collision_binary.collision))
+		collision := make([dynamic]Collider, 0, len(collision_binary.collision))
 
 		for c in collision_binary.collision {
-			collider: Level_Collider
+			collider: Collider
 			collider.min = {f32(c.min.x) * TILE_SIZE, f32(c.min.y) * TILE_SIZE}
 			collider.max = {f32(c.max.x + 1) * TILE_SIZE, f32(c.max.y + 1) * TILE_SIZE}
 			collider.flags = {.Standable}
