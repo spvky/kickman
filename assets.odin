@@ -35,9 +35,6 @@ init_assets :: proc() {
 	assets.room_transitions = make(map[tags.Room_Tag][dynamic]Room_Transition, 10)
 	assets.room_entities = make(map[tags.Room_Tag][dynamic]tags.Entity, 10)
 	load_region_data(.tutorial)
-	for k, i in assets.room_transitions {
-		fmt.printfln("%v: %v", k, i)
-	}
 }
 
 load_region_data :: proc(tag: tags.Region_Tag) {
@@ -135,6 +132,7 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 		assets.room_collision[room_tag] = collision
 		assets.room_transitions[room_tag] = transitions
 		assets.room_entities[room_tag] = entities
+		fmt.printfln("%v", assets.room_entities[room_tag])
 	}
 	end_time := time.now()
 	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))

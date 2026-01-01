@@ -33,5 +33,6 @@ Movable_Block_Data :: struct {
 }
 
 Trigger_Data :: struct {
-	on: bool,
+	on:              bool,
+	touching_player: bool,
 }

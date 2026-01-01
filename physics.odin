@@ -3,6 +3,7 @@ package main
 import "core:log"
 import "core:math"
 import l "core:math/linalg"
+import "tags"
 import rl "vendor:raylib"
 
 Rigidbody :: struct {
@@ -104,6 +105,7 @@ physics_step :: proc() {
 	//Update timed flags before collision occurs
 	manage_player_ball_flags(delta)
 	player_ball_level_collision()
+	player_ball_entity_collision()
 	player_ball_transition_collision()
 	player_ball_collision()
 }
@@ -348,6 +350,35 @@ player_ball_level_collision :: proc() {
 		ball.flag_timers[.Coyote] = 0.10
 	} else {
 		ball.state_flags -= {.Grounded}
+	}
+}
+
+player_ball_entity_collision :: proc() {
+	player := &world.player
+	ball := &world.ball
+	for &entity in assets.room_entities[world.current_room] {
+		switch entity.tag {
+		case .Lever:
+			bb := AABB {
+				min = entity.pos,
+				max = entity.pos + {8, 8},
+			}
+			data := &entity.data.(tags.Trigger_Data)
+			already_touching := data.touching_player
+			_, player_colliding := circle_aabb_collide(player.translation, player.radius, bb)
+			_, ball_colliding := circle_aabb_collide(ball.translation, ball.radius, bb)
+			touching_this_frame := player_colliding || ball_colliding
+			if !already_touching && touching_this_frame {
+				data.on = !data.on
+			}
+			data.touching_player = touching_this_frame
+		case .Button:
+			bb := AABB {
+				min = entity.pos,
+				max = entity.pos + {8, 8},
+			}
+		case .Movable_Block:
+		}
 	}
 }
 

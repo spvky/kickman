@@ -1,6 +1,6 @@
 package main
 
-import tags "tags"
+import "tags"
 import rl "vendor:raylib"
 
 draw_room_entities :: proc() {
@@ -27,6 +27,8 @@ draw_room_entities :: proc() {
 			rl.DrawTexturePro(assets.raw_atlas, source, dest, {0, 0}, 0, rl.WHITE)
 		case .Button:
 		case .Movable_Block:
+			data := entity.data.(tags.Movable_Block_Data)
+			rl.DrawRectangleV(entity.pos, data.extents, rl.BLACK)
 		}
 	}
 }
