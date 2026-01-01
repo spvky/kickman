@@ -20,6 +20,7 @@ Binary_Region :: struct {
 Binary_Room :: struct {
 	collision:   [dynamic]Binary_Collider,
 	transitions: [dynamic]Binary_Transition,
+	entities:    [dynamic]tags.Binary_Entity,
 }
 
 Binary_Transition :: struct {
@@ -30,6 +31,7 @@ Binary_Transition :: struct {
 }
 
 Temp_Entity :: struct {
+	id:   string,
 	tag:  tags.Entity_Tag,
 	pos:  [2]int,
 	data: Temp_Entity_Data,
@@ -67,7 +69,6 @@ main :: proc() {
 			write_region_to_file(region)
 			fmt.printfln("Levels Count: %v", len(world.levels))
 			transitions_map := make(map[string]Temp_Binary_Transition, 16)
-			entities_map := make(map[string]Temp_Entity, 32)
 
 
 			for level, i in world.levels {
@@ -76,6 +77,7 @@ main :: proc() {
 				collision_csv: []int
 				entities: []ldtk.Entity_Instance
 				level_name := fmt.tprintf("%v_%02d", region.name, i)
+				temp_entities_array := make([dynamic]Temp_Entity, 0, 32)
 
 				for layer in level.layer_instances {
 					if layer.identifier == "collision_layer" {
@@ -217,12 +219,14 @@ main :: proc() {
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Lever
 						temp_entity.pos = entity.px
-						entities_map[entity.iid] = temp_entity
+						temp_entity.id = entity.iid
+						append(&temp_entities_array, temp_entity)
 					case "button":
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Button
 						temp_entity.pos = entity.px
-						entities_map[entity.iid] = temp_entity
+						temp_entity.id = entity.iid
+						append(&temp_entities_array, temp_entity)
 					case "movable_block":
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Movable_Block
@@ -254,14 +258,34 @@ main :: proc() {
 							}
 						}
 						temp_entity.data = block_data
-						entities_map[entity.iid] = temp_entity
-
-					// append(&region_room_transitions, transition)
+						temp_entity.id = entity.iid
+						append(&temp_entities_array, temp_entity)
 					}
-					//////////////////////
-
 				}
 
+				entities_array := make([dynamic]tags.Binary_Entity, 0, len(temp_entities_array))
+
+				for te in temp_entities_array {
+					new_entity: tags.Binary_Entity
+					new_entity.pos = [2]f32{f32(te.pos.x), f32(te.pos.y)}
+					new_entity.tag = te.tag
+					if te.tag == .Movable_Block {
+						data: tags.Binary_Movable_Block_Data
+						temp_data := te.data.(Temp_Movable_Block_Data)
+						data.extents = [2]f32{f32(temp_data.extents.x), f32(temp_data.extents.y)}
+						for p, i in temp_data.points {
+							data.positions[i] = [2]f32{f32(p.x), f32(p.y)}
+						}
+						for tte, i in temp_entities_array {
+							if tte.id == temp_data.trigger_ref {
+								data.trigger_index = i
+							}
+						}
+						new_entity.data = data
+					}
+					append(&entities_array, new_entity)
+				}
+				room.entities = entities_array
 				append(&region.rooms, room)
 			}
 
@@ -372,6 +396,29 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 				fmt.eprintln("Error writing to file:", write_err)
 			}
 			fmt.printfln("Successfully wrote %v bytes to %v", n, transition_path)
+		}
+		// Write Entity File
+		{
+			entity_path := fmt.tprintf("%v%v.ent", entities_dir, level_name)
+			entity_file, ent_err := os.open(entity_path, file_flags, file_permissions)
+			if ent_err != nil {
+				fmt.eprintln("Error opening file:", ent_err)
+			}
+			defer os.close(entity_file)
+
+			entity_len := len(room.entities) * size_of(tags.Binary_Entity)
+			entity_len_bytes := transmute([8]u8)entity_len
+			n, write_err := os.write(entity_file, entity_len_bytes[:])
+			if write_err != nil {
+				fmt.eprintln("Error writing to file:", write_err)
+			}
+			//Dynamic data
+			fmt.printfln("Entities to Write: %v", room.entities)
+			n, write_err = os.write_ptr(entity_file, raw_data(room.entities), entity_len)
+			if write_err != nil {
+				fmt.eprintln("Error writing to file:", write_err)
+			}
+			fmt.printfln("Successfully wrote %v bytes to %v", n, entity_path)
 		}
 	}
 }
