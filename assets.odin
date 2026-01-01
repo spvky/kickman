@@ -2,6 +2,7 @@ package main
 
 import lr "./level_read"
 import lw "./level_write"
+import tags "./tags"
 import "core:fmt"
 import "core:os"
 import "core:strings"
@@ -15,27 +16,27 @@ SCREEN_HEIGHT :: 224
 
 Assets :: struct {
 	gameplay_texture: rl.RenderTexture,
-	room_textures:    map[Room_Tag]rl.Texture2D,
-	room_dimensions:  map[Room_Tag]Vec2,
-	room_collision:   map[Room_Tag][dynamic]Level_Collider,
-	room_transitions: map[Room_Tag][dynamic]Room_Transition,
+	room_textures:    map[tags.Room_Tag]rl.Texture2D,
+	room_dimensions:  map[tags.Room_Tag]Vec2,
+	room_collision:   map[tags.Room_Tag][dynamic]Level_Collider,
+	room_transitions: map[tags.Room_Tag][dynamic]Room_Transition,
 }
 
 assets: Assets
 
 init_assets :: proc() {
 	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
-	assets.room_dimensions = make(map[Room_Tag]Vec2, 10)
-	assets.room_textures = make(map[Room_Tag]rl.Texture2D, 10)
-	assets.room_collision = make(map[Room_Tag][dynamic]Level_Collider, 10)
-	assets.room_transitions = make(map[Room_Tag][dynamic]Room_Transition, 4)
+	assets.room_dimensions = make(map[tags.Room_Tag]Vec2, 10)
+	assets.room_textures = make(map[tags.Room_Tag]rl.Texture2D, 10)
+	assets.room_collision = make(map[tags.Room_Tag][dynamic]Level_Collider, 10)
+	assets.room_transitions = make(map[tags.Room_Tag][dynamic]Room_Transition, 4)
 	load_region_data(.tutorial)
 	for k, i in assets.room_transitions {
 		fmt.printfln("%v: %v", k, i)
 	}
 }
 
-load_region_data :: proc(tag: Region_Tag) {
+load_region_data :: proc(tag: tags.Region_Tag) {
 	start_time := time.now()
 	filename := fmt.tprintf("assets/levels/regions/%v.rgn", tag)
 	file, read_err := os.open(filename)
@@ -51,7 +52,7 @@ load_region_data :: proc(tag: Region_Tag) {
 		fmt.printfln("Failed to read %v: %v", filename, err)
 	}
 	for i in 0 ..< room_count {
-		room_tag := Room_Tag {
+		room_tag := tags.Room_Tag {
 			region_tag = tag,
 			room_index = u8(i),
 		}
@@ -89,7 +90,7 @@ load_region_data :: proc(tag: Region_Tag) {
 
 		// Room Transitions
 		transition_path := fmt.tprintf(
-			"assets/levels/entities/%v_%02d_invis.ent",
+			"assets/levels/entities/%v_%02d.trns",
 			tag,
 			room_tag.room_index,
 		)
@@ -122,5 +123,3 @@ load_region_data :: proc(tag: Region_Tag) {
 	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
 	fmt.printfln("Loading region %v took %v ms", tag, total_duration)
 }
-
-// TODO: Load collision

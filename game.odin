@@ -1,5 +1,6 @@
 package main
 
+import tags "./tags"
 import "core:container/queue"
 import rl "vendor:raylib"
 
@@ -9,7 +10,7 @@ World :: struct {
 	camera:          rl.Camera2D,
 	player:          Player,
 	ball:            Ball,
-	current_room:    Room_Tag,
+	current_room:    tags.Room_Tag,
 	level_collision: [dynamic]Level_Collider,
 	event_listeners: map[Event_Type][dynamic]Event_Callback,
 	event_queue:     queue.Queue(Event),
@@ -28,7 +29,7 @@ init_world :: proc() {
 	world.ball.radius = 3
 	world.ball.state_flags += {.Carried}
 	world.level_collision = make([dynamic]Level_Collider, 0, 16)
-	world.current_room = Room_Tag{.tutorial, 0}
+	world.current_room = tags.Room_Tag{.tutorial, 0}
 	world.render_mode = .Scaled
 	build_level()
 }

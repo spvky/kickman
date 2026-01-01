@@ -1,5 +1,7 @@
 package main
 
+import tags "./tags/"
+
 
 build_level :: proc() {
 	append(
@@ -20,21 +22,12 @@ build_level :: proc() {
 	)
 }
 
-Room_Tag :: struct {
-	region_tag: Region_Tag,
-	room_index: u8,
-}
-
-Region_Tag :: enum {
-	tutorial,
-}
-
 Region :: struct {
-	tag: Region_Tag,
+	tag: tags.Region_Tag,
 }
 
 Room_Transition :: struct {
-	tag:                 Room_Tag,
+	tag:                 tags.Room_Tag,
 	transition_position: [2]f32,
 	using aabb:          AABB,
 }
