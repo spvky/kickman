@@ -1,6 +1,7 @@
 package level_read
 
 import lvl_write "../level_write"
+import tags "../tags"
 import "core:fmt"
 import "core:os"
 import "core:slice"
@@ -106,6 +107,43 @@ read_room_transitions_from_file :: proc(
 	return
 }
 
+read_room_entities_from_file :: proc(
+	filename: string,
+) -> (
+	room: lvl_write.Binary_Room,
+	success: bool,
+) {
+	file, read_err := os.open(filename)
+	if read_err != nil {
+		fmt.eprintfln("Failed to read %v: %v", filename, read_err)
+		return
+	}
+	defer os.close(file)
+
+	bytes_read: int
+	entities_len_in_bytes: int
+
+	// Read ints from the start of the file
+	bytes_read = read_int_from_file(file, &entities_len_in_bytes)
+	// Read dynamic data from the file
+	entities_raw := make(
+		[]tags.Binary_Entity,
+		entities_len_in_bytes / size_of(tags.Binary_Entity),
+		allocator = context.temp_allocator,
+	)
+	entities_bytes := slice.to_bytes(entities_raw)
+	bytes_read, read_err = os.read_full(file, entities_bytes)
+	if read_err != nil {
+		fmt.printfln("Failed to read %v: %v", filename, read_err)
+		return
+	}
+	entities := slice.clone_to_dynamic(entities_raw, allocator = context.temp_allocator)
+
+	room.entities = entities
+
+	success = true
+	return
+}
 
 // Read int from passed file into the passed pointer
 read_int_from_file :: proc(file: os.Handle, destination: ^int) -> (bytes_read: int) {
