@@ -23,6 +23,7 @@ render_scene_to_texture :: proc() {
 	rl.BeginMode2D(world.camera)
 	rl.ClearBackground({33, 38, 63, 255})
 	draw_current_room()
+	draw_room_entities()
 	draw_player_and_ball()
 	if ODIN_DEBUG {
 		draw_level_collision()

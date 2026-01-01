@@ -15,18 +15,23 @@ Entity_Tag :: enum {
 	Movable_Block,
 }
 
-Binary_Entity :: struct {
+Entity :: struct {
 	tag:  Entity_Tag,
 	pos:  [2]f32,
-	data: Binary_Entity_Data,
+	data: Entity_Data,
 }
 
-Binary_Entity_Data :: union {
-	Binary_Movable_Block_Data,
+Entity_Data :: union {
+	Movable_Block_Data,
+	Trigger_Data,
 }
 
-Binary_Movable_Block_Data :: struct {
+Movable_Block_Data :: struct {
 	trigger_index: int,
 	positions:     [2][2]f32,
 	extents:       [2]f32,
+}
+
+Trigger_Data :: struct {
+	on: bool,
 }

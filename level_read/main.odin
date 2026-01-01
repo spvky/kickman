@@ -127,8 +127,8 @@ read_room_entities_from_file :: proc(
 	bytes_read = read_int_from_file(file, &entities_len_in_bytes)
 	// Read dynamic data from the file
 	entities_raw := make(
-		[]tags.Binary_Entity,
-		entities_len_in_bytes / size_of(tags.Binary_Entity),
+		[]tags.Entity,
+		entities_len_in_bytes / size_of(tags.Entity),
 		allocator = context.temp_allocator,
 	)
 	entities_bytes := slice.to_bytes(entities_raw)

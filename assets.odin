@@ -2,11 +2,11 @@ package main
 
 import lr "./level_read"
 import lw "./level_write"
-import tags "./tags"
 import "core:fmt"
 import "core:os"
 import "core:strings"
 import "core:time"
+import tags "tags"
 import rl "vendor:raylib"
 
 WINDOW_WIDTH: i32 = 1920
@@ -16,20 +16,24 @@ SCREEN_HEIGHT :: 224
 
 Assets :: struct {
 	gameplay_texture: rl.RenderTexture,
+	raw_atlas:        rl.Texture2D,
 	room_textures:    map[tags.Room_Tag]rl.Texture2D,
 	room_dimensions:  map[tags.Room_Tag]Vec2,
 	room_collision:   map[tags.Room_Tag][dynamic]Level_Collider,
 	room_transitions: map[tags.Room_Tag][dynamic]Room_Transition,
+	room_entities:    map[tags.Room_Tag][dynamic]tags.Entity,
 }
 
 assets: Assets
 
 init_assets :: proc() {
 	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
+	assets.raw_atlas = rl.LoadTexture("assets/cave_tiles.png")
 	assets.room_dimensions = make(map[tags.Room_Tag]Vec2, 10)
 	assets.room_textures = make(map[tags.Room_Tag]rl.Texture2D, 10)
 	assets.room_collision = make(map[tags.Room_Tag][dynamic]Level_Collider, 10)
-	assets.room_transitions = make(map[tags.Room_Tag][dynamic]Room_Transition, 4)
+	assets.room_transitions = make(map[tags.Room_Tag][dynamic]Room_Transition, 10)
+	assets.room_entities = make(map[tags.Room_Tag][dynamic]tags.Entity, 10)
 	load_region_data(.tutorial)
 	for k, i in assets.room_transitions {
 		fmt.printfln("%v: %v", k, i)
@@ -99,7 +103,6 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 			fmt.printfln("Failed to read transitions for %v", transition_path)
 			return
 		}
-
 		transitions := make([dynamic]Room_Transition, 0, len(transition_binary.transitions))
 
 		for t in transition_binary.transitions {
@@ -113,11 +116,25 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 			append(&transitions, transition)
 		}
 
+		// Entities
+		entity_path := fmt.tprintf("assets/levels/entities/%v_%02d.ent", tag, room_tag.room_index)
+		entity_binary, entity_ok := lr.read_room_entities_from_file(entity_path)
+		if !transition_ok {
+			fmt.printfln("Failed to read entities for %v", entity_path)
+			return
+		}
+		entities := make([dynamic]tags.Entity, 0, len(entity_binary.entities))
+
+		for e in entity_binary.entities {
+			// Still keeping the loop here in case there is data that needs to be instantiated at runtime
+			append(&entities, e)
+		}
 
 		assets.room_dimensions[room_tag] = Vec2{f32(texture.width), f32(texture.height)}
 		assets.room_textures[room_tag] = texture
 		assets.room_collision[room_tag] = collision
 		assets.room_transitions[room_tag] = transitions
+		assets.room_entities[room_tag] = entities
 	}
 	end_time := time.now()
 	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))

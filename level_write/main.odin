@@ -20,7 +20,7 @@ Binary_Region :: struct {
 Binary_Room :: struct {
 	collision:   [dynamic]Binary_Collider,
 	transitions: [dynamic]Binary_Transition,
-	entities:    [dynamic]tags.Binary_Entity,
+	entities:    [dynamic]tags.Entity,
 }
 
 Binary_Transition :: struct {
@@ -231,7 +231,7 @@ main :: proc() {
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Movable_Block
 						temp_entity.pos = entity.px
-						block_data := Temp_Movable_Block_Data {
+						entity_data := Temp_Movable_Block_Data {
 							extents = {entity.width, entity.height},
 						}
 						for fi in entity.field_instances {
@@ -240,37 +240,37 @@ main :: proc() {
 								case "trigger":
 									value := raw_value.(json.Object)
 									entity_id := value["entityIid"].(string)
-									block_data.trigger_ref = entity_id
+									entity_data.trigger_ref = entity_id
 								case "positions":
 									value := raw_value.(json.Array)
 									p1 := value[0].(json.Object)
 									p2 := value[1].(json.Object)
 
-									block_data.points[0] = [2]int {
+									entity_data.points[0] = [2]int {
 										int(p1["cx"].(i64)),
 										int(p1["cy"].(i64)),
 									}
-									block_data.points[1] = [2]int {
+									entity_data.points[1] = [2]int {
 										int(p2["cx"].(i64)),
 										int(p2["cy"].(i64)),
 									}
 								}
 							}
 						}
-						temp_entity.data = block_data
+						temp_entity.data = entity_data
 						temp_entity.id = entity.iid
 						append(&temp_entities_array, temp_entity)
 					}
 				}
 
-				entities_array := make([dynamic]tags.Binary_Entity, 0, len(temp_entities_array))
+				entities_array := make([dynamic]tags.Entity, 0, len(temp_entities_array))
 
 				for te in temp_entities_array {
-					new_entity: tags.Binary_Entity
+					new_entity: tags.Entity
 					new_entity.pos = [2]f32{f32(te.pos.x), f32(te.pos.y)}
 					new_entity.tag = te.tag
 					if te.tag == .Movable_Block {
-						data: tags.Binary_Movable_Block_Data
+						data: tags.Movable_Block_Data
 						temp_data := te.data.(Temp_Movable_Block_Data)
 						data.extents = [2]f32{f32(temp_data.extents.x), f32(temp_data.extents.y)}
 						for p, i in temp_data.points {
@@ -282,6 +282,10 @@ main :: proc() {
 							}
 						}
 						new_entity.data = data
+					} else {
+						new_entity.data = tags.Trigger_Data {
+							on = false,
+						}
 					}
 					append(&entities_array, new_entity)
 				}
@@ -406,7 +410,7 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 			}
 			defer os.close(entity_file)
 
-			entity_len := len(room.entities) * size_of(tags.Binary_Entity)
+			entity_len := len(room.entities) * size_of(tags.Entity)
 			entity_len_bytes := transmute([8]u8)entity_len
 			n, write_err := os.write(entity_file, entity_len_bytes[:])
 			if write_err != nil {
