@@ -30,7 +30,28 @@ draw_room_entities :: proc() {
 		case .Button:
 		case .Movable_Block:
 			data := entity.data.(tags.Movable_Block_Data)
-			rl.DrawRectangleV(entity.pos, data.extents, rl.BLACK)
+			// rl.DrawRectangleV(entity.pos, data.extents, rl.BLACK)
+			source := rl.Rectangle {
+				x      = 0,
+				y      = 72,
+				width  = 24,
+				height = 24,
+			}
+			dest := rl.Rectangle {
+				x      = entity.pos.x,
+				y      = entity.pos.y,
+				width  = data.extents.x,
+				height = data.extents.y,
+			}
+			patch_info := rl.NPatchInfo {
+				source = source,
+				top    = 8,
+				left   = 8,
+				right  = 8,
+				bottom = 8,
+				layout = .NINE_PATCH,
+			}
+			rl.DrawTextureNPatch(assets.raw_atlas, patch_info, dest, {0, 0}, 0, rl.WHITE)
 		}
 	}
 }

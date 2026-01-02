@@ -2189,22 +2189,6 @@
 							"__worldY": 112
 						},
 						{
-							"__identifier": "button",
-							"__grid": [140,106],
-							"__pivot": [0,0],
-							"__tags": ["trigger"],
-							"__tile": { "tilesetUid": 9, "x": 32, "y": 88, "w": 8, "h": 8 },
-							"__smartColor": "#D77643",
-							"iid": "2abaac90-d380-11f0-b95e-7bdb8bf070f1",
-							"width": 8,
-							"height": 8,
-							"defUid": 131,
-							"px": [560,424],
-							"fieldInstances": [],
-							"__worldX": 1360,
-							"__worldY": 424
-						},
-						{
 							"__identifier": "movable_block",
 							"__grid": [186,104],
 							"__pivot": [0,0],
@@ -2218,13 +2202,13 @@
 							"px": [744,416],
 							"fieldInstances": [
 								{ "__identifier": "trigger", "__type": "EntityRef", "__value": {
-									"entityIid": "2abaac90-d380-11f0-b95e-7bdb8bf070f1",
+									"entityIid": "8eafadf0-d380-11f0-b95e-5d28090b9103",
 									"layerIid": "b6e51380-d380-11f0-af8e-6d55cffa6e0c",
 									"levelIid": "0a8aa7f0-d380-11f0-a673-1772c63d9733",
 									"worldIid": "c914f9b0-c640-11ed-ad34-3371cda0821c"
 								}, "__tile": null, "defUid": 134, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["2abaac90-d380-11f0-b95e-7bdb8bf070f1"]
+									"params": ["8eafadf0-d380-11f0-b95e-5d28090b9103"]
 								}] },
 								{ "__identifier": "positions", "__type": "Array<Point>", "__value": [ { "cx": 186, "cy": 104 }, { "cx": 186, "cy": 75 } ], "__tile": null, "defUid": 135, "realEditorValues": [ {
 									"id": "V_String",
@@ -2236,6 +2220,22 @@
 							],
 							"__worldX": 1544,
 							"__worldY": 416
+						},
+						{
+							"__identifier": "lever",
+							"__grid": [140,106],
+							"__pivot": [0,0],
+							"__tags": ["trigger"],
+							"__tile": { "tilesetUid": 9, "x": 48, "y": 88, "w": 8, "h": 8 },
+							"__smartColor": "#BE4A2F",
+							"iid": "8eafadf0-d380-11f0-b95e-5d28090b9103",
+							"width": 8,
+							"height": 8,
+							"defUid": 130,
+							"px": [560,424],
+							"fieldInstances": [],
+							"__worldX": 1360,
+							"__worldY": 424
 						}
 					]
 				},
