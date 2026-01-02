@@ -36,6 +36,8 @@ Movable_Block_Data :: struct {
 	trigger_index: int,
 	positions:     [2][2]f32,
 	extents:       [2]f32,
+	velocity:      [2]f32,
+	speed:         f32,
 }
 
 Trigger_Data :: struct {

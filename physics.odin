@@ -40,6 +40,7 @@ player_movement :: proc(delta: f32) {
 		player.facing = player.movement_delta
 		player.velocity.x = max_speed * player.movement_delta
 	} else if player_lacks(.No_Move) {
+
 		player.velocity.x = 0
 	}
 }
@@ -89,7 +90,7 @@ apply_player_ball_velocity :: proc(delta: f32) {
 		player.translation = ball.translation - {0, player.radius * 2}
 		player.facing = math.sign(ball.spin)
 	} else {
-		player.translation += player.velocity * delta
+		player.translation += (player.velocity + player.platform_velocity) * delta
 	}
 	if ball_lacks(.Carried, .Recalling) {
 		ball.translation += ball.velocity * delta
@@ -117,6 +118,7 @@ physics_step :: proc() {
 Collider :: struct {
 	using aabb: AABB,
 	flags:      bit_set[tags.Collider_Flag;u8],
+	velocity:   Vec2,
 }
 
 AABB :: struct {
@@ -166,12 +168,15 @@ circle_sensor_level_collider_overlap :: proc(
 	return
 }
 
-player_resolve_level_collision :: proc(player: ^Player, collision: Collision, spin: f32 = 1) {
+player_resolve_level_collision :: proc(player: ^Player, collision: Collision) {
 	player.translation += collision.mtv
 	x_dot := math.abs(l.dot(collision.normal, Vec2{1, 0}))
 	y_dot := math.abs(l.dot(collision.normal, Vec2{0, 1}))
 	if x_dot > 0.7 {
 		player.velocity.x = 0
+		if player_has(.Grounded) {
+			player.state_flags -= {.Walking}
+		}
 	}
 	if y_dot > 0.7 {
 		player.velocity.y = 0
@@ -260,6 +265,7 @@ player_ball_level_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
 	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
+	platform_velocity: Vec2
 	feet_on_ground, ball_on_ground: bool
 	falling := player.velocity.y > 0
 
@@ -268,9 +274,10 @@ player_ball_level_collision :: proc() {
 		if entity.tag == .Movable_Block {
 			data := entity.data.(tags.Movable_Block_Data)
 			collider := Collider {
-				min   = entity.pos,
-				max   = entity.pos + data.extents,
-				flags = {.Standable},
+				min      = entity.pos,
+				max      = entity.pos + data.extents,
+				flags    = {.Standable},
+				velocity = data.velocity,
 			}
 			append(&entity_colliders, collider)
 		}
@@ -284,16 +291,27 @@ player_ball_level_collision :: proc() {
 	for collider in collision_slice {
 		// Player
 
-
 		player_should_collide := true
 		ball_should_collide := true
 
 		if .Oneway in collider.flags {
-			if player.velocity.y < 0 {
-				player_should_collide = false
+
+			if player.velocity.y <= 0 {
+				if collider.min.y < player.translation.y + (player.radius * 1.5) - 2 {
+					player_should_collide = false
+				}
 			}
-			if ball.velocity.y < 0 {
-				ball_should_collide = false
+
+			log.debugf(
+				"Player Should Collide Calc: \n%v min_y: %1.f - p_feet: %1.f\np_velo : %1.f",
+				player_should_collide,
+				collider.min.y,
+				player.translation.y + (player.radius * 1.5),
+				player.velocity.y,
+			)
+			if ball.velocity.y <= 0 {if collider.min.y < ball.translation.y + ball.radius {
+					ball_should_collide = false
+				}
 			}
 		}
 
@@ -315,15 +333,15 @@ player_ball_level_collision :: proc() {
 			)
 			if feet_collided {
 				player_resolve_level_collision(player, feet_collision)
+
 			}
-			if circle_sensor_level_collider_overlap(
-				player_feet_sensor,
-				0.06,
-				collider,
-				{.Standable},
-			) {
-				feet_on_ground = true
-			}
+		}
+		if circle_sensor_level_collider_overlap(player_feet_sensor, 1, collider, {.Standable}) {
+			feet_on_ground = true
+			platform_velocity.x =
+				abs(platform_velocity.x) > abs(collider.velocity.x) ? platform_velocity.x : collider.velocity.x
+			platform_velocity.y =
+				abs(platform_velocity.y) > abs(collider.velocity.y) ? platform_velocity.y : collider.velocity.y
 		}
 
 		// Ball
@@ -348,6 +366,7 @@ player_ball_level_collision :: proc() {
 	if feet_on_ground {
 		player.state_flags += {.Grounded, .Double_Jump}
 		player.flag_timers[.Coyote] = 0.10
+		player.platform_velocity = platform_velocity
 	} else {
 		player.state_flags -= {.Grounded}
 	}
@@ -372,8 +391,12 @@ player_ball_entity_collision :: proc() {
 			}
 			data := &entity.data.(tags.Trigger_Data)
 			already_touching := data.touching_player
-			_, player_colliding := circle_aabb_collide(player.translation, player.radius, bb)
-			_, ball_colliding := circle_aabb_collide(ball.translation, ball.radius, bb)
+			player_colliding: bool
+			ball_colliding: bool
+			_, player_colliding = circle_aabb_collide(player.translation, player.radius, bb)
+			if ball_lacks(.Recalling) {
+				_, ball_colliding = circle_aabb_collide(ball.translation, ball.radius, bb)
+			}
 			touching_this_frame := player_colliding || ball_colliding
 			if !already_touching && touching_this_frame {
 				data.on = !data.on

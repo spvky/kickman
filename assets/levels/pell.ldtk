@@ -11,7 +11,7 @@
 	"iid": "a22d35f0-7820-11ed-b6fd-213e885f30da",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 136,
+	"nextUid": 137,
 	"identifierStyle": "Lowercase",
 	"toc": [],
 	"worldLayout": null,
@@ -997,6 +997,43 @@
 					"allowedRefsEntityUid": null,
 					"allowedRefTags": [],
 					"tilesetUid": null
+				},
+				{
+					"identifier": "speed",
+					"doc": null,
+					"__type": "Float",
+					"uid": 136,
+					"type": "F_Float",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": { "id": "V_Float", "params": [5.01] },
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
 				}
 			]
 		}
@@ -1168,7 +1205,8 @@
 								}, {
 									"id": "V_String",
 									"params": ["90,17"]
-								} ] }
+								} ] },
+								{ "__identifier": "speed", "__type": "Float", "__value": 3.01, "__tile": null, "defUid": 136, "realEditorValues": [{ "id": "V_Float", "params": [3.01] }] }
 							],
 							"__worldX": 760,
 							"__worldY": 112
@@ -1228,7 +1266,7 @@
 						0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
 						0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,
-						1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,
+						1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,2,2,2,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,
 						1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,
 						1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -2101,8 +2139,11 @@
 						{ "px": [232,200], "src": [32,40], "f": 0, "t": 44, "d": [95,1279], "a": 1 },
 						{ "px": [256,200], "src": [32,40], "f": 0, "t": 44, "d": [95,1282], "a": 1 },
 						{ "px": [64,160], "src": [48,8], "f": 0, "t": 14, "d": [129,1008], "a": 1 },
+						{ "px": [56,192], "src": [48,8], "f": 0, "t": 14, "d": [129,1207], "a": 1 },
+						{ "px": [64,192], "src": [48,8], "f": 0, "t": 14, "d": [129,1208], "a": 1 },
 						{ "px": [56,160], "src": [56,8], "f": 1, "t": 15, "d": [128,1007], "a": 1 },
-						{ "px": [72,160], "src": [56,8], "f": 0, "t": 15, "d": [128,1009], "a": 1 }
+						{ "px": [72,160], "src": [56,8], "f": 0, "t": 15, "d": [128,1009], "a": 1 },
+						{ "px": [72,192], "src": [56,8], "f": 0, "t": 15, "d": [128,1209], "a": 1 }
 					],
 					"seed": 320412,
 					"overrideTilesetUid": null,
@@ -2210,13 +2251,14 @@
 									"id": "V_String",
 									"params": ["8eafadf0-d380-11f0-b95e-5d28090b9103"]
 								}] },
-								{ "__identifier": "positions", "__type": "Array<Point>", "__value": [ { "cx": 186, "cy": 104 }, { "cx": 186, "cy": 75 } ], "__tile": null, "defUid": 135, "realEditorValues": [ {
+								{ "__identifier": "positions", "__type": "Array<Point>", "__value": [ { "cx": 186, "cy": 104 }, { "cx": 156, "cy": 104 } ], "__tile": null, "defUid": 135, "realEditorValues": [ {
 									"id": "V_String",
 									"params": ["186,104"]
 								}, {
 									"id": "V_String",
-									"params": ["186,75"]
-								} ] }
+									"params": ["156,104"]
+								} ] },
+								{ "__identifier": "speed", "__type": "Float", "__value": 5.01, "__tile": null, "defUid": 136, "realEditorValues": [{ "id": "V_Float", "params": [5.01] }] }
 							],
 							"__worldX": 1544,
 							"__worldY": 416

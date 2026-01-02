@@ -77,6 +77,8 @@ draw_player_and_ball :: proc() {
 	ball := world.ball
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
+	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
+	rl.DrawCircleV(player_feet_sensor, 1, rl.RED)
 	ball_color := rl.WHITE
 
 	if ball_has(.Revved) {

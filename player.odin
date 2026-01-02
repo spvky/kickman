@@ -51,6 +51,7 @@ Player :: struct {
 	carry_pos:         f32,
 	state_flags:       bit_set[Player_State;u8],
 	timed_state_flags: bit_set[Player_Timed_State;u8],
+	platform_velocity: Vec2,
 	flag_timers:       [Player_Timed_State]f32,
 	juice_values:      [Player_Juice_Values]f32,
 	badge_type:        Player_Badge,
@@ -250,6 +251,7 @@ player_jump :: proc() {
 		} else {
 			if player_has(.Grounded) || player_has(.Coyote) {
 				player.velocity.y = jump_speed
+				player.velocity += player.platform_velocity
 				player.timed_state_flags -= {.Coyote}
 				consume_action(.Jump)
 				return

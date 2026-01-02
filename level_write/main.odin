@@ -46,6 +46,7 @@ Temp_Movable_Block_Data :: struct {
 	trigger_ref: string,
 	points:      [2][2]int,
 	extents:     [2]int,
+	speed:       f32,
 }
 
 Temp_Binary_Transition :: struct {
@@ -299,6 +300,9 @@ main :: proc() {
 										int(p2["cx"].(i64)),
 										int(p2["cy"].(i64)),
 									}
+								case "speed":
+									speed := f32(raw_value.(f64))
+									entity_data.speed = speed
 								}
 							}
 						}
@@ -326,6 +330,7 @@ main :: proc() {
 								data.trigger_index = i
 							}
 						}
+						data.speed = temp_data.speed
 						new_entity.data = data
 					} else {
 						new_entity.data = tags.Trigger_Data {
