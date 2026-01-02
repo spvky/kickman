@@ -296,19 +296,11 @@ player_ball_level_collision :: proc() {
 
 		if .Oneway in collider.flags {
 
-			if player.velocity.y <= 0 {
-				if collider.min.y < player.translation.y + (player.radius * 1.5) - 2 {
-					player_should_collide = false
-				}
+			if player.velocity.y <= 0 ||
+			   collider.min.y < player.translation.y + (player.radius * 1.4) {
+				player_should_collide = false
 			}
 
-			log.debugf(
-				"Player Should Collide Calc: \n%v min_y: %1.f - p_feet: %1.f\np_velo : %1.f",
-				player_should_collide,
-				collider.min.y,
-				player.translation.y + (player.radius * 1.5),
-				player.velocity.y,
-			)
 			if ball.velocity.y <= 0 {if collider.min.y < ball.translation.y + ball.radius {
 					ball_should_collide = false
 				}
@@ -321,7 +313,7 @@ player_ball_level_collision :: proc() {
 				player.radius,
 				collider.aabb,
 			)
-			if head_collided {
+			if head_collided && .Oneway not_in collider.flags {
 				//TODO: Head collision while riding
 				player_resolve_level_collision(player, head_collision)
 			}
@@ -336,7 +328,12 @@ player_ball_level_collision :: proc() {
 
 			}
 		}
-		if circle_sensor_level_collider_overlap(player_feet_sensor, 1, collider, {.Standable}) {
+		if circle_sensor_level_collider_overlap(
+			player_feet_sensor,
+			1,
+			collider,
+			{.Standable, .Oneway},
+		) {
 			feet_on_ground = true
 			platform_velocity.x =
 				abs(platform_velocity.x) > abs(collider.velocity.x) ? platform_velocity.x : collider.velocity.x
