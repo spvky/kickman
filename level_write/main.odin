@@ -77,16 +77,31 @@ main :: proc() {
 				layer_width, layer_height: int
 				collision_csv: []int
 				entities: []ldtk.Entity_Instance
+				transition_entities: []ldtk.Entity_Instance
 				level_name := fmt.tprintf("%v_%02d", region.name, i)
 				temp_entities_array := make([dynamic]Temp_Entity, 0, 32)
 
 				for layer in level.layer_instances {
+					fmt.printfln(
+						"Level %v, Layer_Id: %v, Layer_Type: %v",
+						level.identifier,
+						layer.identifier,
+						layer.type,
+					)
 					if layer.identifier == "collision_layer" {
 						layer_width = layer.c_width
 						layer_height = layer.c_height
 						collision_csv = layer.int_grid_csv
 					}
-					if layer.type == .Entities {
+					if layer.identifier == "transitions" {
+						transition_entities = layer.entity_instances
+					}
+					if layer.identifier == "entities" {
+						fmt.printfln(
+							"Level %v found entities %v",
+							level.identifier,
+							len(layer.entity_instances),
+						)
 						entities = layer.entity_instances
 					}
 				}
@@ -96,7 +111,7 @@ main :: proc() {
 					allocator = context.temp_allocator,
 				)
 				colliders := make([dynamic]Binary_Collider, 0, 8)
-				room.transitions = make([dynamic]Binary_Transition, 0, 4)
+				room.transitions = make([dynamic]Binary_Transition, 0, len(transition_entities))
 				collider_id: int
 
 				// Collision_Layer
@@ -132,13 +147,6 @@ main :: proc() {
 										   t_y > starting_y {
 											for i_x in starting_x ..= ending_x {
 												// When we move to another row, mark the previous row
-												if collision_type_value == 2 {
-													fmt.printfln(
-														"Marking: [%v,%v] while building a one way",
-														i_x,
-														t_y,
-													)
-												}
 												mark_checked(&checked, layer_width, i_x, t_y)
 											}
 											break
@@ -179,13 +187,6 @@ main :: proc() {
 											   ) ==
 											   collision_type_value {
 
-												if collision_type_value == 2 {
-													fmt.printfln(
-														"Marking: [%v,%v] while building a one way",
-														t_x,
-														t_y,
-													)
-												}
 												mark_checked(&checked, layer_width, t_x, t_y)
 											}
 										}
@@ -226,22 +227,19 @@ main :: proc() {
 				fmt.printfln("%v: Colliders found %v", level_name, len(colliders))
 				room.collision = colliders
 
-				for entity in entities {
+				for entity in transition_entities {
 					switch entity.identifier {
-					// Binary_Transition
 					case "room_transition":
 						transition: Temp_Binary_Transition
 						transition.level_index = i
 						transition.min = entity.px
 						transition.max = {entity.px.x + entity.width, entity.px.y + entity.height}
-						fmt.printfln("\n%v", entity.iid)
 						for fi in entity.field_instances {
 							if raw_value, exists := fi.value.?; exists {
 								switch fi.identifier {
 								case "room_index":
 									room_index := u8(raw_value.(i64))
 									transition.tag.room_index = room_index
-								// fmt.printfln("(%v)%v: %v", fi.type, fi.identifier, fi.value)
 								case "region_tag":
 									region_string := raw_value.(string)
 									region_tag: tags.Region_Tag
@@ -250,7 +248,6 @@ main :: proc() {
 										region_tag = .tutorial
 									}
 									transition.tag.region_tag = region_tag
-								// fmt.printfln("(%v)%v: %v", fi.type, fi.identifier, fi.value)
 								case "other_exit":
 									value := raw_value.(json.Object)
 									entity_id := value["entityIid"].(string)
@@ -259,8 +256,13 @@ main :: proc() {
 								}
 							}
 						}
-						fmt.printfln("Transitions: %v", transition)
 						transitions_map[entity.iid] = transition
+					}
+				}
+
+				for entity in entities {
+					switch entity.identifier {
+					// Binary_Transition
 					case "lever":
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Lever
@@ -440,7 +442,6 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 				fmt.eprintln("Error writing to file:", write_err)
 			}
 			//Dynamic data
-			fmt.printfln("Transitions to Write: %v", room.transitions)
 			n, write_err = os.write_ptr(
 				transition_file,
 				raw_data(room.transitions),
