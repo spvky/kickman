@@ -106,7 +106,8 @@ draw_player_and_ball :: proc() {
 
 draw_level_collision :: proc() {
 	for collider in assets.room_collision[world.current_room] {
+		color := .Oneway in collider.flags ? rl.YELLOW : rl.RED
 		extents := collider.max - collider.min
-		rl.DrawRectangleV(collider.min, extents, rl.RED)
+		rl.DrawRectangleV(collider.min, extents, color)
 	}
 }

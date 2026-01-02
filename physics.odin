@@ -115,17 +115,11 @@ physics_step :: proc() {
 
 Collider :: struct {
 	using aabb: AABB,
-	flags:      bit_set[Collider_Flag;u8],
+	flags:      bit_set[tags.Collider_Flag;u8],
 }
 
 AABB :: struct {
 	min, max: Vec2,
-}
-
-Collider_Flag :: enum u8 {
-	Standable,
-	Clingable,
-	Oneway,
 }
 
 Collision :: struct {
@@ -137,7 +131,6 @@ aabb_nearest_point :: proc(c: AABB, v: Vec2) -> Vec2 {
 	return l.clamp(v, c.min, c.max)
 }
 
-// TODO: Refactor and use this instead of circle_level_collide
 circle_aabb_collide :: proc(
 	translation: Vec2,
 	radius: f32,
@@ -157,30 +150,11 @@ circle_aabb_collide :: proc(
 	return
 }
 
-circle_level_collide :: proc(
-	translation: Vec2,
-	radius: f32,
-	collider: Collider,
-) -> (
-	collision: Collision,
-	ok: bool,
-) {
-	nearest_point := aabb_nearest_point(collider.aabb, translation)
-	if l.distance(nearest_point, translation) < radius {
-		collision_vector := translation - nearest_point
-		collision.normal = l.normalize0(collision_vector)
-		pen_depth := radius - l.length(collision_vector)
-		collision.mtv = collision.normal * pen_depth
-		ok = true
-	}
-	return
-}
-
 circle_sensor_level_collider_overlap :: proc(
 	translation: Vec2,
 	radius: f32,
 	collider: Collider,
-	collider_mask: bit_set[Collider_Flag;u8],
+	collider_mask: bit_set[tags.Collider_Flag;u8],
 ) -> (
 	overlap: bool,
 ) {
@@ -291,21 +265,34 @@ player_ball_level_collision :: proc() {
 	for collider in assets.room_collision[world.current_room] {
 		// Player
 
-		if player_lacks(.Riding) {
-			head_collision, head_collided := circle_level_collide(
+
+		player_should_collide := true
+		ball_should_collide := true
+
+		if .Oneway in collider.flags {
+			if player.velocity.y < 0 {
+				player_should_collide = false
+			}
+			if ball.velocity.y < 0 {
+				ball_should_collide = false
+			}
+		}
+
+		if player_lacks(.Riding) && player_should_collide {
+			head_collision, head_collided := circle_aabb_collide(
 				player.translation - {0, player.radius / 2},
 				player.radius,
-				collider,
+				collider.aabb,
 			)
 			if head_collided {
 				//TODO: Head collision while riding
 				player_resolve_level_collision(player, head_collision)
 			}
 
-			feet_collision, feet_collided := circle_level_collide(
+			feet_collision, feet_collided := circle_aabb_collide(
 				player.translation + {0, player.radius / 2},
 				player.radius,
-				collider,
+				collider.aabb,
 			)
 			if feet_collided {
 				player_resolve_level_collision(player, feet_collision)
@@ -321,12 +308,12 @@ player_ball_level_collision :: proc() {
 		}
 
 		// Ball
-		if ball_lacks(.Carried, .Recalling) {
+		if ball_lacks(.Carried, .Recalling) && ball_should_collide {
 			ball_ground_sensor := ball.translation + Vec2{0, ball.radius}
-			ball_collision, ball_collided := circle_level_collide(
+			ball_collision, ball_collided := circle_aabb_collide(
 				ball.translation,
 				ball.radius,
-				collider,
+				collider.aabb,
 			)
 			if ball_collided {
 				ball_resolve_level_collision(ball, ball_collision)

@@ -1,5 +1,11 @@
 package tags
 
+Collider_Flag :: enum u8 {
+	Standable,
+	Clingable,
+	Oneway,
+}
+
 Room_Tag :: struct {
 	region_tag: Region_Tag,
 	room_index: u8,

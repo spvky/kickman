@@ -84,7 +84,7 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 			collider: Collider
 			collider.min = {f32(c.min.x) * TILE_SIZE, f32(c.min.y) * TILE_SIZE}
 			collider.max = {f32(c.max.x + 1) * TILE_SIZE, f32(c.max.y + 1) * TILE_SIZE}
-			collider.flags = {.Standable}
+			collider.flags = c.flags
 			append(&collision, collider)
 		}
 

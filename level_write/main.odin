@@ -9,6 +9,7 @@ import "core:time"
 
 Binary_Collider :: struct {
 	min, max: [2]int,
+	flags:    bit_set[tags.Collider_Flag;u8],
 }
 
 Binary_Region :: struct {
@@ -56,7 +57,6 @@ Temp_Binary_Transition :: struct {
 }
 
 main :: proc() {
-	fmt.printfln("ColliderSize %v", size_of(Binary_Collider))
 	start_time := time.now()
 	if project, ok := ldtk.load_from_file("../assets/levels/pell.ldtk", context.temp_allocator).?;
 	   ok {
@@ -102,7 +102,23 @@ main :: proc() {
 				for y in 0 ..< layer_height {
 					for x in 0 ..< layer_width {
 						if !is_checked(checked, layer_width, x, y) {
-							if check_csv_collision(collision_csv, layer_width, x, y) {
+							collision_type_value := get_csv_collision_value(
+								collision_csv,
+								layer_width,
+								x,
+								y,
+							)
+							if collision_type_value == 0 {
+								mark_checked(&checked, layer_width, x, y)
+								continue
+							}
+							if check_csv_collision(
+								collision_type_value,
+								collision_csv,
+								layer_width,
+								x,
+								y,
+							) {
 								collider_id += 1
 								starting_x, starting_y := x, y
 								ending_x, ending_y := x, y
@@ -115,10 +131,18 @@ main :: proc() {
 										   t_y > starting_y {
 											for i_x in starting_x ..= ending_x {
 												// When we move to another row, mark the previous row
+												if collision_type_value == 2 {
+													fmt.printfln(
+														"Marking: [%v,%v] while building a one way",
+														i_x,
+														t_y,
+													)
+												}
 												mark_checked(&checked, layer_width, i_x, t_y)
 											}
 											break
 										}
+
 										tile_unchecked := !is_checked(
 											checked,
 											layer_width,
@@ -126,6 +150,7 @@ main :: proc() {
 											t_y,
 										)
 										tile_collidable := check_csv_collision(
+											collision_type_value,
 											collision_csv,
 											layer_width,
 											t_x,
@@ -145,7 +170,23 @@ main :: proc() {
 										}
 										// Mark initial row as we read it
 										if t_y == starting_y {
-											mark_checked(&checked, layer_width, t_x, t_y)
+											if get_csv_collision_value(
+												   collision_csv,
+												   layer_width,
+												   t_x,
+												   t_y,
+											   ) ==
+											   collision_type_value {
+
+												if collision_type_value == 2 {
+													fmt.printfln(
+														"Marking: [%v,%v] while building a one way",
+														t_x,
+														t_y,
+													)
+												}
+												mark_checked(&checked, layer_width, t_x, t_y)
+											}
 										}
 										t_x += 1
 									}
@@ -156,9 +197,18 @@ main :: proc() {
 									t_y += 1
 								}
 
+								flags: bit_set[tags.Collider_Flag;u8]
+								switch collision_type_value {
+								case 1:
+									flags += {.Standable}
+								case 2:
+									flags += {.Standable, .Oneway}
+								}
+
 								collider := Binary_Collider {
-									min = {starting_x, starting_y},
-									max = {ending_x, ending_y},
+									min   = {starting_x, starting_y},
+									max   = {ending_x, ending_y},
+									flags = flags,
 								}
 								if ODIN_DEBUG {
 									fmt.printfln(
@@ -168,11 +218,6 @@ main :: proc() {
 									)
 								}
 								append(&colliders, collider)
-
-
-							} else {
-								// X,Y Tile is not collidable
-								mark_checked(&checked, layer_width, x, y)
 							}
 						}
 					}
@@ -428,8 +473,15 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 }
 
 
-check_csv_collision :: #force_inline proc(slice: []int, width, x, y: int) -> bool {
-	return slice[x + (y * width)] == 1
+check_csv_collision :: #force_inline proc(
+	collision_type: int,
+	slice: []int,
+	width, x, y: int,
+) -> bool {
+	return slice[x + (y * width)] == collision_type
+}
+get_csv_collision_value :: #force_inline proc(slice: []int, width, x, y: int) -> int {
+	return slice[x + (y * width)]
 }
 is_checked :: #force_inline proc(checked: [dynamic]bool, width, x, y: int) -> bool {
 	return checked[x + (y * width)]
