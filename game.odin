@@ -43,4 +43,5 @@ game_update :: proc() {
 	physics_step()
 	camera_follow_player()
 	render()
+	free_all(context.temp_allocator)
 }

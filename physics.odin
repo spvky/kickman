@@ -3,6 +3,7 @@ package main
 import "core:log"
 import "core:math"
 import l "core:math/linalg"
+import "core:slice"
 import "tags"
 import rl "vendor:raylib"
 
@@ -262,7 +263,25 @@ player_ball_level_collision :: proc() {
 	feet_on_ground, ball_on_ground: bool
 	falling := player.velocity.y > 0
 
-	for collider in assets.room_collision[world.current_room] {
+	entity_colliders := make([dynamic]Collider, 0, 4, allocator = context.temp_allocator)
+	for entity in assets.room_entities[world.current_room] {
+		if entity.tag == .Movable_Block {
+			data := entity.data.(tags.Movable_Block_Data)
+			collider := Collider {
+				min   = entity.pos,
+				max   = entity.pos + data.extents,
+				flags = {.Standable},
+			}
+			append(&entity_colliders, collider)
+		}
+	}
+
+	collision_slice: []Collider = slice.concatenate(
+		[][]Collider{assets.room_collision[world.current_room][:], entity_colliders[:]},
+		allocator = context.temp_allocator,
+	)
+
+	for collider in collision_slice {
 		// Player
 
 
