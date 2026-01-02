@@ -266,7 +266,7 @@ player_ball_level_collision :: proc() {
 	ball := &world.ball
 	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
 	platform_velocity: Vec2
-	feet_on_ground, ball_on_ground: bool
+	feet_on_ground, ball_on_ground, ball_in_collider: bool
 	falling := player.velocity.y > 0
 
 	entity_colliders := make([dynamic]Collider, 0, 4, allocator = context.temp_allocator)
@@ -342,7 +342,7 @@ player_ball_level_collision :: proc() {
 		}
 
 		// Ball
-		if ball_lacks(.Carried, .Recalling) && ball_should_collide {
+		if ball_should_collide {
 			ball_ground_sensor := ball.translation + Vec2{0, ball.radius}
 			ball_collision, ball_collided := circle_aabb_collide(
 				ball.translation,
@@ -350,7 +350,11 @@ player_ball_level_collision :: proc() {
 				collider.aabb,
 			)
 			if ball_collided {
-				ball_resolve_level_collision(ball, ball_collision)
+				if ball_lacks(.Carried, .Recalling) {
+					ball_resolve_level_collision(ball, ball_collision)
+				} else {
+					ball_in_collider = true
+				}
 			}
 			
 					//odinfmt: disable
@@ -373,6 +377,12 @@ player_ball_level_collision :: proc() {
 		ball.flag_timers[.Coyote] = 0.10
 	} else {
 		ball.state_flags -= {.Grounded}
+	}
+
+	if ball_in_collider {
+		ball.state_flags += {.In_Collider}
+	} else {
+		ball.state_flags -= {.In_Collider}
 	}
 }
 
@@ -423,7 +433,7 @@ player_ball_collision :: proc() {
 		ball_above_head := ball.translation.y < player_head.y
 		player_feet := player.translation + {0, player.radius / 2}
 		player_bounce_box := AABB {
-			player.translation - {player.radius * 1.5, 0},
+			player.translation - {player.radius * 1.5, player.radius * 0.25},
 			player.translation + ({player.radius * 1.5, player.radius * 2}),
 		}
 

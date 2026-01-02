@@ -67,7 +67,7 @@ update_entities :: proc(delta: f32) {
 			// Lerp to location based on signal value
 			previous_pos := entity.pos
 			target_pos := signal ? data.positions[1] : data.positions[0]
-			if l.distance(entity.pos, target_pos) < 2 {
+			if l.distance(entity.pos, target_pos) < 1 {
 				entity.pos = target_pos
 			} else {
 				entity.pos = math.lerp(entity.pos, target_pos, data.speed * delta)

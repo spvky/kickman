@@ -175,7 +175,7 @@ player_kick :: proc() {
 			ball.spin = -player.facing
 			ball.velocity = {player.facing * 75, -150}
 		} else {
-			if player.has_ball && ball_has(.Carried) {
+			if player_can(.Kick) {
 				ball_angle: Vec2
 				unscaled_velo: Vec2
 				ignore_duration: f32
