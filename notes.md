@@ -57,3 +57,8 @@ Mon 29 Dec 2025 01:15:03 AM EST
 - Should feel rewarding to find setups for it
 - Would be nice to clean up some of the physics code, I suspect theres more branching than their need to be
 - Just testing
+
+Fri 02 Jan 2026 10:23:55 PM EST
+
+What's Next?:
+* New badges?
