@@ -59,7 +59,6 @@ Player :: struct {
 }
 
 Player_Badge :: enum u8 {
-	None,
 	Striker,
 	Sisyphus,
 	Ghost,
@@ -222,7 +221,6 @@ player_badge_action :: proc() {
 	ball := &world.ball
 	if is_action_buffered(.Badge) {
 		switch player.badge_type {
-		case .None:
 		case .Striker:
 			if player_can(.Recall) {
 				player.flag_timers[.No_Badge] = 1

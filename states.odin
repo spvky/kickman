@@ -7,6 +7,7 @@ Player_State :: enum u8 {
 	Double_Jump,
 	Walking,
 	Riding,
+	Full_Control,
 }
 
 Player_Timed_State :: enum u8 {
@@ -15,6 +16,7 @@ Player_Timed_State :: enum u8 {
 	No_Badge,
 	No_Move,
 	No_Transition,
+	Sliding,
 }
 
 Player_Master_State :: enum u16 {
@@ -22,11 +24,13 @@ Player_Master_State :: enum u16 {
 	Double_Jump,
 	Walking,
 	Riding,
+	Full_Control,
 	Coyote,
 	Ignore_Ball,
 	No_Badge,
 	No_Move,
 	No_Transition,
+	Sliding,
 }
 Ball_State :: enum u8 {
 	Carried,
@@ -79,6 +83,8 @@ player_has :: proc(set: ..Player_Master_State) -> bool {
 			static += {.Walking}
 		case .Riding:
 			static += {.Riding}
+		case .Full_Control:
+			static += {.Full_Control}
 		case .Coyote:
 			timed += {.Coyote}
 		case .Ignore_Ball:
@@ -89,6 +95,8 @@ player_has :: proc(set: ..Player_Master_State) -> bool {
 			timed += {.No_Move}
 		case .No_Transition:
 			timed += {.No_Transition}
+		case .Sliding:
+			timed += {.Sliding}
 		}
 	}
 	return static <= player.state_flags && timed <= player.timed_state_flags
@@ -121,6 +129,10 @@ player_lacks :: proc(set: ..Player_Master_State) -> (lacks: bool) {
 				lacks = false
 				return
 			}
+		case .Full_Control:
+			if .Full_Control in player.state_flags {
+				lacks = false
+			}
 		case .Coyote:
 			if .Coyote in player.timed_state_flags {
 				lacks = false
@@ -143,6 +155,11 @@ player_lacks :: proc(set: ..Player_Master_State) -> (lacks: bool) {
 			}
 		case .No_Transition:
 			if .No_Transition in player.timed_state_flags {
+				lacks = false
+				return
+			}
+		case .Sliding:
+			if .Sliding in player.timed_state_flags {
 				lacks = false
 				return
 			}

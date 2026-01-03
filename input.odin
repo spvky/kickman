@@ -19,6 +19,7 @@ Input_Action :: enum {
 	Dash,
 	Kick,
 	Badge,
+	Slide,
 }
 
 update_buffer :: proc() {
@@ -97,14 +98,18 @@ poll_input :: proc() {
 	player.facing = facing
 	update_buffer()
 	// Buffer pressed inputs
-	if rl.IsKeyPressed(.SPACE) do buffer_action(.Jump)
+	if rl.IsKeyPressed(.SPACE) {
+		if rl.IsKeyDown(.S) {
+			buffer_action(.Slide)
+		} else {
+			buffer_action(.Jump)
+		}
+	}
 	if rl.IsKeyPressed(.K) do buffer_action(.Kick)
 	if rl.IsKeyPressed(.J) do buffer_action(.Badge)
-	if rl.IsKeyPressed(.H) do buffer_action(.Dash)
 
 	if rl.IsKeyReleased(.SPACE) do release_action(.Jump)
 	if rl.IsKeyReleased(.K) do release_action(.Kick)
 	if rl.IsKeyReleased(.J) do release_action(.Badge)
-	// if rl.IsKeyReleased(.H) do release_action(.Dash)
 
 }
