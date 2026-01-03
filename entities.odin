@@ -69,10 +69,11 @@ update_entities :: proc(delta: f32) {
 			target_pos := signal ? data.positions[1] : data.positions[0]
 			if l.distance(entity.pos, target_pos) < 1 {
 				entity.pos = target_pos
+				data.velocity = VEC_0
 			} else {
 				entity.pos = math.lerp(entity.pos, target_pos, data.speed * delta)
+				data.velocity = (entity.pos - previous_pos) / delta
 			}
-			data.velocity = (entity.pos - previous_pos) / delta
 		}
 	}
 }

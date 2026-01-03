@@ -36,11 +36,21 @@ apply_player_ball_gravity :: proc(delta: f32) {
 
 player_movement :: proc(delta: f32) {
 	player := &world.player
-	if player.movement_delta != 0 && player_lacks(.Riding, .No_Move) {
+	if player_can(.Crouch) {
+		if is_action_held(.Crouch) {
+			player.state_flags += {.Crouching}
+			player.state_flags -= {.Walking}
+		} else {
+			player.state_flags -= {.Crouching}
+		}
+	}
+	if player.movement_delta != 0 && player_lacks(.Riding, .No_Move, .Sliding, .Crouching) {
 		player.facing = player.movement_delta
 		player.velocity.x = max_speed * player.movement_delta
-	} else if player_lacks(.No_Move) {
-
+	} else if player_has(.Crouching) && player.movement_delta != 0 {
+		player.facing = player.movement_delta
+		player.velocity.x = 0
+	} else if player_lacks(.No_Move, .Sliding) {
 		player.velocity.x = 0
 	}
 }
@@ -48,12 +58,17 @@ player_movement :: proc(delta: f32) {
 manage_player_ball_velocity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
+
+	if player_has(.Sliding, .Grounded) {
+		player.velocity.x *= 0.999
+	}
+	// Ball dribbling & recalling
 	if ball_has(.Recalling) {
 		player_feet := player.translation + {0, player.radius / 2}
 		ball.translation = math.lerp(ball.translation, player_feet, delta * 10)
 	} else if ball_has(.Carried) {
 		if player_has(.Grounded) {
-			if player_has(.Walking) {
+			if player_has(.Walking) && player_lacks(.Crouching, .Sliding) {
 				dribble_position :=
 					player_foot_position() +
 					{
@@ -307,7 +322,7 @@ player_ball_level_collision :: proc() {
 			}
 		}
 
-		if player_lacks(.Riding) && player_should_collide {
+		if player_lacks(.Riding, .Sliding) && player_should_collide {
 			head_collision, head_collided := circle_aabb_collide(
 				player.translation - {0, player.radius / 2},
 				player.radius,
@@ -317,7 +332,9 @@ player_ball_level_collision :: proc() {
 				//TODO: Head collision while riding
 				player_resolve_level_collision(player, head_collision)
 			}
+		}
 
+		if player_lacks(.Riding) && player_should_collide {
 			feet_collision, feet_collided := circle_aabb_collide(
 				player.translation + {0, player.radius / 2},
 				player.radius,
@@ -367,7 +384,7 @@ player_ball_level_collision :: proc() {
 	if feet_on_ground {
 		player.state_flags += {.Grounded, .Double_Jump}
 		player.flag_timers[.Coyote] = 0.10
-		player.platform_velocity = platform_velocity
+		player.platform_velocity = {platform_velocity.x, platform_velocity.y * 0.3}
 	} else {
 		player.state_flags -= {.Grounded}
 	}

@@ -119,7 +119,6 @@ manage_juice_values :: proc(delta: f32) {
 		case .Rev_Flash:
 			rev_timer := &ball.juice_values[.Rev_Flash]
 			rev_timer^ += delta
-			// 2 radian
 			if rev_timer^ > math.PI {
 				rev_timer^ = 0
 			}
@@ -216,6 +215,16 @@ player_kick :: proc() {
 	}
 }
 
+player_slide :: proc() {
+	player := &world.player
+	if player_can(.Slide) {
+		if is_action_buffered(.Slide) {
+			player.flag_timers[.Sliding] = 1
+			player.velocity.x = max_speed * 2 * player.facing
+		}
+	}
+}
+
 player_badge_action :: proc() {
 	player := &world.player
 	ball := &world.ball
@@ -262,6 +271,7 @@ player_controls :: proc(delta: f32) {
 	player_movement(delta)
 	player_jump()
 	player_kick()
+	player_slide()
 	player_badge_action()
 }
 

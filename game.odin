@@ -6,6 +6,8 @@ import rl "vendor:raylib"
 
 Vec2 :: [2]f32
 
+VEC_0 :: Vec2{0, 0}
+
 World :: struct {
 	camera:          rl.Camera2D,
 	player:          Player,

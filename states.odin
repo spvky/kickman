@@ -7,6 +7,7 @@ Player_State :: enum u8 {
 	Double_Jump,
 	Walking,
 	Riding,
+	Crouching,
 	Full_Control,
 }
 
@@ -24,6 +25,7 @@ Player_Master_State :: enum u16 {
 	Double_Jump,
 	Walking,
 	Riding,
+	Crouching,
 	Full_Control,
 	Coyote,
 	Ignore_Ball,
@@ -64,6 +66,8 @@ Player_Ball_Interaction :: enum u8 {
 	Recall,
 	Catch,
 	Kick,
+	Crouch,
+	Slide,
 }
 
 @(require_results)
@@ -83,6 +87,8 @@ player_has :: proc(set: ..Player_Master_State) -> bool {
 			static += {.Walking}
 		case .Riding:
 			static += {.Riding}
+		case .Crouching:
+			static += {.Crouching}
 		case .Full_Control:
 			static += {.Full_Control}
 		case .Coyote:
@@ -126,6 +132,11 @@ player_lacks :: proc(set: ..Player_Master_State) -> (lacks: bool) {
 			}
 		case .Riding:
 			if .Riding in player.state_flags {
+				lacks = false
+				return
+			}
+		case .Crouching:
+			if .Crouching in player.state_flags {
 				lacks = false
 				return
 			}
@@ -257,6 +268,8 @@ player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 	ball := &world.ball
 	if player_has(.Ignore_Ball) || player_has(.Riding) do return
 	switch i {
+	case .Crouch, .Slide:
+		able = player_lacks(.Sliding) && player_has(.Grounded)
 	case .Catch:
 		able = ball_lacks(.Revved, .Carried) && (player_has(.Grounded) || ball_has(.Recalling))
 	case .Header:
