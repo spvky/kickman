@@ -63,3 +63,12 @@ Fri 02 Jan 2026 10:23:55 PM EST
 What's Next?:
 * New badges?
 * Sliding
+
+
+Sun 04 Jan 2026 12:27:13 AM EST
+
+More deliberate movement, like metroid or sm64
+make maintaining velocity more of a challenge
+Remove revshot and instead initiate by slide kicking the ball mid-air
+
+
