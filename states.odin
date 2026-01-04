@@ -2,39 +2,37 @@ package main
 
 import "core:log"
 
-Player_State :: enum u8 {
+Player_Flag :: enum u8 {
 	Grounded,
 	Double_Jump,
-	Walking,
-	Riding,
-	Crouching,
-	Full_Control,
+	Has_Ball,
+	On_Ball,
 }
 
-Player_Timed_State :: enum u8 {
+Player_Timed_Flag :: enum u8 {
 	Coyote,
 	Ignore_Ball,
 	No_Badge,
 	No_Move,
+	No_Control,
 	No_Transition,
-	Sliding,
+	In_Slide,
 }
 
-Player_Master_State :: enum u16 {
+Player_Master_Flag :: enum u16 {
 	Grounded,
 	Double_Jump,
-	Walking,
-	Riding,
-	Crouching,
-	Full_Control,
+	Has_Ball,
+	On_Ball,
 	Coyote,
 	Ignore_Ball,
 	No_Badge,
 	No_Move,
+	No_Control,
 	No_Transition,
-	Sliding,
+	In_Slide,
 }
-Ball_State :: enum u8 {
+Ball_Flag :: enum u8 {
 	Carried,
 	Grounded,
 	Recalling,
@@ -43,12 +41,12 @@ Ball_State :: enum u8 {
 	In_Collider,
 }
 
-Ball_Timed_State :: enum u8 {
+Ball_Timed_Flag :: enum u8 {
 	No_Gravity,
 	Coyote,
 }
 
-Ball_Master_State :: enum u16 {
+Ball_Master_Flag :: enum u16 {
 	Carried,
 	Grounded,
 	Recalling,
@@ -66,16 +64,15 @@ Player_Ball_Interaction :: enum u8 {
 	Recall,
 	Catch,
 	Kick,
-	Crouch,
 	Slide,
 }
 
 @(require_results)
-player_has :: proc(set: ..Player_Master_State) -> bool {
+player_has :: proc(set: ..Player_Master_Flag) -> bool {
 	player := &world.player
 
-	static: bit_set[Player_State;u8]
-	timed: bit_set[Player_Timed_State;u8]
+	static: bit_set[Player_Flag;u8]
+	timed: bit_set[Player_Timed_Flag;u8]
 
 	for v in set {
 		switch v {
@@ -83,14 +80,10 @@ player_has :: proc(set: ..Player_Master_State) -> bool {
 			static += {.Grounded}
 		case .Double_Jump:
 			static += {.Double_Jump}
-		case .Walking:
-			static += {.Walking}
-		case .Riding:
-			static += {.Riding}
-		case .Crouching:
-			static += {.Crouching}
-		case .Full_Control:
-			static += {.Full_Control}
+		case .Has_Ball:
+			static += {.Has_Ball}
+		case .On_Ball:
+			static += {.On_Ball}
 		case .Coyote:
 			timed += {.Coyote}
 		case .Ignore_Ball:
@@ -99,78 +92,76 @@ player_has :: proc(set: ..Player_Master_State) -> bool {
 			timed += {.No_Badge}
 		case .No_Move:
 			timed += {.No_Move}
+		case .No_Control:
+			timed += {.No_Control}
 		case .No_Transition:
 			timed += {.No_Transition}
-		case .Sliding:
-			timed += {.Sliding}
+		case .In_Slide:
+			timed += {.In_Slide}
 		}
 	}
-	return static <= player.state_flags && timed <= player.timed_state_flags
+	return static <= player.flags && timed <= player.timed_flags
 }
 
 @(require_results)
-player_lacks :: proc(set: ..Player_Master_State) -> (lacks: bool) {
+player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
 	player := &world.player
 	lacks = true
 
 	for v in set {
 		switch v {
 		case .Grounded:
-			if .Grounded in player.state_flags {
+			if .Grounded in player.flags {
 				lacks = false
 				return
 			}
 		case .Double_Jump:
-			if .Double_Jump in player.state_flags {
+			if .Double_Jump in player.flags {
 				lacks = false
 				return
 			}
-		case .Walking:
-			if .Walking in player.state_flags {
+		case .Has_Ball:
+			if .Has_Ball in player.flags {
 				lacks = false
 				return
 			}
-		case .Riding:
-			if .Riding in player.state_flags {
+		case .On_Ball:
+			if .On_Ball in player.flags {
 				lacks = false
 				return
-			}
-		case .Crouching:
-			if .Crouching in player.state_flags {
-				lacks = false
-				return
-			}
-		case .Full_Control:
-			if .Full_Control in player.state_flags {
-				lacks = false
 			}
 		case .Coyote:
-			if .Coyote in player.timed_state_flags {
+			if .Coyote in player.timed_flags {
 				lacks = false
 				return
 			}
 		case .Ignore_Ball:
-			if .Ignore_Ball in player.timed_state_flags {
+			if .Ignore_Ball in player.timed_flags {
 				lacks = false
 				return
 			}
 		case .No_Badge:
-			if .No_Badge in player.timed_state_flags {
+			if .No_Badge in player.timed_flags {
 				lacks = false
 				return
 			}
 		case .No_Move:
-			if .No_Move in player.timed_state_flags {
+			if .No_Move in player.timed_flags {
+				lacks = false
+				return
+			}
+		case .No_Control:
+			if .No_Control in player.timed_flags {
 				lacks = false
 				return
 			}
 		case .No_Transition:
-			if .No_Transition in player.timed_state_flags {
+			if .No_Transition in player.timed_flags {
 				lacks = false
 				return
 			}
-		case .Sliding:
-			if .Sliding in player.timed_state_flags {
+		case .In_Slide:
+			if .In_Slide in player.timed_flags {
 				lacks = false
 				return
 			}
@@ -180,11 +171,11 @@ player_lacks :: proc(set: ..Player_Master_State) -> (lacks: bool) {
 }
 
 @(require_results)
-ball_has :: proc(set: ..Ball_Master_State) -> bool {
+ball_has :: proc(set: ..Ball_Master_Flag) -> bool {
 	ball := &world.ball
 
-	static: bit_set[Ball_State;u8]
-	timed: bit_set[Ball_Timed_State;u8]
+	static: bit_set[Ball_Flag;u8]
+	timed: bit_set[Ball_Timed_Flag;u8]
 
 	for v in set {
 		switch v {
@@ -206,52 +197,52 @@ ball_has :: proc(set: ..Ball_Master_State) -> bool {
 			timed += {.Coyote}
 		}
 	}
-	return static <= ball.state_flags && timed <= ball.timed_state_flags
+	return static <= ball.flags && timed <= ball.timed_timed_flags
 }
 
 @(require_results)
-ball_lacks :: proc(set: ..Ball_Master_State) -> (lacks: bool) {
+ball_lacks :: proc(set: ..Ball_Master_Flag) -> (lacks: bool) {
 	ball := &world.ball
 	lacks = true
 	for v in set {
 		switch v {
 		case .Carried:
-			if .Carried in ball.state_flags {
+			if .Carried in ball.flags {
 				lacks = false
 				return
 			}
 		case .Grounded:
-			if .Grounded in ball.state_flags {
+			if .Grounded in ball.flags {
 				lacks = false
 				return
 			}
 		case .Recalling:
-			if .Recalling in ball.state_flags {
+			if .Recalling in ball.flags {
 				lacks = false
 				return
 			}
 		case .Revved:
-			if .Revved in ball.state_flags {
+			if .Revved in ball.flags {
 				lacks = false
 				return
 			}
 		case .Bounced:
-			if .Bounced in ball.state_flags {
+			if .Bounced in ball.flags {
 				lacks = false
 				return
 			}
 		case .In_Collider:
-			if .In_Collider in ball.state_flags {
+			if .In_Collider in ball.flags {
 				lacks = false
 				return
 			}
 		case .No_Gravity:
-			if .No_Gravity in ball.timed_state_flags {
+			if .No_Gravity in ball.timed_flags {
 				lacks = false
 				return
 			}
 		case .Coyote:
-			if .Coyote in ball.timed_state_flags {
+			if .Coyote in ball.timed_flags {
 				lacks = false
 				return
 			}
@@ -260,16 +251,32 @@ ball_lacks :: proc(set: ..Ball_Master_State) -> (lacks: bool) {
 	return
 }
 player_ball_can_interact :: proc() -> bool {
-	return player_lacks(.Ignore_Ball) || player_lacks(.Riding) || ball_lacks(.Carried)
+	return player_lacks(.Ignore_Ball) || ball_lacks(.Carried)
 }
 
 player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 	player := &world.player
 	ball := &world.ball
-	if player_has(.Ignore_Ball) || player_has(.Riding) do return
+	if player_has(.Ignore_Ball) do return
 	switch i {
-	case .Crouch, .Slide:
-		able = player_lacks(.Sliding) && player_has(.Grounded)
+	case .Kick:
+		able =
+			player_has(.Has_Ball) &&
+			(player.state == .Idle ||
+					player.state == .Running ||
+					player.state == .Skidding ||
+					player.state == .Rising ||
+					player.state == .Falling) &&
+			ball_has(.Carried) &&
+			ball_lacks(.In_Collider)
+	case .Slide:
+		able =
+			player_has(.Grounded) &&
+			(player.state == .Idle ||
+					player.state == .Running ||
+					player.state == .Skidding ||
+					player.state == .Crouching ||
+					player.state == .Crouch_Skidding)
 	case .Catch:
 		able = ball_lacks(.Revved, .Carried) && (player_has(.Grounded) || ball_has(.Recalling))
 	case .Header:
@@ -282,9 +289,7 @@ player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 			ball_lacks(.Revved, .Recalling, .Carried) &&
 			player.velocity.y >= 0
 	case .Recall:
-		able = ball_has(.Bounced) && player_lacks(.Riding, .No_Badge) && ball_lacks(.Carried)
-	case .Kick:
-		able = player.has_ball && ball_lacks(.In_Collider) && ball_has(.Carried)
+		able = ball_has(.Bounced) && player_lacks(.No_Badge) && ball_lacks(.Carried)
 	}
 	return
 }

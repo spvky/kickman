@@ -28,7 +28,7 @@ init_world :: proc() {
 	world.player.facing = 1
 	world.player.badge_type = .Striker
 	world.ball.radius = 3
-	world.ball.state_flags += {.Carried}
+	world.ball.flags += {.Carried}
 	world.current_room = tags.Room_Tag{.tutorial, 0}
 	world.render_mode = .Scaled
 }

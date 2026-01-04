@@ -46,13 +46,14 @@ calculate_dash_speed :: proc "c" () -> f32 {
 Player :: struct {
 	using rigidbody:   Rigidbody,
 	kick_angle:        Kick_Angle,
+	state:             Player_State,
 	movement_delta:    f32,
 	facing:            f32,
 	carry_pos:         f32,
-	state_flags:       bit_set[Player_State;u8],
-	timed_state_flags: bit_set[Player_Timed_State;u8],
+	flags:             bit_set[Player_Flag;u8],
+	timed_flags:       bit_set[Player_Timed_Flag;u8],
 	platform_velocity: Vec2,
-	flag_timers:       [Player_Timed_State]f32,
+	flag_timers:       [Player_Timed_Flag]f32,
 	juice_values:      [Player_Juice_Values]f32,
 	badge_type:        Player_Badge,
 	has_ball:          bool,
@@ -76,13 +77,14 @@ Kick_Angle :: enum u8 {
 }
 
 Ball :: struct {
-	using rigidbody:   Rigidbody,
-	ignore_player:     f32,
-	spin:              f32,
-	state_flags:       bit_set[Ball_State;u8],
-	timed_state_flags: bit_set[Ball_Timed_State;u8],
-	flag_timers:       [Ball_Timed_State]f32,
-	juice_values:      [Ball_Juice_Values]f32,
+	using rigidbody: Rigidbody,
+	ignore_player:   f32,
+	spin:            f32,
+	state:           Ball_State,
+	flags:           bit_set[Ball_Flag;u8],
+	timed_flags:     bit_set[Ball_Timed_Flag;u8],
+	flag_timers:     [Ball_Timed_Flag]f32,
+	juice_values:    [Ball_Juice_Values]f32,
 }
 
 Ball_Juice_Values :: enum {
@@ -133,32 +135,23 @@ manage_player_ball_flags :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
 	// Player timed state flags
-	for v in Player_Timed_State {
+	for v in Player_Timed_Flag {
 		timer := &player.flag_timers[v]
 		timer^ = math.clamp(timer^ - delta, 0, 10)
 		if timer^ > 0.0 {
-			player.timed_state_flags += {v}
+			player.timed_flags += {v}
 		} else {
-			player.timed_state_flags -= {v}
+			player.timed_flags -= {v}
 		}
 	}
 
-	// Un-Timed state management
-	if player_has(.Grounded) && player_lacks(.Crouching, .Sliding) {
-		if player.movement_delta != 0 {
-			player.state_flags += {.Walking}
-		} else {
-			player.state_flags -= {.Walking}
-		}
-	}
-
-	for v in Ball_Timed_State {
+	for v in Ball_Timed_Flag {
 		timer := &ball.flag_timers[v]
 		timer^ = math.clamp(timer^ - delta, 0, 10)
 		if timer^ > 0.0 {
-			ball.timed_state_flags += {v}
+			ball.timed_flags += {v}
 		} else {
-			ball.timed_state_flags -= {v}
+			ball.timed_flags -= {v}
 		}
 	}
 }
@@ -168,7 +161,7 @@ player_kick :: proc() {
 	ball := &world.ball
 	if is_action_buffered(.Kick) {
 		if player_has(.Riding) {
-			player.state_flags -= {.Riding}
+			player.flags -= {.Riding}
 			player.flag_timers[.Ignore_Ball] = 0.2
 			player.velocity = {player.facing * -60, -100}
 			player.flag_timers[.No_Move] = 0.1
@@ -196,13 +189,13 @@ player_kick :: proc() {
 					ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
 				case .Down:
 					ball.spin = player.facing
-					ball.state_flags += {.Revved}
+					ball.flags += {.Revved}
 					ball.translation = player_foot_position()
 					player.flag_timers[.Ignore_Ball] = 0.3
 					ball.velocity = {-player.facing * 30, -175} + {player.velocity.x, 0}
 				}
 
-				ball.state_flags -= {.Carried}
+				ball.flags -= {.Carried}
 				player.has_ball = false
 
 				// Instead of the movement direction system, hone some specific angles:
@@ -221,10 +214,10 @@ player_crouch :: proc() {
 	player := &world.player
 	if player_can(.Crouch) {
 		if is_action_held(.Crouch) {
-			player.state_flags += {.Crouching}
-			player.state_flags -= {.Walking}
+			player.flags += {.Crouching}
+			player.flags -= {.Walking}
 		} else {
-			player.state_flags -= {.Crouching}
+			player.flags -= {.Crouching}
 		}
 	}
 }
@@ -247,8 +240,8 @@ player_badge_action :: proc() {
 		case .Striker:
 			if player_can(.Recall) {
 				player.flag_timers[.No_Badge] = 1
-				ball.state_flags += {.Recalling}
-				ball.state_flags -= {.Revved}
+				ball.flags += {.Recalling}
+				ball.flags -= {.Revved}
 				consume_action(.Badge)
 			}
 		case .Sisyphus:
@@ -265,7 +258,7 @@ player_jump :: proc() {
 		if player_has(.Riding) {
 			if ball_has(.Grounded) || ball_has(.Coyote) {
 				ball.velocity.y = jump_speed
-				ball.timed_state_flags -= {.Coyote}
+				ball.timed_flags -= {.Coyote}
 				consume_action(.Jump)
 				return
 			}
@@ -273,8 +266,8 @@ player_jump :: proc() {
 			if player_has(.Grounded) || player_has(.Coyote) {
 				player.velocity.y = jump_speed
 				player.velocity += player.platform_velocity
-				player.state_flags -= {.Crouching}
-				player.timed_state_flags -= {.Coyote}
+				player.flags -= {.Crouching}
+				player.timed_flags -= {.Coyote}
 				consume_action(.Jump)
 				return
 			}
@@ -294,8 +287,8 @@ player_controls :: proc(delta: f32) {
 catch_ball :: proc() {
 	player := &world.player
 	ball := &world.ball
-	ball.state_flags += {.Carried}
-	ball.state_flags -= {.Recalling, .Bounced, .Revved}
+	ball.flags += {.Carried}
+	ball.flags -= {.Recalling, .Bounced, .Revved}
 	ball.velocity = Vec2{0, 0}
 	ball.translation = player_foot_position()
 	player.has_ball = true

@@ -20,8 +20,8 @@ player_debug :: proc() {
 		player.velocity.x + player.platform_velocity.x,
 		player.velocity.y + player.platform_velocity.y,
 		player.kick_angle,
-		player.state_flags,
-		player.timed_state_flags,
+		player.flags,
+		player.timed_flags,
 		world.camera.target,
 	)
 	rl.DrawText(strings.clone_to_cstring(player_string), 20, 100, 16, rl.YELLOW)
@@ -32,8 +32,8 @@ player_debug :: proc() {
 		ball.velocity.x,
 		ball.velocity.y,
 		ball.spin,
-		ball.state_flags,
-		ball.timed_state_flags,
+		ball.flags,
+		ball.timed_flags,
 	)
 	rl.DrawText(strings.clone_to_cstring(ball_string), 800, 100, 16, rl.YELLOW)
 }

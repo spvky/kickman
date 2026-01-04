@@ -66,7 +66,7 @@ player_resolve_level_collision :: proc(player: ^Player, collision: Collision) {
 	if x_dot > 0.7 {
 		player.velocity.x = 0
 		if player_has(.Grounded) {
-			player.state_flags -= {.Walking}
+			player.flags -= {.Walking}
 		}
 	}
 	if y_dot > 0.7 {
@@ -96,7 +96,7 @@ ball_resolve_level_collision :: proc(ball: ^Ball, collision: Collision) {
 			// If Revved and hasn't bounced yet apply rev speed
 			ball.velocity.x = 300 * ball.spin
 		}
-		ball.state_flags += {.Bounced}
+		ball.flags += {.Bounced}
 	}
 }
 
@@ -258,24 +258,24 @@ player_ball_level_collision :: proc() {
 		}
 	}
 	if feet_on_ground {
-		player.state_flags += {.Grounded, .Double_Jump}
+		player.flags += {.Grounded, .Double_Jump}
 		player.flag_timers[.Coyote] = 0.10
 		player.platform_velocity = {platform_velocity.x, platform_velocity.y * 0.3}
 	} else {
-		player.state_flags -= {.Grounded}
+		player.flags -= {.Grounded}
 	}
 
 	if ball_on_ground && ball_lacks(.No_Gravity, .Recalling) {
-		ball.state_flags += {.Grounded}
+		ball.flags += {.Grounded}
 		ball.flag_timers[.Coyote] = 0.10
 	} else {
-		ball.state_flags -= {.Grounded}
+		ball.flags -= {.Grounded}
 	}
 
 	if ball_in_collider {
-		ball.state_flags += {.In_Collider}
+		ball.flags += {.In_Collider}
 	} else {
-		ball.state_flags -= {.In_Collider}
+		ball.flags -= {.In_Collider}
 	}
 }
 
@@ -337,7 +337,7 @@ player_ball_collision :: proc() {
 				head_normal := l.normalize0(ball.translation - player_head)
 				ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
 				player.flag_timers[.Ignore_Ball] = 0.2
-				ball.state_flags += {.Bounced}
+				ball.flags += {.Bounced}
 				return
 			}
 		}
@@ -356,9 +356,9 @@ player_ball_collision :: proc() {
 			}
 
 			if player_can(.Ride) {
-				player.state_flags += {.Riding}
-				player.state_flags -= {.Crouching}
-				ball.state_flags -= {.Revved}
+				player.flags += {.Riding}
+				player.flags -= {.Crouching}
+				ball.flags -= {.Revved}
 				return
 			}
 
