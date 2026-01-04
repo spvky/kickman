@@ -75,7 +75,7 @@ draw_current_room :: proc() {
 draw_player_and_ball :: proc() {
 	player := world.player
 	ball := world.ball
-	if player_lacks(.Crouching, .Sliding) {
+	if player_lacks(.Crouching, .Sliding) || player_lacks(.Grounded) {
 		rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
 	}
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)

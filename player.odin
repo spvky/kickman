@@ -66,6 +66,7 @@ Player_Badge :: enum u8 {
 
 Player_Juice_Values :: enum u8 {
 	Dribble_Timer,
+	Run_Timer,
 }
 
 Kick_Angle :: enum u8 {
@@ -111,6 +112,7 @@ manage_juice_values :: proc(delta: f32) {
 			if dribble_timer^ > math.PI {
 				dribble_timer^ = 0
 			}
+		case .Run_Timer:
 		}
 	}
 
@@ -142,7 +144,7 @@ manage_player_ball_flags :: proc(delta: f32) {
 	}
 
 	// Un-Timed state management
-	if player_has(.Grounded) {
+	if player_has(.Grounded) && player_lacks(.Crouching, .Sliding) {
 		if player.movement_delta != 0 {
 			player.state_flags += {.Walking}
 		} else {
@@ -215,6 +217,18 @@ player_kick :: proc() {
 	}
 }
 
+player_crouch :: proc() {
+	player := &world.player
+	if player_can(.Crouch) {
+		if is_action_held(.Crouch) {
+			player.state_flags += {.Crouching}
+			player.state_flags -= {.Walking}
+		} else {
+			player.state_flags -= {.Crouching}
+		}
+	}
+}
+
 player_slide :: proc() {
 	player := &world.player
 	if player_can(.Slide) {
@@ -259,6 +273,7 @@ player_jump :: proc() {
 			if player_has(.Grounded) || player_has(.Coyote) {
 				player.velocity.y = jump_speed
 				player.velocity += player.platform_velocity
+				player.state_flags -= {.Crouching}
 				player.timed_state_flags -= {.Coyote}
 				consume_action(.Jump)
 				return
@@ -268,11 +283,12 @@ player_jump :: proc() {
 }
 
 player_controls :: proc(delta: f32) {
-	player_movement(delta)
+	player_crouch()
 	player_jump()
 	player_kick()
 	player_slide()
 	player_badge_action()
+	player_movement(delta)
 }
 
 catch_ball :: proc() {
