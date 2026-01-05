@@ -82,6 +82,9 @@ player_state_transition_listener :: proc(event: Event) {
 
 determine_player_state :: proc() {
 	player := &world.player
+	if player_is(.Riding) {
+		return
+	}
 	if player_has(.On_Ball) {
 		player.state = .Riding
 		return

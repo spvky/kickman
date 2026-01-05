@@ -367,6 +367,7 @@ player_ball_collision :: proc() {
 			}
 
 			if player_can(.Ride) {
+				log.debug("Start riding")
 				player.state = .Riding
 				ball.state = .Riding
 				return

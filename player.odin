@@ -165,6 +165,7 @@ player_kick :: proc() {
 		if player_is(.Riding) {
 			if player_can(.Dismount) {
 				player.state = .Rising
+				ball.state = .Free
 				player.flag_timers[.Ignore_Ball] = 0.2
 				player.velocity = {player.facing * -60, -100}
 				player.flag_timers[.No_Move] = 0.1
@@ -173,7 +174,6 @@ player_kick :: proc() {
 			}
 		} else {
 			if player_can(.Kick) {
-				log.debug("Kicking ball")
 				ball_angle: Vec2
 				unscaled_velo: Vec2
 				switch player.kick_angle {
@@ -277,5 +277,4 @@ catch_ball :: proc() {
 	ball.velocity = Vec2{0, 0}
 	ball.translation = player_foot_position()
 	player.flags += {.Has_Ball}
-	log.debug("Caught ball")
 }

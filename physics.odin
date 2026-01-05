@@ -43,18 +43,24 @@ player_movement :: proc(delta: f32) {
 	}
 	switch player.state {
 	case .Idle:
+	case .Rising, .Falling:
+		if math.abs(player.velocity.x) < max_speed {
+			player.velocity.x +=
+				(max_speed * player.movement_delta) * (delta * (1 / player.time_to_top_speed * 2))
+		}
 	case .Running:
 		if math.abs(player.velocity.x) < max_speed {
 			player.velocity.x +=
 				(max_speed * player.movement_delta) * (delta * (1 / player.time_to_top_speed))
 		}
 	case .Skidding:
+		if player.movement_delta == -math.sign(player.velocity.x) {
+			player.facing = player.movement_delta
+		}
 	// player.velocity.x += (max_speed * player.facing) * (delta * (1 / player.time_to_top_speed))
 	case .Crouch_Skidding:
 	case .Sliding:
 	case .Crouching:
-	case .Rising:
-	case .Falling:
 	case .Riding:
 	}
 }
@@ -134,7 +140,7 @@ apply_player_ball_velocity :: proc(delta: f32) {
 	} else {
 		player.translation += (player.velocity + player.platform_velocity) * delta
 	}
-	if ball_is(.Free, .Revved) {
+	if ball_is(.Free, .Revved, .Riding) {
 		ball.translation += ball.velocity * delta
 	}
 }
