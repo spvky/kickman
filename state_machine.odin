@@ -60,6 +60,9 @@ handle_state_transitions :: proc() {
 
 player_state_transition_listener :: proc(event: Event) {
 	data := event.payload.(Event_Player_State_Transition)
+
+	switch data.exited {
+	}
 }
 
 determine_player_state :: proc() {
