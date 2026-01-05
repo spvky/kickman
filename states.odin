@@ -65,6 +65,7 @@ Player_Ball_Interaction :: enum u8 {
 	Catch,
 	Kick,
 	Slide,
+	Dismount,
 }
 
 @(require_results)
@@ -197,7 +198,7 @@ ball_has :: proc(set: ..Ball_Master_Flag) -> bool {
 			timed += {.Coyote}
 		}
 	}
-	return static <= ball.flags && timed <= ball.timed_timed_flags
+	return static <= ball.flags && timed <= ball.timed_flags
 }
 
 @(require_results)
@@ -262,34 +263,32 @@ player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 	case .Kick:
 		able =
 			player_has(.Has_Ball) &&
-			(player.state == .Idle ||
-					player.state == .Running ||
-					player.state == .Skidding ||
-					player.state == .Rising ||
-					player.state == .Falling) &&
-			ball_has(.Carried) &&
+			player_is(.Idle, .Running, .Skidding, .Rising, .Falling) &&
+			ball_is(.Carried) &&
 			ball_lacks(.In_Collider)
 	case .Slide:
 		able =
 			player_has(.Grounded) &&
-			(player.state == .Idle ||
-					player.state == .Running ||
-					player.state == .Skidding ||
-					player.state == .Crouching ||
-					player.state == .Crouch_Skidding)
+			player_is(.Idle, .Running, .Skidding, .Crouching, .Crouch_Skidding)
 	case .Catch:
-		able = ball_lacks(.Revved, .Carried) && (player_has(.Grounded) || ball_has(.Recalling))
-	case .Header:
-		able = ball_lacks(.Revved, .Recalling, .Carried)
-	case .Ride:
-		able = ball_has(.Revved, .Bounced) && ball_lacks(.Recalling, .Carried)
-	case .Bounce:
 		able =
-			player_lacks(.Grounded) &&
-			ball_lacks(.Revved, .Recalling, .Carried) &&
-			player.velocity.y >= 0
+			player_lacks(.Has_Ball, .Ignore_Ball) &&
+				(player_is(.Idle, .Running, .Skidding, .Crouching, .Crouch_Skidding) &&
+						ball_is(.Free, .Recalling)) ||
+			(player_is(.Rising, .Falling) && ball_is(.Recalling))
+	case .Header:
+		able =
+			player_lacks(.Ignore_Ball) &&
+			player_is(.Idle, .Running, .Skidding, .Rising, .Falling) &&
+			ball_is(.Free)
+	case .Ride:
+		able = player_lacks(.Ignore_Ball) && ball_is(.Revved)
+	case .Bounce:
+		able = player_lacks(.Ignore_Ball) && player_is(.Falling) && ball_is(.Free)
 	case .Recall:
-		able = ball_has(.Bounced) && player_lacks(.No_Badge) && ball_lacks(.Carried)
+		able = player_lacks(.No_Badge) && ball_has(.Bounced) && ball_is(.Revved, .Free)
+	case .Dismount:
+		able = player_is(.Riding)
 	}
 	return
 }

@@ -17,7 +17,7 @@ apply_player_ball_gravity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
 
-	if player_lacks(.Riding) {
+	if !player_is(.Riding) {
 		if player.velocity.y < 0 {
 			player.velocity.y += rising_gravity * delta
 		} else {
@@ -25,7 +25,7 @@ apply_player_ball_gravity :: proc(delta: f32) {
 		}
 	}
 
-	if ball_lacks(.Carried, .Recalling, .No_Gravity) {
+	if ball_is(.Free, .Revved, .Riding) {
 		if ball.velocity.y < 0 {
 			ball.velocity.y += rising_gravity * delta
 		} else {
@@ -36,20 +36,62 @@ apply_player_ball_gravity :: proc(delta: f32) {
 
 player_movement :: proc(delta: f32) {
 	player := &world.player
-	if player.movement_delta != 0 && player_lacks(.Riding, .No_Move, .Sliding, .Crouching) {
+	if player_is(.Idle, .Running, .Crouching, .Rising, .Falling) {
 		player.facing = player.movement_delta
-		player.velocity.x = max_speed * player.movement_delta
-	} else if player_has(.Crouching) && player_lacks(.Sliding) && player.movement_delta != 0 {
-		player.facing = player.movement_delta
-		player.velocity.x = 0
-	} else if player_lacks(.No_Move, .Sliding) {
-		player.velocity.x = 0
+	}
+	switch player.state {
+	case .Idle:
+	case .Running:
+		player.velocity.x +=
+			(max_speed * player.movement_delta) * (delta * (1 / player.time_to_top_speed))
+	case .Skidding:
+		player.velocity.x += (max_speed * player.facing) * (delta * (1 / player.time_to_top_speed))
+	case .Crouch_Skidding:
+	case .Sliding:
+	case .Crouching:
+	case .Rising:
+	case .Falling:
+	case .Riding:
 	}
 }
 
 manage_player_ball_velocity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
+	// This can now be switch statements based on badge_type
+	// Player Velocity is generally independent of the current badge
+	switch player.state {
+	case .Idle, .Crouching, .Running:
+	case .Skidding:
+		if math.abs(player.velocity.x) < 5 {
+			if player.movement_delta == 0 {
+				player.state = .Idle
+				player.velocity.x = 0
+			} else {
+				player.state = .Running
+			}
+		}
+	case .Crouch_Skidding:
+		player.velocity.x *= 0.98
+	case .Sliding:
+		player.velocity.x *= 0.998
+	case .Riding:
+	case .Rising, .Falling:
+	}
+	// Ball Velocity is dependant on the balls state
+	switch player.badge_type {
+	case .Striker:
+		switch ball.state {
+		case .Carried:
+			ball.velocity = VEC_0
+		case .Free:
+		case .Recalling:
+		case .Revved:
+		case .Riding:
+		}
+	case .Sisyphus:
+	case .Ghost:
+	}
 
 	if player_has(.Sliding, .Grounded) {
 		player.velocity.x *= 0.999

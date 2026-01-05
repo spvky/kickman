@@ -25,6 +25,29 @@ Ball_State :: enum {
 	Riding,
 }
 
+// Returns true if the player state matches ANY of the passed states
+player_is :: proc(states: ..Player_State) -> (matches: bool) {
+	player := &world.player
+	for v in states {
+		if player.state == v {
+			matches = true
+		}
+	}
+	return
+}
+
+// Returns true if the ball state matches ANY of the passed states
+ball_is :: proc(states: ..Ball_State) -> (matches: bool) {
+	ball := &world.ball
+	for v in states {
+		if ball.state == v {
+			matches = true
+		}
+	}
+	return
+}
+
+
 determine_player_state :: proc() {
 	player := &world.player
 	if player_has(.On_Ball) {

@@ -75,7 +75,7 @@ draw_current_room :: proc() {
 draw_player_and_ball :: proc() {
 	player := world.player
 	ball := world.ball
-	if player_lacks(.Crouching, .Sliding) || player_lacks(.Grounded) {
+	if player_is(.Idle, .Running, .Skidding, .Rising, .Falling, .Riding) {
 		rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
 	}
 	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
@@ -83,7 +83,7 @@ draw_player_and_ball :: proc() {
 	rl.DrawCircleV(player_feet_sensor, 1, rl.RED)
 	ball_color := rl.WHITE
 
-	if ball_has(.Revved) {
+	if ball_is(.Revved) {
 		t := math.sin(ball.juice_values[.Rev_Flash] * 20)
 		white: [4]f32 = {255, 255, 255, 255}
 		red: [4]f32 = {255, 0, 0, 255}

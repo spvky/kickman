@@ -47,6 +47,7 @@ Player :: struct {
 	using rigidbody:   Rigidbody,
 	kick_angle:        Kick_Angle,
 	state:             Player_State,
+	time_to_top_speed: f32,
 	movement_delta:    f32,
 	facing:            f32,
 	carry_pos:         f32,
@@ -56,7 +57,6 @@ Player :: struct {
 	flag_timers:       [Player_Timed_Flag]f32,
 	juice_values:      [Player_Juice_Values]f32,
 	badge_type:        Player_Badge,
-	has_ball:          bool,
 }
 
 Player_Badge :: enum u8 {
@@ -160,18 +160,19 @@ player_kick :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if is_action_buffered(.Kick) {
-		if player_has(.Riding) {
-			player.flags -= {.Riding}
-			player.flag_timers[.Ignore_Ball] = 0.2
-			player.velocity = {player.facing * -60, -100}
-			player.flag_timers[.No_Move] = 0.1
-			ball.spin = -player.facing
-			ball.velocity = {player.facing * 75, -150}
+		if player_is(.Riding) {
+			if player_can(.Dismount) {
+				player.state = .Rising
+				player.flag_timers[.Ignore_Ball] = 0.2
+				player.velocity = {player.facing * -60, -100}
+				player.flag_timers[.No_Move] = 0.1
+				ball.spin = -player.facing
+				ball.velocity = {player.facing * 75, -150}
+			}
 		} else {
 			if player_can(.Kick) {
 				ball_angle: Vec2
 				unscaled_velo: Vec2
-				ignore_duration: f32
 				switch player.kick_angle {
 				case .Up:
 					ball_angle = Vec2{0, -1}
@@ -194,30 +195,11 @@ player_kick :: proc() {
 					player.flag_timers[.Ignore_Ball] = 0.3
 					ball.velocity = {-player.facing * 30, -175} + {player.velocity.x, 0}
 				}
-
 				ball.flags -= {.Carried}
-				player.has_ball = false
-
-				// Instead of the movement direction system, hone some specific angles:
-				// - Heel kick up (Up)
-				// - Normal Shot (Forward/Neutral)
-				// - Low shot (Grounded, Down)
-				// - Straight down shot (Airborne, Down)
+				player.flags -= {.Has_Ball}
 				player.flag_timers[.No_Badge] = 0.5
 				consume_action(.Kick)
 			}
-		}
-	}
-}
-
-player_crouch :: proc() {
-	player := &world.player
-	if player_can(.Crouch) {
-		if is_action_held(.Crouch) {
-			player.flags += {.Crouching}
-			player.flags -= {.Walking}
-		} else {
-			player.flags -= {.Crouching}
 		}
 	}
 }
@@ -226,7 +208,7 @@ player_slide :: proc() {
 	player := &world.player
 	if player_can(.Slide) {
 		if is_action_buffered(.Slide) {
-			player.flag_timers[.Sliding] = 1
+			player.flag_timers[.In_Slide] = 0.8
 			player.velocity.x = max_speed * 2 * player.facing
 		}
 	}
@@ -255,7 +237,7 @@ player_jump :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if is_action_buffered(.Jump) {
-		if player_has(.Riding) {
+		if player_is(.Riding) && ball_is(.Riding) {
 			if ball_has(.Grounded) || ball_has(.Coyote) {
 				ball.velocity.y = jump_speed
 				ball.timed_flags -= {.Coyote}
@@ -266,8 +248,9 @@ player_jump :: proc() {
 			if player_has(.Grounded) || player_has(.Coyote) {
 				player.velocity.y = jump_speed
 				player.velocity += player.platform_velocity
-				player.flags -= {.Crouching}
+				player.flags -= {.Grounded}
 				player.timed_flags -= {.Coyote}
+				player.state = .Rising
 				consume_action(.Jump)
 				return
 			}
@@ -276,7 +259,6 @@ player_jump :: proc() {
 }
 
 player_controls :: proc(delta: f32) {
-	player_crouch()
 	player_jump()
 	player_kick()
 	player_slide()
@@ -291,6 +273,6 @@ catch_ball :: proc() {
 	ball.flags -= {.Recalling, .Bounced, .Revved}
 	ball.velocity = Vec2{0, 0}
 	ball.translation = player_foot_position()
-	player.has_ball = true
+	player.flags -= {.Has_Ball}
 
 }

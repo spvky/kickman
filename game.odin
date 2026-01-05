@@ -7,6 +7,8 @@ import rl "vendor:raylib"
 Vec2 :: [2]f32
 
 VEC_0 :: Vec2{0, 0}
+VEC_X :: Vec2{1, 0}
+VEC_Y :: Vec2{0, 1}
 
 World :: struct {
 	camera:          rl.Camera2D,
@@ -24,11 +26,12 @@ init_world :: proc() {
 	init_events_system()
 	world.player.radius = 4
 	world.player.translation = {18, 10}
-	world.player.has_ball = true
+	world.player.flags += {.Has_Ball}
 	world.player.facing = 1
 	world.player.badge_type = .Striker
+	world.player.time_to_top_speed = 1
 	world.ball.radius = 3
-	world.ball.flags += {.Carried}
+	world.ball.state = .Carried
 	world.current_room = tags.Room_Tag{.tutorial, 0}
 	world.render_mode = .Scaled
 }

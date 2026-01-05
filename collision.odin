@@ -65,9 +65,6 @@ player_resolve_level_collision :: proc(player: ^Player, collision: Collision) {
 	y_dot := math.abs(l.dot(collision.normal, Vec2{0, 1}))
 	if x_dot > 0.7 {
 		player.velocity.x = 0
-		if player_has(.Grounded) {
-			player.flags -= {.Walking}
-		}
 	}
 	if y_dot > 0.7 {
 		player.velocity.y = 0
@@ -114,7 +111,7 @@ player_ball_transition_collision :: proc() {
 				transition_extents := transition.max - transition.min
 				translation_ptr: ^Vec2
 
-				if player_has(.Riding) {
+				if player_is(.Riding) {
 					translation_ptr = &ball.translation
 				} else {
 					translation_ptr = &player.translation
@@ -130,7 +127,7 @@ player_ball_transition_collision :: proc() {
 					translation_ptr.x = transition.transition_position.x + x_offset
 				}
 
-				if player_lacks(.Riding) {
+				if !player_is(.Riding) {
 					catch_ball()
 				}
 
@@ -140,7 +137,7 @@ player_ball_transition_collision :: proc() {
 		}
 
 		//Ball
-		if player_lacks(.Riding) {
+		if !ball_is(.Riding) {
 			if collision, ball_collided := circle_aabb_collide(
 				ball.translation,
 				ball.radius,
@@ -198,7 +195,8 @@ player_ball_level_collision :: proc() {
 			}
 		}
 
-		if player_lacks(.Riding, .Sliding) && player_should_collide {
+		if player_is(.Idle, .Running, .Skidding, .Rising, .Falling, .Riding) &&
+		   player_should_collide {
 			head_collision, head_collided := circle_aabb_collide(
 				player.translation - {0, player.radius / 2},
 				player.radius,
@@ -206,11 +204,24 @@ player_ball_level_collision :: proc() {
 			)
 			if head_collided && .Oneway not_in collider.flags {
 				//TODO: Head collision while riding
-				player_resolve_level_collision(player, head_collision)
+				if player_is(.Riding) {
+				} else {
+					player_resolve_level_collision(player, head_collision)
+				}
 			}
 		}
 
-		if player_lacks(.Riding) && player_should_collide {
+		if player_is(
+			   .Idle,
+			   .Running,
+			   .Skidding,
+			   .Sliding,
+			   .Crouching,
+			   .Crouch_Skidding,
+			   .Rising,
+			   .Falling,
+		   ) &&
+		   player_should_collide {
 			feet_collision, feet_collided := circle_aabb_collide(
 				player.translation + {0, player.radius / 2},
 				player.radius,
@@ -356,9 +367,8 @@ player_ball_collision :: proc() {
 			}
 
 			if player_can(.Ride) {
-				player.flags += {.Riding}
-				player.flags -= {.Crouching}
-				ball.flags -= {.Revved}
+				player.state = .Riding
+				ball.state = .Riding
 				return
 			}
 
