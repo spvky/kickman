@@ -42,10 +42,12 @@ player_movement :: proc(delta: f32) {
 	switch player.state {
 	case .Idle:
 	case .Running:
-		player.velocity.x +=
-			(max_speed * player.movement_delta) * (delta * (1 / player.time_to_top_speed))
+		if math.abs(player.velocity.x) < max_speed {
+			player.velocity.x +=
+				(max_speed * player.movement_delta) * (delta * (1 / player.time_to_top_speed))
+		}
 	case .Skidding:
-		player.velocity.x += (max_speed * player.facing) * (delta * (1 / player.time_to_top_speed))
+	// player.velocity.x += (max_speed * player.facing) * (delta * (1 / player.time_to_top_speed))
 	case .Crouch_Skidding:
 	case .Sliding:
 	case .Crouching:
@@ -134,6 +136,7 @@ apply_player_ball_velocity :: proc(delta: f32) {
 
 physics_step :: proc() {
 	delta := rl.GetFrameTime()
+	determine_player_state()
 	manage_player_ball_velocity(delta)
 	manage_juice_values(delta)
 	player_controls(delta)

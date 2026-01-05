@@ -47,6 +47,7 @@ Player :: struct {
 	using rigidbody:   Rigidbody,
 	kick_angle:        Kick_Angle,
 	state:             Player_State,
+	prev_state:        Player_State,
 	time_to_top_speed: f32,
 	movement_delta:    f32,
 	facing:            f32,

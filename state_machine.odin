@@ -47,6 +47,20 @@ ball_is :: proc(states: ..Ball_State) -> (matches: bool) {
 	return
 }
 
+handle_state_transitions :: proc() {
+	player := &world.player
+	if player.state != player.prev_state {
+		publish_event(
+			.Player_State_Transition,
+			Event_Player_State_Transition{player.prev_state, player.state},
+		)
+	}
+	player.prev_state = player.state
+}
+
+player_state_transition_listener :: proc(event: Event) {
+	data := event.payload.(Event_Player_State_Transition)
+}
 
 determine_player_state :: proc() {
 	player := &world.player
@@ -90,4 +104,5 @@ determine_player_state :: proc() {
 			return
 		}
 	}
+
 }

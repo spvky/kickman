@@ -29,7 +29,7 @@ init_world :: proc() {
 	world.player.flags += {.Has_Ball}
 	world.player.facing = 1
 	world.player.badge_type = .Striker
-	world.player.time_to_top_speed = 1
+	world.player.time_to_top_speed = 0.25
 	world.ball.radius = 3
 	world.ball.state = .Carried
 	world.current_room = tags.Room_Tag{.tutorial, 0}

@@ -13,9 +13,14 @@ Event_Type :: enum {
 	Chest_Appeared,
 	Started_Wall_Cling,
 	Player_State_Change,
+	Player_State_Transition,
 }
 
 
+Event_Player_State_Transition :: struct {
+	exited:  Player_State,
+	entered: Player_State,
+}
 Event_Player_State_Change_Payload :: struct {
 	gained: bit_set[Player_Flag;u8],
 	lost:   bit_set[Player_Flag;u8],
@@ -27,6 +32,7 @@ Event_Location_Payload :: struct {
 Event_Payload :: union {
 	Event_Location_Payload,
 	Event_Player_State_Change_Payload,
+	Event_Player_State_Transition,
 }
 
 Event_Callback :: proc(event: Event)

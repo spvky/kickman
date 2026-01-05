@@ -67,14 +67,14 @@ is_action_held :: proc(action: Input_Action) -> bool {
 poll_input :: proc() {
 	player := &world.player
 	direction: Vec2
-	facing := world.player.facing
+	// facing := world.player.facing
 	if rl.IsKeyDown(.A) {
 		direction.x -= 1
-		facing = -1
+		// facing = -1
 	}
 	if rl.IsKeyDown(.D) {
 		direction.x += 1
-		facing = 1
+		// facing = 1
 	}
 	if rl.IsKeyDown(.W) {
 		direction.y -= 1
@@ -96,7 +96,7 @@ poll_input :: proc() {
 
 	player.movement_delta = direction.x
 	player.kick_angle = kick_angle
-	player.facing = facing
+	// player.facing = facing
 	update_buffer()
 	// Buffer pressed inputs
 	if rl.IsKeyPressed(.SPACE) {
