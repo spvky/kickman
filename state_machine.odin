@@ -1,5 +1,6 @@
 package main
 
+import "core:log"
 import "core:math"
 
 Player_State :: enum {
@@ -60,9 +61,24 @@ handle_state_transitions :: proc() {
 
 player_state_transition_listener :: proc(event: Event) {
 	data := event.payload.(Event_Player_State_Transition)
+	player := &world.player
 
-	switch data.exited {
+	// Should handle all transitions here
+	#partial switch data.entered {
+	case .Skidding:
+		if player.movement_delta != 0 {
+			player.facing = player.movement_delta
+			log.debugf("Started Skidding")
+		}
+	case .Running:
+		if data.exited == .Skidding {
+			if player.run_direction != player.facing {
+				player.velocity.x = player.facing * max_speed * 0.9
+			}
+		}
+		player.run_direction = player.facing
 	}
+
 }
 
 determine_player_state :: proc() {

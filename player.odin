@@ -51,6 +51,7 @@ Player :: struct {
 	time_to_top_speed: f32,
 	movement_delta:    f32,
 	facing:            f32,
+	run_direction:     f32,
 	carry_pos:         f32,
 	flags:             bit_set[Player_Flag;u8],
 	timed_flags:       bit_set[Player_Timed_Flag;u8],

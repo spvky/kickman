@@ -65,7 +65,8 @@ manage_player_ball_velocity :: proc(delta: f32) {
 	switch player.state {
 	case .Idle, .Crouching, .Running:
 	case .Skidding:
-		if math.abs(player.velocity.x) < 5 {
+		player.velocity.x *= 0.997
+		if math.abs(player.velocity.x) < 10 {
 			if player.movement_delta == 0 {
 				player.state = .Idle
 				player.velocity.x = 0
@@ -137,6 +138,9 @@ apply_player_ball_velocity :: proc(delta: f32) {
 physics_step :: proc() {
 	delta := rl.GetFrameTime()
 	determine_player_state()
+	handle_state_transitions()
+	process_events()
+	//
 	manage_player_ball_velocity(delta)
 	manage_juice_values(delta)
 	player_controls(delta)

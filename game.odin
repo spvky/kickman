@@ -34,6 +34,8 @@ init_world :: proc() {
 	world.ball.state = .Carried
 	world.current_room = tags.Room_Tag{.tutorial, 0}
 	world.render_mode = .Scaled
+
+	subscribe_event(.Player_State_Transition, player_state_transition_listener)
 }
 
 game_init :: proc() {
