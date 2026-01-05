@@ -62,6 +62,7 @@ handle_state_transitions :: proc() {
 player_state_transition_listener :: proc(event: Event) {
 	data := event.payload.(Event_Player_State_Transition)
 	player := &world.player
+	log.debugf("State Transition: %v", data)
 
 	// Should handle all transitions here
 	#partial switch data.entered {
@@ -70,6 +71,8 @@ player_state_transition_listener :: proc(event: Event) {
 			player.facing = player.movement_delta
 		}
 	case .Running:
+		if data.exited == .Idle {
+		}
 		if data.exited == .Skidding {
 			if player.run_direction != player.facing {
 				player.velocity.x = player.facing * max_speed * 0.9
@@ -82,6 +85,17 @@ player_state_transition_listener :: proc(event: Event) {
 
 determine_player_state :: proc() {
 	player := &world.player
+	switch player.state {
+	case .Idle:
+	case .Running:
+	case .Skidding:
+	case .Sliding:
+	case .Crouching:
+	case .Crouch_Skidding:
+	case .Rising:
+	case .Falling:
+	case .Riding:
+	}
 	if player_is(.Riding) {
 		return
 	}
