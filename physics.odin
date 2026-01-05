@@ -74,7 +74,7 @@ manage_player_ball_velocity :: proc(delta: f32) {
 	case .Crouch_Skidding:
 		player.velocity.x *= 0.98
 	case .Sliding:
-		player.velocity.x *= 0.998
+		player.velocity.x *= 0.999
 	case .Riding:
 	case .Rising, .Falling:
 	}
@@ -84,25 +84,7 @@ manage_player_ball_velocity :: proc(delta: f32) {
 		switch ball.state {
 		case .Carried:
 			ball.velocity = VEC_0
-		case .Free:
-		case .Recalling:
-		case .Revved:
-		case .Riding:
-		}
-	case .Sisyphus:
-	case .Ghost:
-	}
-
-	if player_has(.Sliding, .Grounded) {
-		player.velocity.x *= 0.999
-	}
-	// Ball dribbling & recalling
-	if ball_has(.Recalling) {
-		player_feet := player.translation + {0, player.radius / 2}
-		ball.translation = math.lerp(ball.translation, player_feet, delta * 10)
-	} else if ball_has(.Carried) {
-		if player_has(.Grounded) {
-			if player_has(.Walking) && player_lacks(.Crouching, .Sliding) {
+			if player_is(.Running) && player_has(.Grounded) {
 				dribble_position :=
 					player_foot_position() +
 					{
@@ -118,30 +100,34 @@ manage_player_ball_velocity :: proc(delta: f32) {
 			} else {
 				ball.translation = math.lerp(ball.translation, player_foot_position(), delta * 80)
 			}
-		} else {
-			ball.translation = math.lerp(ball.translation, player_foot_position(), delta * 80)
-		}
-	} else {
-		if ball_has(.Grounded) {
-			if ball_has(.Revved) || player_has(.Riding) {
-				ball.velocity *= 0.9999
-			} else {
-				ball.velocity *= 0.999
+		case .Free:
+			if ball_has(.Grounded) {
+				ball.velocity.x *= 0.999
+			}
+		case .Recalling:
+			ball.velocity = VEC_0
+			player_feet := player.translation + {0, player.radius / 2}
+			ball.translation = math.lerp(ball.translation, player_feet, delta * 10)
+		case .Revved, .Riding:
+			if ball_has(.Grounded) {
+				ball.velocity.x *= 0.9999
 			}
 		}
+	case .Sisyphus:
+	case .Ghost:
 	}
 }
 
 apply_player_ball_velocity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
-	if player_has(.Riding) {
+	if player_is(.Riding) {
 		player.translation = ball.translation - {0, player.radius * 2}
 		player.facing = math.sign(ball.spin)
 	} else {
 		player.translation += (player.velocity + player.platform_velocity) * delta
 	}
-	if ball_lacks(.Carried, .Recalling) {
+	if ball_is(.Free, .Revved) {
 		ball.translation += ball.velocity * delta
 	}
 }
