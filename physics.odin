@@ -37,7 +37,9 @@ apply_player_ball_gravity :: proc(delta: f32) {
 player_movement :: proc(delta: f32) {
 	player := &world.player
 	if player_is(.Idle, .Running, .Crouching, .Rising, .Falling) {
-		player.facing = player.movement_delta
+		if player.movement_delta != 0 {
+			player.facing = player.movement_delta
+		}
 	}
 	switch player.state {
 	case .Idle:
@@ -63,7 +65,9 @@ manage_player_ball_velocity :: proc(delta: f32) {
 	// This can now be switch statements based on badge_type
 	// Player Velocity is generally independent of the current badge
 	switch player.state {
-	case .Idle, .Crouching, .Running:
+	case .Idle, .Running:
+	case .Crouching:
+		player.velocity.x *= 0.98
 	case .Skidding:
 		player.velocity.x *= 0.997
 		if math.abs(player.velocity.x) < 10 {

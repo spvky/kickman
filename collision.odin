@@ -81,15 +81,15 @@ ball_resolve_level_collision :: proc(ball: ^Ball, collision: Collision) {
 	}
 	if y_dot > 0.7 {
 		y_velo := ball.velocity.y
-		if ball_has(.Revved) {
+		if ball_is(.Revved) {
 			ball.velocity.y = y_velo * -0.3
 		} else {
 			ball.velocity.y = y_velo * -0.6
 		}
 		// Roll based on spin if our x velo is low enough
-		if math.abs(ball.velocity.x) < 25 && ball_lacks(.Revved) {
+		if math.abs(ball.velocity.x) < 25 && !ball_is(.Revved) {
 			ball.velocity.x = y_velo * 0.2 * ball.spin
-		} else if ball_has(.Revved) && ball_lacks(.Bounced) {
+		} else if ball_is(.Revved) && ball_lacks(.Bounced) {
 			// If Revved and hasn't bounced yet apply rev speed
 			ball.velocity.x = 300 * ball.spin
 		}
@@ -254,7 +254,7 @@ player_ball_level_collision :: proc() {
 				collider.aabb,
 			)
 			if ball_collided {
-				if ball_lacks(.Carried, .Recalling) {
+				if ball_is(.Free, .Revved, .Riding) {
 					ball_resolve_level_collision(ball, ball_collision)
 				} else {
 					ball_in_collider = true
@@ -276,7 +276,7 @@ player_ball_level_collision :: proc() {
 		player.flags -= {.Grounded}
 	}
 
-	if ball_on_ground && ball_lacks(.No_Gravity, .Recalling) {
+	if ball_on_ground && ball_lacks(.No_Gravity) && ball_is(.Free, .Revved, .Riding) {
 		ball.flags += {.Grounded}
 		ball.flag_timers[.Coyote] = 0.10
 	} else {
@@ -305,7 +305,7 @@ player_ball_entity_collision :: proc() {
 			player_colliding: bool
 			ball_colliding: bool
 			_, player_colliding = circle_aabb_collide(player.translation, player.radius, bb)
-			if ball_lacks(.Recalling) {
+			if !ball_is(.Recalling, .Carried) {
 				_, ball_colliding = circle_aabb_collide(ball.translation, ball.radius, bb)
 			}
 			touching_this_frame := player_colliding || ball_colliding

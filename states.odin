@@ -33,10 +33,7 @@ Player_Master_Flag :: enum u16 {
 	In_Slide,
 }
 Ball_Flag :: enum u8 {
-	Carried,
 	Grounded,
-	Recalling,
-	Revved,
 	Bounced,
 	In_Collider,
 }
@@ -47,10 +44,7 @@ Ball_Timed_Flag :: enum u8 {
 }
 
 Ball_Master_Flag :: enum u16 {
-	Carried,
 	Grounded,
-	Recalling,
-	Revved,
 	Bounced,
 	In_Collider,
 	No_Gravity,
@@ -180,14 +174,8 @@ ball_has :: proc(set: ..Ball_Master_Flag) -> bool {
 
 	for v in set {
 		switch v {
-		case .Carried:
-			static += {.Carried}
 		case .Grounded:
 			static += {.Grounded}
-		case .Recalling:
-			static += {.Recalling}
-		case .Revved:
-			static += {.Revved}
 		case .Bounced:
 			static += {.Bounced}
 		case .In_Collider:
@@ -207,23 +195,8 @@ ball_lacks :: proc(set: ..Ball_Master_Flag) -> (lacks: bool) {
 	lacks = true
 	for v in set {
 		switch v {
-		case .Carried:
-			if .Carried in ball.flags {
-				lacks = false
-				return
-			}
 		case .Grounded:
 			if .Grounded in ball.flags {
-				lacks = false
-				return
-			}
-		case .Recalling:
-			if .Recalling in ball.flags {
-				lacks = false
-				return
-			}
-		case .Revved:
-			if .Revved in ball.flags {
 				lacks = false
 				return
 			}
@@ -252,7 +225,7 @@ ball_lacks :: proc(set: ..Ball_Master_Flag) -> (lacks: bool) {
 	return
 }
 player_ball_can_interact :: proc() -> bool {
-	return player_lacks(.Ignore_Ball) || ball_lacks(.Carried)
+	return player_lacks(.Ignore_Ball) || !ball_is(.Carried)
 }
 
 player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {

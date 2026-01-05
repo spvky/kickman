@@ -173,6 +173,7 @@ player_kick :: proc() {
 			}
 		} else {
 			if player_can(.Kick) {
+				log.debug("Kicking ball")
 				ball_angle: Vec2
 				unscaled_velo: Vec2
 				switch player.kick_angle {
@@ -182,22 +183,23 @@ player_kick :: proc() {
 					ball.spin = player.facing
 					unscaled_velo = {player.facing * player.radius * 2.5, -50}
 					player.flag_timers[.Ignore_Ball] = 0.2
+					ball.state = .Free
 					ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
 				case .Forward:
 					ball_angle = Vec2{player.facing, 0} //-0.4}
 					ball.flag_timers[.No_Gravity] = 0.15
+					ball.state = .Free
 					ball.translation = player_foot_position() - {0, 2}
 					ball.spin = player.facing
 					player.flag_timers[.Ignore_Ball] = 0.1
 					ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
 				case .Down:
 					ball.spin = player.facing
-					ball.flags += {.Revved}
+					ball.state = .Revved
 					ball.translation = player_foot_position()
 					player.flag_timers[.Ignore_Ball] = 0.3
 					ball.velocity = {-player.facing * 30, -175} + {player.velocity.x, 0}
 				}
-				ball.flags -= {.Carried}
 				player.flags -= {.Has_Ball}
 				player.flag_timers[.No_Badge] = 0.5
 				consume_action(.Kick)
@@ -224,8 +226,7 @@ player_badge_action :: proc() {
 		case .Striker:
 			if player_can(.Recall) {
 				player.flag_timers[.No_Badge] = 1
-				ball.flags += {.Recalling}
-				ball.flags -= {.Revved}
+				ball.state = .Recalling
 				consume_action(.Badge)
 			}
 		case .Sisyphus:
@@ -271,10 +272,10 @@ player_controls :: proc(delta: f32) {
 catch_ball :: proc() {
 	player := &world.player
 	ball := &world.ball
-	ball.flags += {.Carried}
-	ball.flags -= {.Recalling, .Bounced, .Revved}
+	ball.state = .Carried
+	ball.flags -= {.Bounced}
 	ball.velocity = Vec2{0, 0}
 	ball.translation = player_foot_position()
-	player.flags -= {.Has_Ball}
-
+	player.flags += {.Has_Ball}
+	log.debug("Caught ball")
 }

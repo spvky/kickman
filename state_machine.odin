@@ -68,7 +68,6 @@ player_state_transition_listener :: proc(event: Event) {
 	case .Skidding:
 		if player.movement_delta != 0 {
 			player.facing = player.movement_delta
-			log.debugf("Started Skidding")
 		}
 	case .Running:
 		if data.exited == .Skidding {
