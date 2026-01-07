@@ -3,37 +3,6 @@ package main
 import "core:log"
 import "core:math"
 
-// Idle
-// -> Run
-// -> Rise
-// -> Fall
-// -> Crouch
-//
-// Run
-// -> Skid
-// -> Slide
-// -> Rise
-// -> Fall
-// -> Idle (when you don't pass a certain speed)
-
-// Fall
-// -> Idle
-// -> Run
-// -> Rise
-// -> Crouch
-// -> Skid
-// -> Slide
-
-// Skid
-// -> Idle
-// -> Slide
-// -> Rising
-// -> Falling
-// -> Running
-
-// Rise -> Fall
-
-
 Player_State :: enum {
 	// Grounded
 	Idle,
@@ -141,70 +110,140 @@ manage_player_state :: proc() {
 	player.state = state
 }
 
-determine_player_state :: proc() {
-	player := &world.player
-	new_state: Player_State
-	// switch player.state {
-	// case .Idle:
-	// 	if is_action_held(.Crouch) && player_lacks(.In_Slide) {
-	// 		new_state = .Crouching
-	// 		break
-	//
-	// 		if player.velocity.x == 0 && player.movement_delta != 0 {
-	// 			new_state = .Idle
-	// 			break
-	// 		}
-	// 	}
-	// case .Running:
-	// case .Skidding:
-	// case .Sliding:
-	// case .Crouching:
-	// case .Crouch_Skidding:
-	// case .Rising:
-	// case .Falling:
-	// case .Riding:
-	// }
-	if player_is(.Riding) {
-		return
-	}
-	if player_has(.On_Ball) {
-		player.state = .Riding
-		return
-	}
+determine_state_from_idle :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Idle
 	if player_has(.Grounded) {
-		if player_has(.In_Slide) {
-			player.state = .Sliding
-			return
-		}
 		if is_action_held(.Crouch) {
-			player.state = .Crouching
-			return
+			state = .Crouching
+		} else if player.movement_delta != 0 {
+			state = .Running
 		}
-
-		if math.sign(player.velocity.x) == math.sign(player.movement_delta) {
-			if player.movement_delta != 0 {
-				player.state = .Running
-				return
-			} else {
-				player.state = .Idle
-				return
-			}
+	} else {
+		if player.velocity.y >= 0 {
+			state = .Falling
 		} else {
-			if is_action_held(.Crouch) {
-				return
+			state = .Rising
+		}
+	}
+	return
+}
+
+determine_state_from_running :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Running
+	if player_has(.Grounded) {
+		if is_action_held(.Crouch) {
+			state = .Sliding
+		} else if player.movement_delta == 0 {
+			if math.abs(player.velocity.x) < 20 {
+				state = .Idle
 			} else {
-				player.state = .Skidding
-				return
+				state = .Skidding
+			}
+		} else if math.sign(player.movement_delta) != math.sign(player.velocity.x) {
+			state = .Skidding
+		}
+	} else {
+		if player.velocity.y >= 0 {
+			state = .Falling
+		} else {
+			state = .Rising
+		}
+	}
+	return
+}
+
+determine_state_from_skidding :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Skidding
+	if player_has(.Grounded) {
+		if is_action_held(.Crouch) {
+			state = .Sliding
+		} else if player.movement_delta == 0 {
+			if math.abs(player.velocity.x) < 20 {
+				state = .Idle
+			}
+		} else if math.sign(player.movement_delta) == math.sign(player.velocity.x) {
+			state = .Running
+		}
+	} else {
+		if player.velocity.y >= 0 {
+			state = .Falling
+		} else {
+			state = .Rising
+		}
+	}
+	return
+}
+
+determine_state_from_sliding :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Sliding
+	if player_has(.Grounded) {
+		if math.abs(player.velocity.x) <= 5 {
+			if is_action_held(.Crouch) {
+				state = .Crouching
+			} else {
+				state = .Idle
 			}
 		}
 	} else {
-		if player.velocity.y < 0 {
-			player.state = .Rising
-			return
+		if player.velocity.y >= 0 {
+			state = .Falling
 		} else {
-			player.state = .Falling
-			return
+			state = .Rising
 		}
 	}
+	return
+}
 
+determine_state_from_crouching :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Crouching
+	if player_has(.Grounded) {
+		if player_has(.In_Slide) {
+			state = .Sliding
+		}
+		if !is_action_held(.Crouch) {
+			state = .Idle
+		}
+	} else {
+		if player.velocity.y >= 0 {
+			state = .Falling
+		} else {
+			state = .Rising
+		}
+	}
+	return
+}
+
+determine_state_from_rising :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Rising
+	if player.velocity.y >= 0 {
+		state = .Falling
+	}
+	return
+}
+
+determine_state_from_falling :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Falling
+	if player_has(.Grounded) {
+		if is_action_held(.Crouch) {
+			state = .Crouching
+		} else {
+			if player.movement_delta == 0 {
+				state = .Idle
+			} else {
+				if math.sign(player.movement_delta) == math.sign(player.velocity.x) {
+					state = .Running
+				} else {
+					state = .Skidding
+				}
+			}
+		}
+		if player_has(.In_Slide) {
+			state = .Idle
+		}
+	} else {
+		if player.velocity.y < 0 {
+			state = .Rising
+		}
+	}
+	return
 }
