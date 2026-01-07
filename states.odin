@@ -240,13 +240,11 @@ player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 			ball_is(.Carried) &&
 			ball_lacks(.In_Collider)
 	case .Slide:
-		able =
-			player_has(.Grounded) &&
-			player_is(.Idle, .Running, .Skidding, .Crouching, .Crouch_Skidding)
+		able = player_has(.Grounded) && player_is(.Idle, .Running, .Skidding, .Crouching)
 	case .Catch:
 		able =
 			player_lacks(.Has_Ball, .Ignore_Ball) &&
-				(player_is(.Idle, .Running, .Skidding, .Crouching, .Crouch_Skidding) &&
+				(player_is(.Idle, .Running, .Skidding, .Crouching) &&
 						ball_is(.Free, .Recalling)) ||
 			(player_is(.Rising, .Falling) && ball_is(.Recalling))
 	case .Header:

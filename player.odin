@@ -46,6 +46,7 @@ calculate_dash_speed :: proc "c" () -> f32 {
 Player :: struct {
 	using rigidbody:   Rigidbody,
 	kick_angle:        Kick_Angle,
+	queued_state:      Player_State,
 	state:             Player_State,
 	prev_state:        Player_State,
 	time_to_top_speed: f32,
@@ -164,6 +165,7 @@ player_kick :: proc() {
 	if is_action_buffered(.Kick) {
 		if player_is(.Riding) {
 			if player_can(.Dismount) {
+				//CHANGE ME
 				player.state = .Rising
 				ball.state = .Free
 				player.flag_timers[.Ignore_Ball] = 0.2
@@ -253,6 +255,7 @@ player_jump :: proc() {
 				player.velocity += player.platform_velocity
 				player.flags -= {.Grounded}
 				player.timed_flags -= {.Coyote}
+				//CHANGE ME
 				player.state = .Rising
 				consume_action(.Jump)
 				return

@@ -3,6 +3,37 @@ package main
 import "core:log"
 import "core:math"
 
+// Idle
+// -> Run
+// -> Rise
+// -> Fall
+// -> Crouch
+//
+// Run
+// -> Skid
+// -> Slide
+// -> Rise
+// -> Fall
+// -> Idle (when you don't pass a certain speed)
+
+// Fall
+// -> Idle
+// -> Run
+// -> Rise
+// -> Crouch
+// -> Skid
+// -> Slide
+
+// Skid
+// -> Idle
+// -> Slide
+// -> Rising
+// -> Falling
+// -> Running
+
+// Rise -> Fall
+
+
 Player_State :: enum {
 	// Grounded
 	Idle,
@@ -10,7 +41,6 @@ Player_State :: enum {
 	Skidding,
 	Sliding,
 	Crouching,
-	Crouch_Skidding,
 	// Airborne
 	Rising,
 	Falling,
@@ -83,19 +113,57 @@ player_state_transition_listener :: proc(event: Event) {
 
 }
 
-determine_player_state :: proc() {
+override_player_state :: proc(state: Player_State) {
+	world.player.state = state
+}
+
+
+manage_player_state :: proc() {
 	player := &world.player
+	state := player.state
 	switch player.state {
 	case .Idle:
+		state = determine_state_from_idle(player)
 	case .Running:
+		state = determine_state_from_running(player)
 	case .Skidding:
+		state = determine_state_from_skidding(player)
 	case .Sliding:
+		state = determine_state_from_sliding(player)
 	case .Crouching:
-	case .Crouch_Skidding:
+		state = determine_state_from_crouching(player)
 	case .Rising:
+		state = determine_state_from_rising(player)
 	case .Falling:
+		state = determine_state_from_falling(player)
 	case .Riding:
 	}
+	player.state = state
+}
+
+determine_player_state :: proc() {
+	player := &world.player
+	new_state: Player_State
+	// switch player.state {
+	// case .Idle:
+	// 	if is_action_held(.Crouch) && player_lacks(.In_Slide) {
+	// 		new_state = .Crouching
+	// 		break
+	//
+	// 		if player.velocity.x == 0 && player.movement_delta != 0 {
+	// 			new_state = .Idle
+	// 			break
+	// 		}
+	// 	}
+	// case .Running:
+	// case .Skidding:
+	// case .Sliding:
+	// case .Crouching:
+	// case .Crouch_Skidding:
+	// case .Rising:
+	// case .Falling:
+	// case .Riding:
+	// }
 	if player_is(.Riding) {
 		return
 	}
@@ -123,7 +191,6 @@ determine_player_state :: proc() {
 			}
 		} else {
 			if is_action_held(.Crouch) {
-				player.state = .Crouch_Skidding
 				return
 			} else {
 				player.state = .Skidding

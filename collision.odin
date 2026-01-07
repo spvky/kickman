@@ -211,16 +211,7 @@ player_ball_level_collision :: proc() {
 			}
 		}
 
-		if player_is(
-			   .Idle,
-			   .Running,
-			   .Skidding,
-			   .Sliding,
-			   .Crouching,
-			   .Crouch_Skidding,
-			   .Rising,
-			   .Falling,
-		   ) &&
+		if player_is(.Idle, .Running, .Skidding, .Sliding, .Crouching, .Rising, .Falling) &&
 		   player_should_collide {
 			feet_collision, feet_collided := circle_aabb_collide(
 				player.translation + {0, player.radius / 2},
@@ -355,6 +346,7 @@ player_ball_collision :: proc() {
 		ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
 		feet_touching_ball := l.distance(ball_feet_nearest, ball.translation) < ball.radius
 
+		// When sliding, send the ball up and behind and rev it
 		if feet_touching_ball {
 			if player_can(.Bounce) {
 				ball.velocity.y = player.velocity.y
@@ -368,6 +360,7 @@ player_ball_collision :: proc() {
 
 			if player_can(.Ride) {
 				log.debug("Start riding")
+				//CHANGE ME
 				player.state = .Riding
 				ball.state = .Riding
 				return
