@@ -16,8 +16,8 @@ TIME_TO_DESCENT: f32 : 0.25
 // How many pixels high can we jump
 JUMP_HEIGHT: f32 : 3.25 * TILE_SIZE
 
-max_speed := calculate_speed()
-dash_speed := calculate_dash_speed()
+max_speed := calculate_ground_speed()
+max_air_speed := calculate_air_speed()
 jump_speed := calulate_jump_speed()
 rising_gravity := calculate_rising_gravity()
 falling_gravity := calculate_falling_gravity()
@@ -34,11 +34,11 @@ calculate_falling_gravity :: proc "c" () -> f32 {
 	return (2 * JUMP_HEIGHT) / math.pow(TIME_TO_DESCENT, 2)
 }
 
-calculate_speed :: proc "c" () -> f32 {
+calculate_ground_speed :: proc "c" () -> f32 {
 	return JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
 }
 
-calculate_dash_speed :: proc "c" () -> f32 {
+calculate_air_speed :: proc "c" () -> f32 {
 	return DASH_JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
 }
 
@@ -214,7 +214,7 @@ player_slide :: proc() {
 	player := &world.player
 	if player_can(.Slide) {
 		if is_action_buffered(.Slide) {
-			player.flag_timers[.In_Slide] = 0.8
+			player.flag_timers[.In_Slide] = 0.55
 			player.velocity.x = max_speed * 2 * player.facing
 		}
 	}

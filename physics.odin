@@ -48,6 +48,12 @@ player_movement :: proc(delta: f32) {
 		if math.abs(player.velocity.x) < max_speed {
 			player.velocity.x +=
 				(max_speed * player.movement_delta) * (delta * (1 / player.time_to_top_speed * 2))
+		} else {
+			if math.sign(player.movement_delta) != math.sign(player.velocity.x) {
+				player.velocity.x +=
+					(max_speed * player.movement_delta) *
+					(delta * (1 / player.time_to_top_speed * 2))
+			}
 		}
 	case .Running:
 		if math.abs(player.velocity.x) < max_speed {

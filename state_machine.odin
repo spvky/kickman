@@ -177,9 +177,21 @@ determine_state_from_skidding :: #force_inline proc(player: ^Player) -> (state: 
 determine_state_from_sliding :: #force_inline proc(player: ^Player) -> (state: Player_State) {
 	state = .Sliding
 	if player_has(.Grounded) {
-		if math.abs(player.velocity.x) <= 5 {
+		if player_has(.In_Slide) {
+			if math.abs(player.velocity.x) <= 25 {
+				if is_action_held(.Crouch) {
+					state = .Crouching
+				} else {
+					state = .Idle
+				}
+			}
+		} else {
 			if is_action_held(.Crouch) {
-				state = .Crouching
+				if math.abs(player.velocity.x) <= 25 {
+					state = .Crouching
+				}
+			} else if player.movement_delta != 0 {
+				state = .Running
 			} else {
 				state = .Idle
 			}
@@ -187,8 +199,10 @@ determine_state_from_sliding :: #force_inline proc(player: ^Player) -> (state: P
 	} else {
 		if player.velocity.y >= 0 {
 			state = .Falling
+			player.flag_timers[.In_Slide] = 0
 		} else {
 			state = .Rising
+			player.flag_timers[.In_Slide] = 0
 		}
 	}
 	return
