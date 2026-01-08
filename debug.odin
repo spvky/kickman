@@ -26,7 +26,13 @@ player_debug :: proc() {
 		player.timed_flags,
 		world.camera.target,
 	)
-	rl.DrawText(strings.clone_to_cstring(player_string), 20, 100, 16, rl.YELLOW)
+	rl.DrawText(
+		strings.clone_to_cstring(player_string, allocator = context.temp_allocator),
+		20,
+		100,
+		16,
+		rl.YELLOW,
+	)
 	ball_string := fmt.tprintf(
 		"Ball:\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tSpin: %.2f\n\tState: %v\n\tFlags: %v\n\tTimed Flags: %v",
 		ball.translation.x,
@@ -38,5 +44,11 @@ player_debug :: proc() {
 		ball.flags,
 		ball.timed_flags,
 	)
-	rl.DrawText(strings.clone_to_cstring(ball_string), 800, 100, 16, rl.YELLOW)
+	rl.DrawText(
+		strings.clone_to_cstring(ball_string, allocator = context.temp_allocator),
+		800,
+		100,
+		16,
+		rl.YELLOW,
+	)
 }

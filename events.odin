@@ -42,6 +42,14 @@ init_events_system :: proc() {
 	queue.reserve(&world.event_queue, 16)
 }
 
+delete_events_system :: proc() {
+	for v in Event_Type {
+		delete(world.event_listeners[v])
+	}
+	delete(world.event_listeners)
+	queue.destroy(&world.event_queue)
+}
+
 publish_event :: proc(type: Event_Type, payload: Event_Payload) {
 	queue.enqueue(&world.event_queue, Event{type = type, payload = payload})
 }

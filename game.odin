@@ -52,3 +52,8 @@ game_update :: proc() {
 	render()
 	free_all(context.temp_allocator)
 }
+
+game_shutdown :: proc() {
+	delete_assets()
+	delete_events_system()
+}

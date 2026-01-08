@@ -37,6 +37,28 @@ init_assets :: proc() {
 	load_region_data(.tutorial)
 }
 
+delete_assets :: proc() {
+	rl.UnloadRenderTexture(assets.gameplay_texture)
+	rl.UnloadTexture(assets.raw_atlas)
+	delete(assets.room_dimensions)
+	for _, v in assets.room_textures {
+		rl.UnloadTexture(v)
+	}
+	for _, v in assets.room_collision {
+		delete(v)
+	}
+	for _, v in assets.room_transitions {
+		delete(v)
+	}
+	for _, v in assets.room_entities {
+		delete(v)
+	}
+	delete(assets.room_textures)
+	delete(assets.room_collision)
+	delete(assets.room_transitions)
+	delete(assets.room_entities)
+}
+
 load_region_data :: proc(tag: tags.Region_Tag) {
 	start_time := time.now()
 	filename := fmt.tprintf("assets/levels/regions/%v.rgn", tag)

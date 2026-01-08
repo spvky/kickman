@@ -61,7 +61,6 @@ handle_state_transitions :: proc() {
 player_state_transition_listener :: proc(event: Event) {
 	data := event.payload.(Event_Player_State_Transition)
 	player := &world.player
-	log.debugf("State Transition: %v", data)
 
 	// Should handle all transitions here
 	#partial switch data.entered {
@@ -162,7 +161,7 @@ determine_state_from_skidding :: #force_inline proc(player: ^Player) -> (state: 
 				state = .Idle
 			}
 		} else if math.sign(player.movement_delta) == math.sign(player.velocity.x) {
-			state = .Running
+			// state = .Running
 		}
 	} else {
 		if player.velocity.y >= 0 {
