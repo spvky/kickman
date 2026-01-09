@@ -37,3 +37,8 @@ jobs:
       - name: Build Odin project
         # Replace 'src/main.odin' with the entry point of your application
         run: odin build .
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4 # Use the recommended v4 action
+        with:
+          name: kickman.exe
+          path: dist/kickman.exe # The path to the files to upload
