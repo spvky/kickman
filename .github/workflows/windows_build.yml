@@ -39,8 +39,13 @@ jobs:
         run: odin build .
       - name: Display Directory
         run: ls
+      - name: Package Game
+        run: |
+          mkdir soccer_man/
+          cp -r ./assets/ soccer_man/assets/
+          cp kickman.exe soccer_man/soccer_man.exe
       - name: Upload build artifact
         uses: actions/upload-artifact@v4 # Use the recommended v4 action
         with:
-          name: kickman.exe
-          path: ./kickman.exe # The path to the files to upload
+          name: soccer_man
+          path: ./soccer_man # The path to the files to upload
