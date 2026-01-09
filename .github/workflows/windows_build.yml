@@ -43,8 +43,9 @@ jobs:
           mkdir soccer_man/
           cp -r ./assets/ soccer_man/assets/
           cp kickman.exe soccer_man/soccer_man.exe
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4 # Use the recommended v4 action
+          Compress-Archive -Path ./soccer_man/* -Destination ./soccer_man.zip
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
         with:
-          name: soccer_man
-          path: ./soccer_man # The path to the files to upload
+          files: |
+            ./soccer_man.zip
