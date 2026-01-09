@@ -15,6 +15,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build-windows:
+    permissions: write-all
     runs-on: windows-latest
     steps:
       - name: Checkout repository
@@ -32,7 +33,6 @@ jobs:
         # The 'odin' command is now available in the PATH
         run: odin version
       - name: Create release
-        permissions: write-all
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
