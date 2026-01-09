@@ -32,6 +32,7 @@ jobs:
         # The 'odin' command is now available in the PATH
         run: odin version
       - name: Create release
+        permissions: write-all
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
