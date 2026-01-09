@@ -359,11 +359,17 @@ player_ball_collision :: proc() {
 			}
 
 			if player_can(.Ride) {
-				log.debug("Start riding")
-				//CHANGE ME
-				player.state = .Riding
+				override_player_state(.Riding)
 				ball.state = .Riding
 				return
+			}
+
+			if player_can(.Rev_Shot) {
+				ball.spin = player.facing
+				ball.state = .Revved
+				ball.velocity = {-player.facing * 30, -175}
+				ball.flags -= {.Bounced}
+				player.flag_timers[.Ignore_Ball] = 0.3
 			}
 
 			if player_can(.Catch) {

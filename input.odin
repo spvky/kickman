@@ -85,12 +85,10 @@ poll_input :: proc() {
 
 	kick_angle: Kick_Angle
 
-	if direction.y == 0 {
-		kick_angle = .Forward
-	} else if direction.y < 0 {
+	if direction.y < 0 {
 		kick_angle = .Up
 	} else {
-		kick_angle = .Down
+		kick_angle = .Forward
 	}
 
 

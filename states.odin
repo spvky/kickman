@@ -60,6 +60,7 @@ Player_Ball_Interaction :: enum u8 {
 	Kick,
 	Slide,
 	Dismount,
+	Rev_Shot,
 }
 
 @(require_results)
@@ -258,11 +259,13 @@ player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 	case .Ride:
 		able = player_lacks(.Ignore_Ball) && ball_is(.Revved)
 	case .Bounce:
-		able = player_lacks(.Ignore_Ball) && player_is(.Falling) && ball_is(.Free)
+		able = player_lacks(.Ignore_Ball, .Grounded) && ball_is(.Free)
 	case .Recall:
 		able = player_lacks(.No_Badge) && ball_has(.Bounced) && ball_is(.Revved, .Free)
 	case .Dismount:
 		able = player_is(.Riding)
+	case .Rev_Shot:
+		able = player_is(.Sliding) && ball_is(.Free)
 	}
 	return
 }
