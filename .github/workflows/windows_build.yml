@@ -37,8 +37,8 @@ jobs:
       - name: Build Odin project
         # Replace 'src/main.odin' with the entry point of your application
         run: odin build .
-        run: dir
       - name: Display Directory
+        run: ls
       - name: Upload build artifact
         uses: actions/upload-artifact@v4 # Use the recommended v4 action
         with:
