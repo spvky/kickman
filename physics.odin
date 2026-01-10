@@ -151,8 +151,7 @@ apply_player_ball_velocity :: proc(delta: f32) {
 	}
 }
 
-physics_step :: proc() {
-	delta := rl.GetFrameTime()
+physics_step :: proc(delta: f32) {
 	manage_player_state()
 	// determine_player_state()
 	handle_state_transitions()

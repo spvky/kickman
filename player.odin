@@ -258,6 +258,7 @@ player_jump :: proc() {
 				//CHANGE ME
 				player.state = .Rising
 				consume_action(.Jump)
+				make_dust(5, player.translation + VEC_Y * player.radius, 3.14, 6.28)
 				return
 			}
 		}

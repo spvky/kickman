@@ -25,6 +25,7 @@ render_scene_to_texture :: proc() {
 	draw_room_entities()
 	draw_current_room()
 	draw_player_and_ball()
+	draw_dust()
 	if ODIN_DEBUG {
 		draw_level_collision()
 	}
@@ -106,6 +107,10 @@ draw_player_and_ball :: proc() {
 		box_extents := player_bounce_box.max - player_bounce_box.min
 		rl.DrawRectangleV(player_bounce_box.min, box_extents, {255, 255, 255, 100})
 	}
+}
+
+draw_dust :: proc() {
+	render_particles(&world.dust_particles)
 }
 
 draw_level_collision :: proc() {
