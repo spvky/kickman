@@ -133,6 +133,7 @@ player_ball_transition_collision :: proc() {
 
 				world.current_room = transition.tag
 				player.flag_timers[.No_Transition] = 0.2
+				clear_dust()
 			}
 		}
 
