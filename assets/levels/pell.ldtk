@@ -1473,15 +1473,13 @@
 							"defUid": 141,
 							"px": [36,184],
 							"fieldInstances": [
-								{ "__identifier": "message", "__type": "String", "__value": "This is a pretty long string so that I can figure out text wrapping rules and make sure the parsing works correctly", "__tile": null, "defUid": 142, "realEditorValues": [{
+								{ "__identifier": "message", "__type": "String", "__value": "Press [SPACE] To Jump", "__tile": null, "defUid": 142, "realEditorValues": [{
 									"id": "V_String",
-									"params": [
-										"This is a pretty long string so that I can figure out text wrapping rules and make sure the parsing works correctly"
-									]
+									"params": ["Press [SPACE] To Jump"]
 								}] },
-								{ "__identifier": "display_point", "__type": "Point", "__value": { "cx": 14, "cy": 32 }, "__tile": null, "defUid": 143, "realEditorValues": [{
+								{ "__identifier": "display_point", "__type": "Point", "__value": { "cx": 10, "cy": 1 }, "__tile": null, "defUid": 143, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["14,32"]
+									"params": ["10,1"]
 								}] }
 							],
 							"__worldX": 436,
@@ -1504,9 +1502,9 @@
 									"id": "V_String",
 									"params": ["Second tooltip"]
 								}] },
-								{ "__identifier": "display_point", "__type": "Point", "__value": { "cx": 39, "cy": 35 }, "__tile": null, "defUid": 143, "realEditorValues": [{
+								{ "__identifier": "display_point", "__type": "Point", "__value": { "cx": 39, "cy": 44 }, "__tile": null, "defUid": 143, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["39,35"]
+									"params": ["39,44"]
 								}] }
 							],
 							"__worldX": 556,
