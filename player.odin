@@ -170,7 +170,7 @@ player_kick :: proc() {
 				ball.state = .Free
 				player.flag_timers[.Ignore_Ball] = 0.2
 				player.velocity = {player.facing * -60, -100}
-				player.flag_timers[.No_Move] = 0.1
+				player.flag_timers[.No_Control] = 0.1
 				ball.spin = -player.facing
 				ball.velocity = {player.facing * 75, -150}
 			}
@@ -251,18 +251,33 @@ player_jump :: proc() {
 			}
 		} else {
 			if player_has(.Grounded) || player_has(.Coyote) {
+
 				player.velocity.y = jump_speed
 				player.velocity += player.platform_velocity
-				player.flags -= {.Grounded}
-				player.timed_flags -= {.Coyote}
-				//CHANGE ME
-				player.state = .Rising
+				player_remove(.Grounded)
+				player_t_remove(.Coyote)
+				player_t_add(.Bounced, 0.15)
 				consume_action(.Jump)
-				make_dust(5, player.translation + VEC_Y * player.radius, 3.14, 6.28)
+				player_jump_dust(player)
 				return
 			}
 		}
 	}
+}
+
+player_jump_dust :: proc(player: ^Player) {
+	dust_min_angle, dust_max_angle: f32
+	if math.abs(player.velocity.x) < 5 {
+		dust_min_angle = -1.92
+		dust_max_angle = -0.22
+	} else if player.velocity.x >= 5 {
+		dust_min_angle = -3.14
+		dust_max_angle = -1.92
+	} else if player.velocity.x <= 5 {
+		dust_min_angle = -1.07
+		dust_max_angle = 0
+	}
+	make_dust(5, player.translation + VEC_Y * player.radius, dust_min_angle, dust_max_angle)
 }
 
 player_controls :: proc(delta: f32) {
@@ -281,4 +296,9 @@ catch_ball :: proc() {
 	ball.velocity = Vec2{0, 0}
 	ball.translation = player_foot_position()
 	player.flags += {.Has_Ball}
+}
+
+player_land :: proc() {
+	player := &world.player
+	make_dust(20, player.translation + VEC_Y * player.radius, -3.14, 0)
 }

@@ -375,11 +375,12 @@ player_ball_collision :: proc() {
 		if feet_touching_ball {
 			if player_can(.Bounce) {
 				ball.velocity.y = player.velocity.y
-				ball.velocity.x *= 0.3 * player.facing
+				// ball.velocity.x *= 0.3 * player.facing
 				ball.spin = player.facing
 				player.velocity.y = jump_speed * 1.125
 				player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
-				player.flag_timers[.Ignore_Ball] = 0.2
+				player_t_add(.Ignore_Ball, 0.1)
+				player_t_add(.Bounced, 0.1)
 				return
 			}
 

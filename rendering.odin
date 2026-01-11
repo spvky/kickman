@@ -67,7 +67,9 @@ render_to_screen :: proc() {
 			rl.WHITE,
 		)
 	}
-	player_debug()
+	if ODIN_DEBUG {
+		player_debug()
+	}
 	rl.EndDrawing()
 }
 

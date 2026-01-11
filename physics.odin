@@ -99,7 +99,11 @@ manage_player_ball_velocity :: proc(delta: f32) {
 	case .Sliding:
 		player.velocity.x *= 0.999
 	case .Riding:
-	case .Rising, .Falling:
+	case .Rising:
+		if !is_action_held(.Jump) && player_lacks(.Bounced) {
+			player.velocity.y = 0
+		}
+	case .Falling:
 	}
 	// Ball Velocity is dependant on the balls state
 	switch player.badge_type {

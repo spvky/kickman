@@ -13,11 +13,11 @@ Player_Timed_Flag :: enum u8 {
 	Coyote,
 	Ignore_Ball,
 	No_Badge,
-	No_Move,
 	No_Control,
 	No_Transition,
 	In_Slide,
 	Ignore_Oneways,
+	Bounced,
 }
 
 Player_Master_Flag :: enum u16 {
@@ -28,11 +28,11 @@ Player_Master_Flag :: enum u16 {
 	Coyote,
 	Ignore_Ball,
 	No_Badge,
-	No_Move,
 	No_Control,
 	No_Transition,
 	In_Slide,
 	Ignore_Oneways,
+	Bounced,
 }
 Ball_Flag :: enum u8 {
 	Grounded,
@@ -88,8 +88,6 @@ player_has :: proc(set: ..Player_Master_Flag) -> bool {
 			timed += {.Ignore_Ball}
 		case .No_Badge:
 			timed += {.No_Badge}
-		case .No_Move:
-			timed += {.No_Move}
 		case .No_Control:
 			timed += {.No_Control}
 		case .No_Transition:
@@ -98,6 +96,8 @@ player_has :: proc(set: ..Player_Master_Flag) -> bool {
 			timed += {.In_Slide}
 		case .Ignore_Oneways:
 			timed += {.Ignore_Oneways}
+		case .Bounced:
+			timed += {.Bounced}
 		}
 	}
 	return static <= player.flags && timed <= player.timed_flags
@@ -145,11 +145,6 @@ player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
 				lacks = false
 				return
 			}
-		case .No_Move:
-			if .No_Move in player.timed_flags {
-				lacks = false
-				return
-			}
 		case .No_Control:
 			if .No_Control in player.timed_flags {
 				lacks = false
@@ -170,10 +165,39 @@ player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
 				lacks = false
 				return
 			}
+
+		case .Bounced:
+			if .Bounced in player.timed_flags {
+				lacks = false
+			}
+			return
 		}
 	}
 	return lacks
 }
+
+player_add :: proc(flag: Player_Flag) {
+	player := &world.player
+	player.flags += {flag}
+}
+
+player_t_add :: proc(flag: Player_Timed_Flag, time: f32) {
+	player := &world.player
+	player.timed_flags += {flag}
+	player.flag_timers[flag] = time
+}
+
+player_remove :: proc(flag: Player_Flag) {
+	player := &world.player
+	player.flags -= {flag}
+}
+
+player_t_remove :: proc(flag: Player_Timed_Flag) {
+	player := &world.player
+	player.timed_flags -= {flag}
+	player.flag_timers[flag] = 0
+}
+
 
 @(require_results)
 ball_has :: proc(set: ..Ball_Master_Flag) -> bool {
