@@ -10,7 +10,7 @@ update_tooltips :: proc(delta: f32) {
 		if tt.touching_player && tt.current_opacity != 1 {
 			tt.current_opacity = math.clamp(tt.current_opacity + delta * 2, 0, 1)
 		} else if !tt.touching_player && tt.current_opacity != 0 {
-			tt.current_opacity = math.clamp(tt.current_opacity - delta, 0, 1)
+			tt.current_opacity = math.clamp(tt.current_opacity - delta * 4, 0, 1)
 		}
 	}
 }

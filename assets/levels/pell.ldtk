@@ -1484,31 +1484,6 @@
 							],
 							"__worldX": 436,
 							"__worldY": 184
-						},
-						{
-							"__identifier": "tooltip",
-							"__grid": [39,48],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": null,
-							"__smartColor": "#7294E4",
-							"iid": "fcd57200-d380-11f0-bd4b-5da08230237b",
-							"width": 44,
-							"height": 16,
-							"defUid": 141,
-							"px": [156,192],
-							"fieldInstances": [
-								{ "__identifier": "message", "__type": "String", "__value": "Second tooltip", "__tile": null, "defUid": 142, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["Second tooltip"]
-								}] },
-								{ "__identifier": "display_point", "__type": "Point", "__value": { "cx": 39, "cy": 44 }, "__tile": null, "defUid": 143, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["39,44"]
-								}] }
-							],
-							"__worldX": 556,
-							"__worldY": 192
 						}
 					]
 				},
@@ -4207,7 +4182,33 @@
 					"seed": 3247144,
 					"overrideTilesetUid": null,
 					"gridTiles": [],
-					"entityInstances": []
+					"entityInstances": [
+						{
+							"__identifier": "tooltip",
+							"__grid": [53,48],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#7294E4",
+							"iid": "93efd120-d380-11f0-bd4b-154803e0bb7d",
+							"width": 68,
+							"height": 16,
+							"defUid": 141,
+							"px": [212,192],
+							"fieldInstances": [
+								{ "__identifier": "message", "__type": "String", "__value": "Press [K] to Kick", "__tile": null, "defUid": 142, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Press [K] to Kick"]
+								}] },
+								{ "__identifier": "display_point", "__type": "Point", "__value": { "cx": 53, "cy": 39 }, "__tile": null, "defUid": 143, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["53,39"]
+								}] }
+							],
+							"__worldX": 612,
+							"__worldY": -32
+						}
+					]
 				},
 				{
 					"__identifier": "collision_layer",
