@@ -495,21 +495,6 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 				fmt.eprintln("Error writing to file:", write_err)
 			}
 
-			// Tooltips (use strings so writing will be slightly more complicated)
-			// entity_len := len(room.entities) * size_of(tags.Entity)
-			// entity_len_bytes := transmute([8]u8)entity_len
-			// n, write_err := os.write(entity_file, entity_len_bytes[:])
-			// if write_err != nil {
-			// 	fmt.eprintln("Error writing to file:", write_err)
-			// }
-			// //
-			// fmt.printfln("Entities to Write: %v", room.entities)
-			// n, write_err = os.write_ptr(entity_file, raw_data(room.entities), entity_len)
-			// if write_err != nil {
-			// 	fmt.eprintln("Error writing to file:", write_err)
-			// }
-			// fmt.printfln("Successfully wrote %v bytes to %v", n, entity_path)
-
 			tooltip_path := fmt.tprintf("%v%v.tt", entities_dir, level_name)
 			tooltip_file, tool_err := os.open(tooltip_path, file_flags, file_permissions)
 			if tool_err != nil {
@@ -534,24 +519,34 @@ write_tooltips_to_file :: proc(
 	n, write_err := os.write(file, tooltips_len_bytes[:])
 	bytes_written += n
 	for tt in tooltips {
-		message_len := len(tt.message)
-		message_len_bytes := transmute([8]u8)message_len
-		n, write_err = os.write(file, message_len_bytes[:])
-		bytes_written += n
-		n, write_err = os.write_ptr(file, raw_data(tt.message), message_len)
-		bytes_written += n
-		// Next 3 fields are size_of([2]f32): 8 bytes
-		pos_bytes := transmute([8]u8)tt.pos
-		n, write_err = os.write(file, pos_bytes[:])
-		bytes_written += n
-		display_point_bytes := transmute([8]u8)tt.display_point
-		n, write_err = os.write(file, display_point_bytes[:])
-		bytes_written += n
-		extents_bytes := transmute([8]u8)tt.extents
-		n, write_err = os.write(file, extents_bytes[:])
-		bytes_written += n
+		bytes_written += write_string_to_file(file, tt.message)
+		bytes_written += write_fixed_to_file(file, tt.pos)
+		bytes_written += write_fixed_to_file(file, tt.display_point)
+		bytes_written += write_fixed_to_file(file, tt.extents)
 		//Skip writing the last 5 bytes, as they are all zero
 	}
+	return
+}
+
+write_fixed_to_file :: #force_inline proc(file: os.Handle, value: $T) -> (bytes_read: int) {
+	val_bytes := transmute([size_of(T)]u8)value
+	n, write_err := os.write(file, val_bytes[:])
+	if write_err != nil {
+	}
+	bytes_read = n
+	return
+}
+
+write_string_to_file :: #force_inline proc(
+	file: os.Handle,
+	value: string,
+) -> (
+	bytes_written: int,
+) {
+	str_len := len(value)
+	bytes_written += write_fixed_to_file(file, str_len)
+	n, write_err := os.write_ptr(file, raw_data(value), str_len)
+	bytes_written += n
 	return
 }
 

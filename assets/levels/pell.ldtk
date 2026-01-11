@@ -1484,6 +1484,31 @@
 							],
 							"__worldX": 436,
 							"__worldY": 184
+						},
+						{
+							"__identifier": "tooltip",
+							"__grid": [14,36],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#7294E4",
+							"iid": "6f2077b0-d380-11f0-bd4b-cb85dcb4adec",
+							"width": 24,
+							"height": 16,
+							"defUid": 141,
+							"px": [56,144],
+							"fieldInstances": [
+								{ "__identifier": "message", "__type": "String", "__value": "Hold [S] To Drop Down", "__tile": null, "defUid": 142, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Hold [S] To Drop Down"]
+								}] },
+								{ "__identifier": "display_point", "__type": "Point", "__value": { "cx": 14, "cy": 30 }, "__tile": null, "defUid": 143, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["14,30"]
+								}] }
+							],
+							"__worldX": 456,
+							"__worldY": 144
 						}
 					]
 				},

@@ -106,15 +106,15 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 			tag,
 			room_tag.room_index,
 		)
-		collision_binary, ok := lr.read_room_collision_from_file(collision_path)
+		binary_collision, ok := lr.read_room_collision_from_file(collision_path)
 		if !ok {
 			fmt.printfln("Failed to read collision for %v", collision_path)
 			return
 		}
 
-		collision := make([dynamic]Collider, 0, len(collision_binary.collision))
+		collision := make([dynamic]Collider, 0, len(binary_collision))
 
-		for c in collision_binary.collision {
+		for c in binary_collision {
 			collider: Collider
 			collider.min = {f32(c.min.x) * TILE_SIZE, f32(c.min.y) * TILE_SIZE}
 			collider.max = {f32(c.max.x + 1) * TILE_SIZE, f32(c.max.y + 1) * TILE_SIZE}
@@ -129,14 +129,14 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 			tag,
 			room_tag.room_index,
 		)
-		transition_binary, transition_ok := lr.read_room_transitions_from_file(transition_path)
+		binary_transitions, transition_ok := lr.read_room_transitions_from_file(transition_path)
 		if !transition_ok {
 			fmt.printfln("Failed to read transitions for %v", transition_path)
 			return
 		}
-		transitions := make([dynamic]Room_Transition, 0, len(transition_binary.transitions))
+		transitions := make([dynamic]Room_Transition, 0, len(binary_transitions))
 
-		for t in transition_binary.transitions {
+		for t in binary_transitions {
 			transition: Room_Transition
 			//TODO: move types to shared module
 			transition.tag.region_tag = .tutorial

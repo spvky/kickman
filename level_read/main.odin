@@ -8,17 +8,6 @@ import "core:slice"
 import "core:strings"
 import "core:time"
 
-main :: proc() {
-	start_time := time.now()
-	room, ok := read_room_collision_from_file("../assets/levels/collision/tutorial_00.col")
-	if ok {
-		fmt.printfln("%v", len(room.collision))
-	}
-	end_time := time.now()
-	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
-	fmt.printfln("Reading room took %v ms", total_duration)
-}
-
 load_region :: proc(path: string) {
 	file, read_err := os.open(path)
 	if read_err != nil {
@@ -29,7 +18,7 @@ load_region :: proc(path: string) {
 read_room_collision_from_file :: proc(
 	filename: string,
 ) -> (
-	room: lvl_write.Binary_Room,
+	colliders: [dynamic]lvl_write.Binary_Collider,
 	success: bool,
 ) {
 	file, read_err := os.open(filename)
@@ -43,7 +32,7 @@ read_room_collision_from_file :: proc(
 	collision_len: int
 
 	// Read ints from the start of the file
-	bytes_read = read_int_from_file(file, &collision_len)
+	bytes_read = read_fixed_from_file(file, &collision_len)
 	// Read dynamic data from the file
 	collision_raw := make(
 		[]lvl_write.Binary_Collider,
@@ -56,15 +45,11 @@ read_room_collision_from_file :: proc(
 		fmt.printfln("Failed to read %v: %v", filename, read_err)
 		return
 	}
-	colliders := slice.clone_to_dynamic(collision_raw, allocator = context.temp_allocator)
-
+	colliders = slice.clone_to_dynamic(collision_raw, allocator = context.temp_allocator)
 	if ODIN_DEBUG {
 		fmt.printfln("Collision Len %v", collision_len)
 		fmt.printfln("Collision dynamic len %v", len(colliders))
 	}
-	room.collision = colliders
-
-
 	success = true
 	return
 }
@@ -72,7 +57,7 @@ read_room_collision_from_file :: proc(
 read_room_transitions_from_file :: proc(
 	filename: string,
 ) -> (
-	room: lvl_write.Binary_Room,
+	transitions: [dynamic]lvl_write.Binary_Transition,
 	success: bool,
 ) {
 	file, read_err := os.open(filename)
@@ -86,7 +71,7 @@ read_room_transitions_from_file :: proc(
 	transition_len: int
 
 	// Read ints from the start of the file
-	bytes_read = read_int_from_file(file, &transition_len)
+	bytes_read = read_fixed_from_file(file, &transition_len)
 	// Read dynamic data from the file
 	transition_raw := make(
 		[]lvl_write.Binary_Transition,
@@ -99,11 +84,7 @@ read_room_transitions_from_file :: proc(
 		fmt.printfln("Failed to read %v: %v", filename, read_err)
 		return
 	}
-	transitions := slice.clone_to_dynamic(transition_raw, allocator = context.temp_allocator)
-
-	room.transitions = transitions
-
-
+	transitions = slice.clone_to_dynamic(transition_raw, allocator = context.temp_allocator)
 	success = true
 	return
 }
@@ -125,7 +106,7 @@ read_room_entities_from_file :: proc(
 	entities_len_in_bytes: int
 
 	// Read ints from the start of the file
-	bytes_read = read_int_from_file(file, &entities_len_in_bytes)
+	bytes_read = read_fixed_from_file(file, &entities_len_in_bytes)
 	// Read dynamic data from the file
 	entities_raw := make(
 		[]tags.Entity,
@@ -162,19 +143,13 @@ read_room_tooltips_from_file :: proc(
 
 	bytes_read: int
 	tooltip_count: int
-	bytes_read = read_int_from_file(file, &tooltip_count)
+	bytes_read = read_fixed_from_file(file, &tooltip_count)
 	for i in 0 ..< tooltip_count {
 		tooltip: tags.Tooltip
-		message_len: int
-		bytes_read = read_int_from_file(file, &message_len)
-		// fmt.printfln("Tooltips message len: %v", message_len)
-		temp_message: string
-		bytes_read = read_string_from_file(file, &temp_message, message_len)
-		tooltip.message = strings.clone(temp_message)
-		// fmt.printfln("Message: %v", tooltip.message)
-		bytes_read = read_vec2_from_file(file, &tooltip.pos)
-		bytes_read = read_vec2_from_file(file, &tooltip.display_point)
-		bytes_read = read_vec2_from_file(file, &tooltip.extents)
+		bytes_read += read_string_from_file(file, &tooltip.message)
+		bytes_read += read_fixed_from_file(file, &tooltip.pos)
+		bytes_read += read_fixed_from_file(file, &tooltip.display_point)
+		bytes_read += read_fixed_from_file(file, &tooltip.extents)
 		append(&tooltips, tooltip)
 	}
 	room.tooltips = tooltips
@@ -182,35 +157,32 @@ read_room_tooltips_from_file :: proc(
 	return
 }
 
-// Read int from passed file into the passed pointer
-read_int_from_file :: proc(file: os.Handle, destination: ^int) -> (bytes_read: int) {
-	n, err := os.read_ptr(file, destination, size_of(int))
-	bytes_read = n
-	if err != nil {
-		fmt.printfln("Failed to read %v", err)
-	}
-	return
-}
-
-read_vec2_from_file :: proc(file: os.Handle, destination: ^[2]f32) -> (bytes_read: int) {
-	// f32 x 2 = 8 bytes
-	n, err := os.read_ptr(file, destination, 8)
-	bytes_read = n
-	if err != nil {
-		fmt.printfln("Failed to read %v", err)
-	}
-	return
-}
-
-// Reads string from passed file into pointer, given length, allocates using context.allocator
-read_string_from_file :: proc(
+// Read a fixed (i.e non dynamic) type from the passed file, into the given rawptr
+read_fixed_from_file :: #force_inline proc(
 	file: os.Handle,
-	destination: ^string,
-	len: int,
+	destination: ^$T,
 ) -> (
 	bytes_read: int,
 ) {
-	value_bytes := make([]u8, len, allocator = context.temp_allocator)
+	n, err := os.read_ptr(file, destination, size_of(T))
+	if err != nil {
+		fmt.printfln("Failed to read %v", err)
+	}
+	bytes_read = n
+	return
+}
+
+// Reads string from passed file into pointer, assuming the string is preceded by its length as an INT, allocates using context.allocator
+read_string_from_file :: #force_inline proc(
+	file: os.Handle,
+	destination: ^string,
+	allocator := context.allocator,
+) -> (
+	bytes_read: int,
+) {
+	str_len: int
+	bytes_read += read_fixed_from_file(file, &str_len)
+	value_bytes := make([]u8, str_len, allocator = allocator)
 	n, read_err := os.read_full(file, value_bytes)
 	bytes_read = n
 	if read_err != nil {

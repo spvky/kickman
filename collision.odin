@@ -100,9 +100,10 @@ ball_resolve_level_collision :: proc(ball: ^Ball, collision: Collision) {
 player_ball_transition_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
-	for transition in assets.room_transitions[world.current_room] {
+	for &transition in assets.room_transitions[world.current_room] {
 		// Player Collision
 		if player_lacks(.No_Transition) {
+
 			if _, player_collided := circle_aabb_collide(
 				player.translation,
 				player.radius / 2,
