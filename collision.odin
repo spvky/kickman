@@ -150,6 +150,26 @@ player_ball_transition_collision :: proc() {
 	}
 }
 
+player_tooltip_collision :: proc() {
+	player := &world.player
+	for &tt in assets.room_tooltips[world.current_room] {
+		tooltip_aabb := AABB {
+			min = tt.pos,
+			max = tt.pos + tt.extents,
+		}
+		// Player Collision
+		if _, player_collided := circle_aabb_collide(
+			player.translation,
+			player.radius / 2,
+			tooltip_aabb,
+		); player_collided {
+			tt.touching_player = true
+		} else {
+			tt.touching_player = false
+		}
+	}
+}
+
 player_ball_level_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
@@ -384,5 +404,6 @@ collision_step :: proc() {
 	player_ball_level_collision()
 	player_ball_entity_collision()
 	player_ball_transition_collision()
+	player_tooltip_collision()
 	player_ball_collision()
 }

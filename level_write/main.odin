@@ -22,6 +22,7 @@ Binary_Room :: struct {
 	collision:   [dynamic]Binary_Collider,
 	transitions: [dynamic]Binary_Transition,
 	entities:    [dynamic]tags.Entity,
+	tooltips:    [dynamic]tags.Tooltip,
 }
 
 Binary_Transition :: struct {
@@ -40,6 +41,7 @@ Temp_Entity :: struct {
 
 Temp_Entity_Data :: union {
 	Temp_Movable_Block_Data,
+	Temp_Tooltip_Data,
 }
 
 Temp_Movable_Block_Data :: struct {
@@ -47,6 +49,12 @@ Temp_Movable_Block_Data :: struct {
 	points:      [2][2]int,
 	extents:     [2]int,
 	speed:       f32,
+}
+
+Temp_Tooltip_Data :: struct {
+	message:       string,
+	display_point: [2]int,
+	extents:       [2]int,
 }
 
 Temp_Binary_Transition :: struct {
@@ -80,14 +88,9 @@ main :: proc() {
 				transition_entities: []ldtk.Entity_Instance
 				level_name := fmt.tprintf("%v_%02d", region.name, i)
 				temp_entities_array := make([dynamic]Temp_Entity, 0, 32)
+				tooltips_array := make([dynamic]tags.Tooltip, 0, 4)
 
 				for layer in level.layer_instances {
-					fmt.printfln(
-						"Level %v, Layer_Id: %v, Layer_Type: %v",
-						level.identifier,
-						layer.identifier,
-						layer.type,
-					)
 					if layer.identifier == "collision_layer" {
 						layer_width = layer.c_width
 						layer_height = layer.c_height
@@ -97,11 +100,6 @@ main :: proc() {
 						transition_entities = layer.entity_instances
 					}
 					if layer.identifier == "entities" {
-						fmt.printfln(
-							"Level %v found entities %v",
-							level.identifier,
-							len(layer.entity_instances),
-						)
 						entities = layer.entity_instances
 					}
 				}
@@ -311,8 +309,30 @@ main :: proc() {
 						temp_entity.data = entity_data
 						temp_entity.id = entity.iid
 						append(&temp_entities_array, temp_entity)
+					case "tooltip":
+						tooltip: tags.Tooltip
+						tooltip.pos = [2]f32{f32(entity.px.x), f32(entity.px.y)}
+						tooltip.extents = {f32(entity.width), f32(entity.height)}
+						fmt.printfln("Tooltip %v", entity)
+						for fi in entity.field_instances {
+							if raw_value, exists := fi.value.?; exists {
+								switch fi.identifier {
+								case "message":
+									value := raw_value.(json.String)
+									tooltip.message = value
+								case "display_point":
+									dp := raw_value.(json.Object)
+									tooltip.display_point = [2]f32 {
+										f32(int(dp["cx"].(i64))) * 4,
+										f32(int(dp["cy"].(i64))) * 4,
+									}
+								}
+							}
+						}
+						append(&tooltips_array, tooltip)
 					}
 				}
+				room.tooltips = tooltips_array
 
 				entities_array := make([dynamic]tags.Entity, 0, len(temp_entities_array))
 
@@ -341,6 +361,7 @@ main :: proc() {
 					}
 					append(&entities_array, new_entity)
 				}
+
 				room.entities = entities_array
 				append(&region.rooms, room)
 			}
@@ -473,9 +494,65 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 			if write_err != nil {
 				fmt.eprintln("Error writing to file:", write_err)
 			}
-			fmt.printfln("Successfully wrote %v bytes to %v", n, entity_path)
+
+			// Tooltips (use strings so writing will be slightly more complicated)
+			// entity_len := len(room.entities) * size_of(tags.Entity)
+			// entity_len_bytes := transmute([8]u8)entity_len
+			// n, write_err := os.write(entity_file, entity_len_bytes[:])
+			// if write_err != nil {
+			// 	fmt.eprintln("Error writing to file:", write_err)
+			// }
+			// //
+			// fmt.printfln("Entities to Write: %v", room.entities)
+			// n, write_err = os.write_ptr(entity_file, raw_data(room.entities), entity_len)
+			// if write_err != nil {
+			// 	fmt.eprintln("Error writing to file:", write_err)
+			// }
+			// fmt.printfln("Successfully wrote %v bytes to %v", n, entity_path)
+
+			tooltip_path := fmt.tprintf("%v%v.tt", entities_dir, level_name)
+			tooltip_file, tool_err := os.open(tooltip_path, file_flags, file_permissions)
+			if tool_err != nil {
+				fmt.eprintln("Error opening file:", tool_err)
+			}
+			defer os.close(tooltip_file)
+			n = write_tooltips_to_file(room.tooltips, tooltip_file)
+			fmt.printfln("Successfully wrote %v bytes to %v", n, tooltip_path)
 		}
 	}
+}
+
+write_tooltips_to_file :: proc(
+	tooltips: [dynamic]tags.Tooltip,
+	file: os.Handle,
+) -> (
+	bytes_written: int,
+) {
+	// Tooltips (use strings so writing will be slightly more complicated)
+	tooltips_len := len(tooltips)
+	tooltips_len_bytes := transmute([8]u8)tooltips_len
+	n, write_err := os.write(file, tooltips_len_bytes[:])
+	bytes_written += n
+	for tt in tooltips {
+		message_len := len(tt.message)
+		message_len_bytes := transmute([8]u8)message_len
+		n, write_err = os.write(file, message_len_bytes[:])
+		bytes_written += n
+		n, write_err = os.write_ptr(file, raw_data(tt.message), message_len)
+		bytes_written += n
+		// Next 3 fields are size_of([2]f32): 8 bytes
+		pos_bytes := transmute([8]u8)tt.pos
+		n, write_err = os.write(file, pos_bytes[:])
+		bytes_written += n
+		display_point_bytes := transmute([8]u8)tt.display_point
+		n, write_err = os.write(file, display_point_bytes[:])
+		bytes_written += n
+		extents_bytes := transmute([8]u8)tt.extents
+		n, write_err = os.write(file, extents_bytes[:])
+		bytes_written += n
+		//Skip writing the last 5 bytes, as they are all zero
+	}
+	return
 }
 
 

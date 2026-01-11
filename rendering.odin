@@ -26,6 +26,8 @@ render_scene_to_texture :: proc() {
 	draw_current_room()
 	draw_player_and_ball()
 	draw_dust()
+	draw_tooltips()
+	// draw_text()
 	if ODIN_DEBUG {
 		draw_level_collision()
 	}

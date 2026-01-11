@@ -32,7 +32,7 @@ init_world :: proc() {
 
 	world.dust_particles = Particle_Emitter(100) {
 		color    = {255, 255, 255, 100},
-		gravity  = {0, 200},
+		gravity  = {0, -50},
 		display  = Particle_Emitter_Circle{0.5, 1.5},
 		lifetime = 0.5,
 		effects  = {.Fade},

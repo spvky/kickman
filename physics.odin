@@ -163,6 +163,7 @@ physics_step :: proc(delta: f32) {
 	apply_player_ball_gravity(delta)
 	apply_player_ball_velocity(delta)
 	update_entities(delta)
+	update_tooltips(delta)
 	//Update timed flags before collision occurs
 	manage_player_ball_flags(delta)
 	collision_step()

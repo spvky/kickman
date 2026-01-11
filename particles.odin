@@ -148,7 +148,7 @@ make_dust :: proc(count: int, origin: Vec2, min_angle, max_angle: f32) {
 	for i in 0 ..< count {
 		r := rand.float32()
 		angle := min_angle + r * (max_angle - min_angle)
-		velocity := Vec2{math.cos(angle), math.sin(angle)} * 75
+		velocity := Vec2{math.cos(angle), math.sin(angle)} * 35
 		new_particle(&world.dust_particles, origin, velocity)
 	}
 }

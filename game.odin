@@ -1,5 +1,6 @@
 package main
 
+import "core:log"
 import rl "vendor:raylib"
 
 Vec2 :: [2]f32
@@ -13,6 +14,9 @@ game_init :: proc() {
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Kick man")
 	init_assets()
 	init_world()
+	for tt in assets.room_tooltips[world.current_room] {
+		log.debugf("Tooltip in room: %v", tt)
+	}
 }
 
 game_update :: proc() {

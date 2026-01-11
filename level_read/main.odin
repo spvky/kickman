@@ -5,6 +5,7 @@ import tags "../tags"
 import "core:fmt"
 import "core:os"
 import "core:slice"
+import "core:strings"
 import "core:time"
 
 main :: proc() {
@@ -145,9 +146,55 @@ read_room_entities_from_file :: proc(
 	return
 }
 
+read_room_tooltips_from_file :: proc(
+	filename: string,
+) -> (
+	room: lvl_write.Binary_Room,
+	success: bool,
+) {
+	file, read_err := os.open(filename)
+	if read_err != nil {
+		fmt.eprintfln("Failed to read %v: %v", filename, read_err)
+		return
+	}
+	defer os.close(file)
+	tooltips: [dynamic]tags.Tooltip
+
+	bytes_read: int
+	tooltip_count: int
+	bytes_read = read_int_from_file(file, &tooltip_count)
+	for i in 0 ..< tooltip_count {
+		tooltip: tags.Tooltip
+		message_len: int
+		bytes_read = read_int_from_file(file, &message_len)
+		// fmt.printfln("Tooltips message len: %v", message_len)
+		temp_message: string
+		bytes_read = read_string_from_file(file, &temp_message, message_len)
+		tooltip.message = strings.clone(temp_message)
+		// fmt.printfln("Message: %v", tooltip.message)
+		bytes_read = read_vec2_from_file(file, &tooltip.pos)
+		bytes_read = read_vec2_from_file(file, &tooltip.display_point)
+		bytes_read = read_vec2_from_file(file, &tooltip.extents)
+		append(&tooltips, tooltip)
+	}
+	room.tooltips = tooltips
+	success = true
+	return
+}
+
 // Read int from passed file into the passed pointer
 read_int_from_file :: proc(file: os.Handle, destination: ^int) -> (bytes_read: int) {
 	n, err := os.read_ptr(file, destination, size_of(int))
+	bytes_read = n
+	if err != nil {
+		fmt.printfln("Failed to read %v", err)
+	}
+	return
+}
+
+read_vec2_from_file :: proc(file: os.Handle, destination: ^[2]f32) -> (bytes_read: int) {
+	// f32 x 2 = 8 bytes
+	n, err := os.read_ptr(file, destination, 8)
 	bytes_read = n
 	if err != nil {
 		fmt.printfln("Failed to read %v", err)

@@ -4,6 +4,7 @@ Collider_Flag :: enum u8 {
 	Standable,
 	Clingable,
 	Oneway,
+	Ball_Only,
 }
 
 Room_Tag :: struct {
@@ -43,4 +44,13 @@ Movable_Block_Data :: struct {
 Trigger_Data :: struct {
 	on:              bool,
 	touching_player: bool,
+}
+
+Tooltip :: struct {
+	message:         string,
+	pos:             [2]f32,
+	display_point:   [2]f32,
+	extents:         [2]f32,
+	touching_player: bool,
+	current_opacity: f32,
 }

@@ -22,6 +22,8 @@ Assets :: struct {
 	room_collision:   map[tags.Room_Tag][dynamic]Collider,
 	room_transitions: map[tags.Room_Tag][dynamic]Room_Transition,
 	room_entities:    map[tags.Room_Tag][dynamic]tags.Entity,
+	room_tooltips:    map[tags.Room_Tag][dynamic]tags.Tooltip,
+	font:             rl.Font,
 }
 
 assets: Assets
@@ -34,12 +36,15 @@ init_assets :: proc() {
 	assets.room_collision = make(map[tags.Room_Tag][dynamic]Collider, 10)
 	assets.room_transitions = make(map[tags.Room_Tag][dynamic]Room_Transition, 10)
 	assets.room_entities = make(map[tags.Room_Tag][dynamic]tags.Entity, 10)
+	assets.room_tooltips = make(map[tags.Room_Tag][dynamic]tags.Tooltip, 10)
+	assets.font = rl.LoadFont("assets/font/dungeon-mode.ttf")
 	load_region_data(.tutorial)
 }
 
 delete_assets :: proc() {
 	rl.UnloadRenderTexture(assets.gameplay_texture)
 	rl.UnloadTexture(assets.raw_atlas)
+	rl.UnloadFont(assets.font)
 	delete(assets.room_dimensions)
 	for _, v in assets.room_textures {
 		rl.UnloadTexture(v)
@@ -53,10 +58,17 @@ delete_assets :: proc() {
 	for _, v in assets.room_entities {
 		delete(v)
 	}
+	for _, v in assets.room_tooltips {
+		for tt in v {
+			delete(tt.message)
+		}
+		delete(v)
+	}
 	delete(assets.room_textures)
 	delete(assets.room_collision)
 	delete(assets.room_transitions)
 	delete(assets.room_entities)
+	delete(assets.room_tooltips)
 }
 
 load_region_data :: proc(tag: tags.Region_Tag) {
@@ -138,7 +150,7 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 		// Entities
 		entity_path := fmt.tprintf("assets/levels/entities/%v_%02d.ent", tag, room_tag.room_index)
 		entity_binary, entity_ok := lr.read_room_entities_from_file(entity_path)
-		if !transition_ok {
+		if !entity_ok {
 			fmt.printfln("Failed to read entities for %v", entity_path)
 			return
 		}
@@ -149,12 +161,26 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 			append(&entities, e)
 		}
 
+		// Tooltips
+		tooltip_path := fmt.tprintf("assets/levels/entities/%v_%02d.tt", tag, room_tag.room_index)
+		tool_binary, tool_ok := lr.read_room_tooltips_from_file(tooltip_path)
+		if !tool_ok {
+			fmt.printfln("Failed to read tooltips for %v", tooltip_path)
+			return
+		}
+		tooltips := make([dynamic]tags.Tooltip, 0, len(tool_binary.tooltips))
+
+		for t in tool_binary.tooltips {
+			// Still keeping the loop here in case there is data that needs to be instantiated at runtime
+			append(&tooltips, t)
+		}
+
 		assets.room_dimensions[room_tag] = Vec2{f32(texture.width), f32(texture.height)}
 		assets.room_textures[room_tag] = texture
 		assets.room_collision[room_tag] = collision
 		assets.room_transitions[room_tag] = transitions
 		assets.room_entities[room_tag] = entities
-		fmt.printfln("%v", assets.room_entities[room_tag])
+		assets.room_tooltips[room_tag] = tooltips
 	}
 	end_time := time.now()
 	total_duration := time.duration_milliseconds(time.diff(start_time, end_time))
