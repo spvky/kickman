@@ -107,10 +107,11 @@ poll_input :: proc() {
 	if rl.IsKeyPressed(.K) do buffer_action(.Kick)
 	if rl.IsKeyPressed(.J) do buffer_action(.Badge)
 	if rl.IsKeyPressed(.S) do buffer_action(.Crouch)
+	if rl.IsKeyPressed(.H) do buffer_action(.Dash)
 
 	if rl.IsKeyReleased(.SPACE) do release_action(.Jump)
 	if rl.IsKeyReleased(.K) do release_action(.Kick)
 	if rl.IsKeyReleased(.J) do release_action(.Badge)
 	if rl.IsKeyReleased(.S) do release_action(.Crouch)
-
+	if rl.IsKeyReleased(.H) do release_action(.Dash)
 }
