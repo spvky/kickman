@@ -17,6 +17,7 @@ Player_Timed_Flag :: enum u8 {
 	No_Control,
 	No_Transition,
 	In_Slide,
+	Ignore_Oneways,
 }
 
 Player_Master_Flag :: enum u16 {
@@ -31,6 +32,7 @@ Player_Master_Flag :: enum u16 {
 	No_Control,
 	No_Transition,
 	In_Slide,
+	Ignore_Oneways,
 }
 Ball_Flag :: enum u8 {
 	Grounded,
@@ -94,6 +96,8 @@ player_has :: proc(set: ..Player_Master_Flag) -> bool {
 			timed += {.No_Transition}
 		case .In_Slide:
 			timed += {.In_Slide}
+		case .Ignore_Oneways:
+			timed += {.Ignore_Oneways}
 		}
 	}
 	return static <= player.flags && timed <= player.timed_flags
@@ -158,6 +162,11 @@ player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
 			}
 		case .In_Slide:
 			if .In_Slide in player.timed_flags {
+				lacks = false
+				return
+			}
+		case .Ignore_Oneways:
+			if .Ignore_Oneways in player.timed_flags {
 				lacks = false
 				return
 			}

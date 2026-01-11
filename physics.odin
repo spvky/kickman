@@ -40,6 +40,10 @@ player_movement :: proc(delta: f32) {
 		if player.movement_delta != 0 {
 			player.facing = player.movement_delta
 		}
+
+		if is_action_held(.Crouch) {
+			player.flag_timers[.Ignore_Oneways] = 0.1
+		}
 	}
 	switch player.state {
 	case .Idle:

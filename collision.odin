@@ -206,7 +206,8 @@ player_ball_level_collision :: proc() {
 		if .Oneway in collider.flags {
 
 			if player.velocity.y <= 0 ||
-			   collider.min.y < player.translation.y + (player.radius * 1.4) {
+			   collider.min.y < player.translation.y + (player.radius * 1.4) ||
+			   player_has(.Ignore_Oneways) {
 				player_should_collide = false
 			}
 
@@ -250,11 +251,13 @@ player_ball_level_collision :: proc() {
 			collider,
 			{.Standable, .Oneway},
 		) {
-			feet_on_ground = true
-			platform_velocity.x =
-				abs(platform_velocity.x) > abs(collider.velocity.x) ? platform_velocity.x : collider.velocity.x
-			platform_velocity.y =
-				abs(platform_velocity.y) > abs(collider.velocity.y) ? platform_velocity.y : collider.velocity.y
+			if player_should_collide {
+				feet_on_ground = true
+				platform_velocity.x =
+					abs(platform_velocity.x) > abs(collider.velocity.x) ? platform_velocity.x : collider.velocity.x
+				platform_velocity.y =
+					abs(platform_velocity.y) > abs(collider.velocity.y) ? platform_velocity.y : collider.velocity.y
+			}
 		}
 
 		// Ball
