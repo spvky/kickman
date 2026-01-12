@@ -73,6 +73,7 @@ Player_Badge :: enum u8 {
 Player_Juice_Values :: enum u8 {
 	Dribble_Timer,
 	Skid_Timer,
+	Dash_Spark_Timer,
 }
 
 Kick_Angle :: enum u8 {
@@ -129,6 +130,15 @@ manage_juice_values :: proc(delta: f32) {
 				}
 			} else {
 				skid_timer^ = 0.0
+			}
+		case .Dash_Spark_Timer:
+			dash_spark_timer := &player.juice_values[.Dash_Spark_Timer]
+			if dash_speed - math.abs(player.velocity.x) <= 5 {
+				dash_spark_timer^ += delta
+				if dash_spark_timer^ > 0.5 {
+					// Speedlines particle
+					dash_spark_timer^ = 0.0
+				}
 			}
 		}
 	}

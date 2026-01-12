@@ -1299,7 +1299,58 @@
 					"seed": 5342963,
 					"overrideTilesetUid": null,
 					"gridTiles": [],
-					"entityInstances": []
+					"entityInstances": [
+						{
+							"__identifier": "tooltip",
+							"__grid": [35,48],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#7294E4",
+							"iid": "1db0c5e0-d380-11f0-bd4b-7fe7be1f0b04",
+							"width": 68,
+							"height": 16,
+							"defUid": 141,
+							"px": [140,192],
+							"fieldInstances": [
+								{ "__identifier": "message", "__type": "String", "__value": "Press [SPACE] to Jump", "__tile": null, "defUid": 142, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Press [SPACE] to Jump"]
+								}] },
+								{ "__identifier": "display_point", "__type": "Point", "__value": { "cx": 35, "cy": 39 }, "__tile": null, "defUid": 143, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["35,39"]
+								}] }
+							],
+							"__worldX": 140,
+							"__worldY": 192
+						},
+						{
+							"__identifier": "tooltip",
+							"__grid": [68,48],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#7294E4",
+							"iid": "2c8f13f0-d380-11f0-bd4b-e977f4df49ed",
+							"width": 136,
+							"height": 16,
+							"defUid": 141,
+							"px": [272,192],
+							"fieldInstances": [
+								{ "__identifier": "message", "__type": "String", "__value": "Hold [H] to Dash", "__tile": null, "defUid": 142, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Hold [H] to Dash"]
+								}] },
+								{ "__identifier": "display_point", "__type": "Point", "__value": { "cx": 68, "cy": 42 }, "__tile": null, "defUid": 143, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["68,42"]
+								}] }
+							],
+							"__worldX": 272,
+							"__worldY": 192
+						}
+					]
 				},
 				{
 					"__identifier": "collision_layer",
