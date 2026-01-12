@@ -309,7 +309,7 @@ player_ball_level_collision :: proc() {
 player_ball_entity_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
-	for &entity in assets.room_entities[world.current_room] {
+	for &entity, i in assets.room_entities[world.current_room] {
 		switch entity.tag {
 		case .Lever:
 			bb := AABB {
@@ -341,7 +341,18 @@ player_ball_entity_collision :: proc() {
 				max = entity.pos + data.extents,
 			}
 		case .Checkpoint:
-		//TODO: trigger data here to set spawn point
+			bb := AABB {
+				min = entity.pos,
+				max = entity.pos + {8, 8},
+			}
+			data := &entity.data.(tags.Trigger_Data)
+			_, player_colliding := circle_aabb_collide(player.translation, player.radius, bb)
+			if player_colliding {
+				world.spawn_point = Spawn_Point {
+					room_tag     = world.current_room,
+					entity_index = i,
+				}
+			}
 		}
 	}
 }

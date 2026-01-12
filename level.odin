@@ -11,3 +11,8 @@ Room_Transition :: struct {
 	transition_position: [2]f32,
 	using aabb:          AABB,
 }
+
+Spawn_Point :: struct {
+	room_tag:     tags.Room_Tag,
+	entity_index: int,
+}

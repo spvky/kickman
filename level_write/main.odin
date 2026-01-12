@@ -274,9 +274,11 @@ main :: proc() {
 						temp_entity.id = entity.iid
 						append(&temp_entities_array, temp_entity)
 					case "checkpoint":
+						fmt.printfln("Found a checkpoint")
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Checkpoint
 						temp_entity.pos = entity.px
+						append(&temp_entities_array, temp_entity)
 					case "movable_block":
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Movable_Block
@@ -317,7 +319,6 @@ main :: proc() {
 						tooltip: tags.Tooltip
 						tooltip.pos = [2]f32{f32(entity.px.x), f32(entity.px.y)}
 						tooltip.extents = {f32(entity.width), f32(entity.height)}
-						fmt.printfln("Tooltip %v", entity)
 						for fi in entity.field_instances {
 							if raw_value, exists := fi.value.?; exists {
 								switch fi.identifier {
@@ -340,6 +341,7 @@ main :: proc() {
 
 				entities_array := make([dynamic]tags.Entity, 0, len(temp_entities_array))
 
+				fmt.printfln("Temp Entities Found: %v", len(temp_entities_array))
 				for te in temp_entities_array {
 					new_entity: tags.Entity
 					new_entity.pos = [2]f32{f32(te.pos.x), f32(te.pos.y)}
@@ -360,11 +362,10 @@ main :: proc() {
 						}
 						data.speed = temp_data.speed
 						new_entity.data = data
-					case .Lever, .Button:
+					case .Lever, .Button, .Checkpoint:
 						new_entity.data = tags.Trigger_Data {
 							on = false,
 						}
-					case .Checkpoint:
 					}
 					append(&entities_array, new_entity)
 				}
