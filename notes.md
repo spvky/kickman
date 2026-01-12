@@ -38,7 +38,7 @@ Cute little black fae kid with an afro
  Fast Straight ricocheting shots that ignore gravity for a while, pass through obstacles and cannot be headered
  Action: Teleport to the ball and gain it's velocity
 
-TODO: Tue 23 Dec 2025 01:19:44 AM EST
+Tue 23 Dec 2025 01:19:44 AM EST
 * Kick angles rework
 * Ldtk support
 * Start making tutorial stage

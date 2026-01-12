@@ -30,7 +30,13 @@ init_world :: proc() {
 	world.ball.state = .Carried
 	world.current_room = tags.Room_Tag{.tutorial, 0}
 	world.render_mode = .Scaled
+	checkpoint_pos: Vec2
+	for entity in assets.room_entities[world.current_room] {
+		if entity.tag == .Checkpoint {
+			checkpoint_pos = entity.pos
+			//TODO: set spawn point here
+		}
+	}
 	init_particle_system()
-
 	subscribe_event(.Player_State_Transition, player_state_transition_listener)
 }
