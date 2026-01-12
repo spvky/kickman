@@ -28,6 +28,7 @@ draw_room_entities :: proc() {
 			}
 			rl.DrawTexturePro(assets.raw_atlas, source, dest, {0, 0}, 0, rl.WHITE)
 		case .Button:
+		case .Checkpoint:
 		case .Movable_Block:
 			data := entity.data.(tags.Movable_Block_Data)
 			// rl.DrawRectangleV(entity.pos, data.extents, rl.BLACK)

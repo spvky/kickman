@@ -340,6 +340,8 @@ player_ball_entity_collision :: proc() {
 				min = entity.pos,
 				max = entity.pos + data.extents,
 			}
+		case .Checkpoint:
+		//TODO: trigger data here to set spawn point
 		}
 	}
 }

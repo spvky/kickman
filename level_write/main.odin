@@ -273,6 +273,10 @@ main :: proc() {
 						temp_entity.pos = entity.px
 						temp_entity.id = entity.iid
 						append(&temp_entities_array, temp_entity)
+					case "checkpoint":
+						temp_entity: Temp_Entity
+						temp_entity.tag = .Checkpoint
+						temp_entity.pos = entity.px
 					case "movable_block":
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Movable_Block
@@ -340,7 +344,9 @@ main :: proc() {
 					new_entity: tags.Entity
 					new_entity.pos = [2]f32{f32(te.pos.x), f32(te.pos.y)}
 					new_entity.tag = te.tag
-					if te.tag == .Movable_Block {
+					switch te.tag {
+					case .Movable_Block:
+						//
 						data: tags.Movable_Block_Data
 						temp_data := te.data.(Temp_Movable_Block_Data)
 						data.extents = [2]f32{f32(temp_data.extents.x), f32(temp_data.extents.y)}
@@ -354,10 +360,11 @@ main :: proc() {
 						}
 						data.speed = temp_data.speed
 						new_entity.data = data
-					} else {
+					case .Lever, .Button:
 						new_entity.data = tags.Trigger_Data {
 							on = false,
 						}
+					case .Checkpoint:
 					}
 					append(&entities_array, new_entity)
 				}

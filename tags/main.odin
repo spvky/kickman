@@ -20,6 +20,7 @@ Entity_Tag :: enum {
 	Lever,
 	Button,
 	Movable_Block,
+	Checkpoint,
 }
 
 Entity :: struct {
