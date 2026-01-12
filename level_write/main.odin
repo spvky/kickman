@@ -274,7 +274,6 @@ main :: proc() {
 						temp_entity.id = entity.iid
 						append(&temp_entities_array, temp_entity)
 					case "checkpoint":
-						fmt.printfln("Found a checkpoint")
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Checkpoint
 						temp_entity.pos = entity.px
@@ -337,11 +336,11 @@ main :: proc() {
 						append(&tooltips_array, tooltip)
 					}
 				}
+				fmt.printfln("%v: Tooltips found %v", level_name, len(tooltips_array))
 				room.tooltips = tooltips_array
 
 				entities_array := make([dynamic]tags.Entity, 0, len(temp_entities_array))
 
-				fmt.printfln("Temp Entities Found: %v", len(temp_entities_array))
 				for te in temp_entities_array {
 					new_entity: tags.Entity
 					new_entity.pos = [2]f32{f32(te.pos.x), f32(te.pos.y)}
@@ -370,6 +369,7 @@ main :: proc() {
 					append(&entities_array, new_entity)
 				}
 
+				fmt.printfln("%v: Entities found %v", level_name, len(entities_array))
 				room.entities = entities_array
 				append(&region.rooms, room)
 			}
@@ -497,7 +497,6 @@ write_rooms_to_file :: proc(region: ^Binary_Region) {
 				fmt.eprintln("Error writing to file:", write_err)
 			}
 			//Dynamic data
-			fmt.printfln("Entities to Write: %v", room.entities)
 			n, write_err = os.write_ptr(entity_file, raw_data(room.entities), entity_len)
 			if write_err != nil {
 				fmt.eprintln("Error writing to file:", write_err)
