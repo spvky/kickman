@@ -114,7 +114,7 @@ draw_player_and_ball :: proc() {
 }
 
 draw_dust :: proc() {
-	render_particles(&world.dust_particles)
+	render_particle_emitter(&world.particles.dust_particles)
 }
 
 draw_level_collision :: proc() {

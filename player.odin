@@ -16,8 +16,8 @@ TIME_TO_DESCENT: f32 : 0.25
 // How many pixels high can we jump
 JUMP_HEIGHT: f32 : 3.25 * TILE_SIZE
 
-max_speed := calculate_ground_speed()
-max_air_speed := calculate_air_speed()
+run_speed := calculate_ground_speed()
+dash_speed := calculate_dash_speed()
 jump_speed := calulate_jump_speed()
 rising_gravity := calculate_rising_gravity()
 falling_gravity := calculate_falling_gravity()
@@ -38,28 +38,30 @@ calculate_ground_speed :: proc "c" () -> f32 {
 	return JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
 }
 
-calculate_air_speed :: proc "c" () -> f32 {
+calculate_dash_speed :: proc "c" () -> f32 {
 	return DASH_JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
 }
 
 
 Player :: struct {
-	using rigidbody:   Rigidbody,
-	kick_angle:        Kick_Angle,
-	queued_state:      Player_State,
-	state:             Player_State,
-	prev_state:        Player_State,
-	time_to_top_speed: f32,
-	movement_delta:    f32,
-	facing:            f32,
-	run_direction:     f32,
-	carry_pos:         f32,
-	flags:             bit_set[Player_Flag;u8],
-	timed_flags:       bit_set[Player_Timed_Flag;u8],
-	platform_velocity: Vec2,
-	flag_timers:       [Player_Timed_Flag]f32,
-	juice_values:      [Player_Juice_Values]f32,
-	badge_type:        Player_Badge,
+	using rigidbody:    Rigidbody,
+	kick_angle:         Kick_Angle,
+	queued_state:       Player_State,
+	state:              Player_State,
+	prev_state:         Player_State,
+	time_to_run_speed:  f32,
+	time_to_dash_speed: f32,
+	movement_delta:     f32,
+	facing:             f32,
+	run_direction:      f32,
+	carry_pos:          f32,
+	flags:              bit_set[Player_Flag;u8],
+	timed_flags:        bit_set[Player_Timed_Flag;u8],
+	platform_velocity:  Vec2,
+	flag_timers:        [Player_Timed_Flag]f32,
+	juice_values:       [Player_Juice_Values]f32,
+	badge_type:         Player_Badge,
+	speed:              f32,
 }
 
 Player_Badge :: enum u8 {
@@ -70,7 +72,7 @@ Player_Badge :: enum u8 {
 
 Player_Juice_Values :: enum u8 {
 	Dribble_Timer,
-	Run_Timer,
+	Skid_Timer,
 }
 
 Kick_Angle :: enum u8 {
@@ -117,7 +119,17 @@ manage_juice_values :: proc(delta: f32) {
 			if dribble_timer^ > math.PI {
 				dribble_timer^ = 0
 			}
-		case .Run_Timer:
+		case .Skid_Timer:
+			skid_timer := &player.juice_values[.Dribble_Timer]
+			if player_is(.Skidding) {
+				skid_timer^ += delta
+				if skid_timer^ > 0.2 {
+					player_skid_dust(player)
+					skid_timer^ = 0.0
+				}
+			} else {
+				skid_timer^ = 0.0
+			}
 		}
 	}
 
@@ -215,7 +227,7 @@ player_slide :: proc() {
 	if player_can(.Slide) {
 		if is_action_buffered(.Slide) {
 			player.flag_timers[.In_Slide] = 0.55
-			player.velocity.x = max_speed * 2 * player.facing
+			player.velocity.x = run_speed * 2 * player.facing
 		}
 	}
 }
@@ -263,6 +275,25 @@ player_jump :: proc() {
 			}
 		}
 	}
+}
+
+player_skid_dust :: proc(player: ^Player) {
+	dust_min_angle, dust_max_angle: f32
+	if player.velocity.x <= -5 {
+		dust_min_angle = -3.14
+		dust_max_angle = -1.92
+	} else if player.velocity.x >= 5 {
+		dust_min_angle = -1.07
+		dust_max_angle = 0
+	}
+	slide_dir := math.sign(player.velocity.x)
+	make_sparks(
+		5,
+		player.translation + (VEC_Y * player.radius) + (VEC_X * slide_dir * 6),
+		dust_min_angle,
+		dust_max_angle,
+		slide_dir,
+	)
 }
 
 player_jump_dust :: proc(player: ^Player) {

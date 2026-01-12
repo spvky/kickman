@@ -49,26 +49,41 @@ player_movement :: proc(delta: f32) {
 	case .Idle:
 		player.velocity.x *= 0.99
 	case .Rising, .Falling:
-		if math.abs(player.velocity.x) < max_speed {
+		if math.abs(player.velocity.x) < run_speed {
 			player.velocity.x +=
-				(max_speed * player.movement_delta) * (delta * (1 / player.time_to_top_speed * 2))
+				(run_speed * player.movement_delta) * (delta * (1 / player.time_to_run_speed * 2))
 		} else {
 			if math.sign(player.movement_delta) != math.sign(player.velocity.x) {
 				player.velocity.x +=
-					(max_speed * player.movement_delta) *
-					(delta * (1 / player.time_to_top_speed * 2))
+					(run_speed * player.movement_delta) *
+					(delta * (1 / player.time_to_run_speed * 2))
 			}
 		}
 	case .Running:
-		if math.abs(player.velocity.x) < max_speed {
-			player.velocity.x +=
-				(max_speed * player.movement_delta) * (delta * (1 / player.time_to_top_speed))
+		if is_action_held(.Dash) {
+			if math.abs(player.velocity.x) < dash_speed {
+				if math.abs(player.velocity.x) < run_speed {
+					player.velocity.x +=
+						(run_speed * player.movement_delta) *
+						(delta * (1 / player.time_to_run_speed))
+				} else {
+					player.velocity.x +=
+						(dash_speed * player.movement_delta) *
+						(delta * (1 / player.time_to_dash_speed))
+				}
+			}
+		} else {
+			if math.abs(player.velocity.x) < run_speed {
+				player.velocity.x +=
+					(run_speed * player.movement_delta) * (delta * (1 / player.time_to_run_speed))
+			} else if math.abs(player.velocity.x) > run_speed {
+				player.velocity.x *= 0.999
+			}
 		}
 	case .Skidding:
 		if player.movement_delta == -math.sign(player.velocity.x) {
 			player.facing = player.movement_delta
 		}
-	// player.velocity.x += (max_speed * player.facing) * (delta * (1 / player.time_to_top_speed))
 	case .Sliding:
 	case .Crouching:
 	case .Riding:
@@ -161,10 +176,8 @@ apply_player_ball_velocity :: proc(delta: f32) {
 
 physics_step :: proc(delta: f32) {
 	manage_player_state()
-	// determine_player_state()
 	handle_state_transitions()
 	process_events()
-	//
 	manage_player_ball_velocity(delta)
 	manage_juice_values(delta)
 	player_controls(delta)

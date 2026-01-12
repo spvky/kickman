@@ -73,12 +73,12 @@ player_state_transition_listener :: proc(event: Event) {
 		}
 		if data.exited == .Skidding {
 			if player.run_direction != player.facing {
-				player.velocity.x = player.facing * max_speed * 0.9
+				speed_to_add := is_action_held(.Dash) ? dash_speed : run_speed
+				player.velocity.x = player.facing * speed_to_add * 0.9
 			}
 		}
 		player.run_direction = player.facing
 	}
-
 }
 
 override_player_state :: proc(state: Player_State) {

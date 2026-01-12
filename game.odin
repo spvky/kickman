@@ -21,7 +21,7 @@ game_update :: proc() {
 	poll_input()
 	physics_step(delta)
 	camera_follow_player()
-	update_particles(&world.dust_particles, delta)
+	update_particles(delta)
 	render()
 	free_all(context.temp_allocator)
 }

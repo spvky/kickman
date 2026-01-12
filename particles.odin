@@ -5,6 +5,28 @@ import "core:math"
 import "core:math/rand"
 import rl "vendor:raylib"
 
+Particle_System :: struct {
+	fire_particles: Particle_Emitter(100),
+	dust_particles: Particle_Emitter(50),
+}
+
+init_particle_system :: proc() {
+	particles := &world.particles
+
+	particles.dust_particles = Particle_Emitter(50) {
+		color    = {255, 255, 255, 100},
+		gravity  = {0, -10},
+		display  = Particle_Emitter_Circle{0.5, 1.5},
+		lifetime = 0.5,
+		effects  = {.Fade},
+	}
+}
+
+update_particles :: proc(delta: f32) {
+	particles := &world.particles
+	update_particle_emitter(&particles.dust_particles, delta)
+}
+
 Particle_Emitter :: struct($N: int) {
 	particles: [N]Particle,
 	color:     rl.Color,
@@ -95,7 +117,7 @@ new_particle :: proc(pe: ^Particle_Emitter($T), position, velocity: Vec2) {
 	}
 }
 
-update_particles :: proc(pe: ^Particle_Emitter($T), delta: f32) {
+update_particle_emitter :: proc(pe: ^Particle_Emitter($T), delta: f32) {
 	for &p in pe.particles {
 		if p.active {
 			p.lifetime -= delta
@@ -109,13 +131,13 @@ update_particles :: proc(pe: ^Particle_Emitter($T), delta: f32) {
 	}
 }
 
-clear_particles :: proc(pe: ^Particle_Emitter($T)) {
+clear_particle_emitter :: proc(pe: ^Particle_Emitter($T)) {
 	for &p in pe.particles {
 		p.active = false
 	}
 }
 
-render_particles :: proc(pe: ^Particle_Emitter($T)) {
+render_particle_emitter :: proc(pe: ^Particle_Emitter($T)) {
 	color := pe.color
 	for p in pe.particles {
 		if p.active {
@@ -148,11 +170,21 @@ make_dust :: proc(count: int, origin: Vec2, min_angle, max_angle: f32) {
 	for i in 0 ..< count {
 		r := rand.float32()
 		angle := min_angle + r * (max_angle - min_angle)
-		velocity := Vec2{math.cos(angle), math.sin(angle)} * 35
-		new_particle(&world.dust_particles, origin, velocity)
+		velocity := Vec2{math.cos(angle), math.sin(angle)} * 100
+		new_particle(&world.particles.dust_particles, origin, velocity)
+	}
+}
+
+make_sparks :: proc(count: int, origin: Vec2, min_angle, max_angle: f32, direction: f32) {
+	for i in 0 ..< count {
+		r := rand.float32()
+		angle := min_angle + r * (max_angle - min_angle)
+		velocity := Vec2{math.cos(angle), math.sin(angle)} * 20
+		velocity.x += direction * 80
+		new_particle(&world.particles.dust_particles, origin, velocity)
 	}
 }
 
 clear_dust :: proc() {
-	clear_particles(&world.dust_particles)
+	clear_particle_emitter(&world.particles.dust_particles)
 }
