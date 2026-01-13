@@ -1400,6 +1400,22 @@
 							"fieldInstances": [],
 							"__worldX": 24,
 							"__worldY": 200
+						},
+						{
+							"__identifier": "checkpoint",
+							"__grid": [161,50],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FEE761",
+							"iid": "8a2e3dd0-d380-11f0-bd4b-f37c3a427f32",
+							"width": 8,
+							"height": 8,
+							"defUid": 144,
+							"px": [644,200],
+							"fieldInstances": [],
+							"__worldX": 644,
+							"__worldY": 200
 						}
 					]
 				},

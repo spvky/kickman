@@ -344,6 +344,17 @@ player_land :: proc() {
 	make_dust(20, player.translation + VEC_Y * player.radius, -3.14, 0)
 }
 
+kill_player_oob :: proc() {
+	player := &world.player
+	extents := assets.room_dimensions[world.current_room]
+	if player.translation.x < 0 ||
+	   player.translation.x > extents.x ||
+	   player.translation.y < 0 ||
+	   player.translation.y > extents.y {
+		spawn_player()
+	}
+}
+
 spawn_player :: proc() {
 	spawn_position: Vec2
 	for entity, i in assets.room_entities[world.spawn_point.room_tag] {

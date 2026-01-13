@@ -188,4 +188,5 @@ physics_step :: proc(delta: f32) {
 	//Update timed flags before collision occurs
 	manage_player_ball_flags(delta)
 	collision_step()
+	kill_player_oob()
 }
