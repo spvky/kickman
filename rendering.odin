@@ -39,6 +39,7 @@ render_scene_to_texture :: proc() {
 
 render_ui_to_texture :: proc() {
 	rl.BeginTextureMode(assets.ui_texture)
+	rl.ClearBackground({0, 0, 0, 0})
 	level_banner()
 	rl.EndTextureMode()
 }
