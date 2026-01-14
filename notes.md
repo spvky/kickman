@@ -72,3 +72,18 @@ make maintaining velocity more of a challenge
 Remove revshot and instead initiate by slide kicking the ball mid-air
 
 
+Tue 13 Jan 2026 08:02:37 PM EST
+
+Upgrade Ideas:
+- Double Jump
+- Lantern (Lights up the ball)
+- Health up
+
+TODO##
+Basics:
+Double Jump
+Start considering saving/loading game state
+mutiple areas
+Area title text drops
+hazards, damage
+death

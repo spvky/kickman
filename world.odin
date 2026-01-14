@@ -9,12 +9,34 @@ World :: struct {
 	camera:          rl.Camera2D,
 	player:          Player,
 	ball:            Ball,
-	spawn_point:     Spawn_Point,
+	spawn_point:     Spawn_Point, // Flags
 	current_room:    tags.Room_Tag,
 	event_listeners: map[Event_Type][dynamic]Event_Callback,
 	event_queue:     queue.Queue(Event),
 	render_mode:     Render_Mode,
 	particles:       Particle_System,
+	world_flags:     World_Flags,
+}
+
+World_Flags :: struct {
+	unlocks:         bit_set[Unlock_Flag;u32],
+	regions_entered: bit_set[Region_Entered_Flag;u16],
+}
+
+Unlock_Flag :: enum u32 {
+	Striker_Badge,
+	Sisyphus_Badge,
+	Spirit_Badge,
+	Double_Jump,
+	Lantern,
+}
+
+Region_Entered_Flag :: enum u16 {
+	Cave_Of_Discovery,
+	Tranquil_Meadow,
+	Inky_Depths,
+	The_Summit,
+	Will_O_Woods,
 }
 
 world: World

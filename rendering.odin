@@ -37,8 +37,15 @@ render_scene_to_texture :: proc() {
 	}
 }
 
+render_ui_to_texture :: proc() {
+	rl.BeginTextureMode(assets.ui_texture)
+	level_banner()
+	rl.EndTextureMode()
+}
+
 render_to_screen :: proc() {
 	render_scene_to_texture()
+	render_ui_to_texture()
 	if world.render_mode == .Scaled {
 		WINDOW_HEIGHT = rl.GetScreenWidth()
 		WINDOW_HEIGHT = rl.GetScreenHeight()
@@ -58,6 +65,7 @@ render_to_screen :: proc() {
 		}
 		origin := Vec2{0, 0}
 		rotation: f32 = 0
+		// Gameplay Texture
 		rl.DrawTexturePro(
 			assets.gameplay_texture.texture,
 			source,
@@ -66,6 +74,8 @@ render_to_screen :: proc() {
 			rotation,
 			rl.WHITE,
 		)
+		// UI Texture
+		rl.DrawTexturePro(assets.ui_texture.texture, source, dest, origin, rotation, rl.WHITE)
 	}
 	if ODIN_DEBUG {
 		player_debug()

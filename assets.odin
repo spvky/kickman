@@ -16,6 +16,7 @@ SCREEN_HEIGHT :: 224
 
 Assets :: struct {
 	gameplay_texture: rl.RenderTexture,
+	ui_texture:       rl.RenderTexture,
 	raw_atlas:        rl.Texture2D,
 	room_textures:    map[tags.Room_Tag]rl.Texture2D,
 	room_dimensions:  map[tags.Room_Tag]Vec2,
@@ -30,6 +31,7 @@ assets: Assets
 
 init_assets :: proc() {
 	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
+	assets.ui_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
 	assets.raw_atlas = rl.LoadTexture("assets/cave_tiles.png")
 	assets.room_dimensions = make(map[tags.Room_Tag]Vec2, 10)
 	assets.room_textures = make(map[tags.Room_Tag]rl.Texture2D, 10)
