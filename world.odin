@@ -14,6 +14,7 @@ World :: struct {
 	event_queue:     queue.Queue(Event),
 	render_mode:     Render_Mode,
 	particles:       Particle_System,
+	stable_ground:   Spawn_Point,
 	// Save the following fields to binary for saving/loading
 	world_flags:     World_Flags,
 	spawn_point:     Spawn_Point,
