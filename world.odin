@@ -58,9 +58,8 @@ init_world :: proc() {
 		log.debugf("Entity %v", entity.tag)
 		if entity.tag == .Checkpoint {
 			log.debugf("Found Checkpoint %v", entity.pos)
-			checkpoint_pos = entity.pos
 			world.spawn_point.room_tag = world.current_room
-			world.spawn_point.entity_index = i
+			world.spawn_point.position = entity.pos
 			break
 		}
 	}

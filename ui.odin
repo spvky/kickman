@@ -17,6 +17,14 @@ level_banner :: proc() {
 	rl.DrawPolyLines({s_height / 2, s_width / 2}, 5, 20, 0, rl.RED)
 	rl.DrawPolyLinesEx(
 		{s_width, s_height} / 2,
+		10,
+		50,
+		-f32(math.sin(rl.GetTime() / 10)) * 300,
+		3,
+		rl.RED,
+	)
+	rl.DrawPolyLinesEx(
+		{s_width, s_height} / 2,
 		5,
 		50,
 		f32(math.sin(rl.GetTime() / 10)) * 300,

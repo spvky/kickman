@@ -356,16 +356,9 @@ kill_player_oob :: proc() {
 }
 
 spawn_player :: proc() {
-	spawn_position: Vec2
-	for entity, i in assets.room_entities[world.spawn_point.room_tag] {
-		if i == world.spawn_point.entity_index {
-			spawn_position = entity.pos
-			break
-		}
-	}
 	world.current_room = world.spawn_point.room_tag
 	world.player.radius = 4
-	world.player.translation = spawn_position
+	world.player.translation = world.spawn_point.position
 	world.player.flags = {.Has_Ball}
 	world.player.facing = 1
 }

@@ -13,6 +13,6 @@ Room_Transition :: struct {
 }
 
 Spawn_Point :: struct {
-	room_tag:     tags.Room_Tag,
-	entity_index: int,
+	room_tag: tags.Room_Tag,
+	position: Vec2,
 }

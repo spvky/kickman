@@ -349,8 +349,8 @@ player_ball_entity_collision :: proc() {
 			_, player_colliding := circle_aabb_collide(player.translation, player.radius, bb)
 			if player_colliding {
 				world.spawn_point = Spawn_Point {
-					room_tag     = world.current_room,
-					entity_index = i,
+					room_tag = world.current_room,
+					position = entity.pos,
 				}
 			}
 		}

@@ -29,6 +29,18 @@ draw_room_entities :: proc() {
 			rl.DrawTexturePro(assets.raw_atlas, source, dest, {0, 0}, 0, rl.WHITE)
 		case .Button:
 		case .Checkpoint:
+			spawn := world.spawn_point
+			check_spawn := Spawn_Point {
+				room_tag = world.current_room,
+				position = entity.pos,
+			}
+			color: rl.Color
+			if spawn == check_spawn {
+				color = rl.BLUE
+			} else {
+				color = rl.WHITE
+			}
+			rl.DrawCircleV(entity.pos, 4, color)
 		case .Movable_Block:
 			data := entity.data.(tags.Movable_Block_Data)
 			// rl.DrawRectangleV(entity.pos, data.extents, rl.BLACK)
