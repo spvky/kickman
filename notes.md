@@ -87,3 +87,6 @@ mutiple areas
 Area title text drops
 hazards, damage
 death
+
+Juice Idea: Octagonal crosshair fades in and focuses on the ball when it becomes revved
+
