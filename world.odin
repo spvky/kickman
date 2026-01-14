@@ -9,13 +9,14 @@ World :: struct {
 	camera:          rl.Camera2D,
 	player:          Player,
 	ball:            Ball,
-	spawn_point:     Spawn_Point, // Flags
 	current_room:    tags.Room_Tag,
 	event_listeners: map[Event_Type][dynamic]Event_Callback,
 	event_queue:     queue.Queue(Event),
 	render_mode:     Render_Mode,
 	particles:       Particle_System,
+	// Save the following fields to binary for saving/loading
 	world_flags:     World_Flags,
+	spawn_point:     Spawn_Point,
 }
 
 World_Flags :: struct {
@@ -37,6 +38,15 @@ Region_Entered_Flag :: enum u16 {
 	Inky_Depths,
 	The_Summit,
 	Will_O_Woods,
+}
+
+Game_State :: enum {
+	Start_Menu,
+	Pause_Menu,
+	Transition,
+	Gameplay,
+	Map,
+	Cutscene,
 }
 
 world: World
