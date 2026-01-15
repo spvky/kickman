@@ -31,7 +31,6 @@ main :: proc() {
 	context.logger = log.create_console_logger(
 		opt = runtime.Logger_Options{.Level, .Short_File_Path, .Line},
 	)
-	log.debugf("Bool Size: %v", size_of(bool))
 	game_init()
 	for !rl.WindowShouldClose() {
 		game_update()
