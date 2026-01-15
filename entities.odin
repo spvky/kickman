@@ -76,7 +76,7 @@ draw_checkpoint :: proc(entity: tags.Entity) {
 		u8(raw_sigil_color.g * 255),
 		u8(raw_sigil_color.a * 255),
 	}
-	origin := entity.pos - VEC_Y * data.animation_value * 12
+	origin := entity.pos + {4, 4} - VEC_Y * data.animation_value * 16
 
 	triangle_rotation := 90 + data.animation_value * 180
 	rl.DrawCircleV(origin, 4, dot_color)
