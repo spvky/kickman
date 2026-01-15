@@ -361,10 +361,12 @@ main :: proc() {
 						}
 						data.speed = temp_data.speed
 						new_entity.data = data
-					case .Lever, .Button, .Checkpoint:
+					case .Lever, .Button:
 						new_entity.data = tags.Trigger_Data {
 							on = false,
 						}
+					case .Checkpoint:
+						new_entity.data = tags.Checkpoint_Data{}
 					}
 					append(&entities_array, new_entity)
 				}

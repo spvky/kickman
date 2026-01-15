@@ -32,6 +32,7 @@ Entity :: struct {
 Entity_Data :: union {
 	Movable_Block_Data,
 	Trigger_Data,
+	Checkpoint_Data,
 }
 
 Movable_Block_Data :: struct {
@@ -45,6 +46,11 @@ Movable_Block_Data :: struct {
 Trigger_Data :: struct {
 	on:              bool,
 	touching_player: bool,
+}
+
+Checkpoint_Data :: struct {
+	active:          bool,
+	animation_value: f32,
 }
 
 Tooltip :: struct {

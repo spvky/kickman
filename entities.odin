@@ -29,18 +29,7 @@ draw_room_entities :: proc() {
 			rl.DrawTexturePro(assets.raw_atlas, source, dest, {0, 0}, 0, rl.WHITE)
 		case .Button:
 		case .Checkpoint:
-			spawn := world.spawn_point
-			check_spawn := Spawn_Point {
-				room_tag = world.current_room,
-				position = entity.pos,
-			}
-			color: rl.Color
-			if spawn == check_spawn {
-				color = rl.BLUE
-			} else {
-				color = rl.WHITE
-			}
-			rl.DrawCircleV(entity.pos, 4, color)
+			draw_checkpoint(entity)
 		case .Movable_Block:
 			data := entity.data.(tags.Movable_Block_Data)
 			// rl.DrawRectangleV(entity.pos, data.extents, rl.BLACK)
@@ -69,9 +58,60 @@ draw_room_entities :: proc() {
 	}
 }
 
+draw_checkpoint :: proc(entity: tags.Entity) {
+	data := entity.data.(tags.Checkpoint_Data)
+
+	raw_dot_color := math.lerp([4]f32{1, 1, 1, 0.8}, [4]f32{0, 1, 0, 1}, data.animation_value)
+	dot_color: rl.Color = {
+		u8(raw_dot_color.r * 255),
+		u8(raw_dot_color.b * 255),
+		u8(raw_dot_color.g * 255),
+		u8(raw_dot_color.a * 255),
+	}
+
+	raw_sigil_color := math.lerp([4]f32{1, 1, 1, 0}, [4]f32{0, 1, 0, 1}, data.animation_value)
+	sigil_color: rl.Color = {
+		u8(raw_sigil_color.r * 255),
+		u8(raw_sigil_color.b * 255),
+		u8(raw_sigil_color.g * 255),
+		u8(raw_sigil_color.a * 255),
+	}
+	origin := entity.pos - VEC_Y * data.animation_value * 12
+
+	triangle_rotation := 90 + data.animation_value * 180
+	rl.DrawCircleV(origin, 4, dot_color)
+	rl.DrawPolyLines(origin, 3, 16, triangle_rotation, sigil_color)
+	rl.DrawPolyLines(origin, 6, 16, triangle_rotation, sigil_color)
+}
+
+
 update_entities :: proc(delta: f32) {
 	for &entity in assets.room_entities[world.current_room] {
 		#partial switch entity.tag {
+		case .Checkpoint:
+			data := &entity.data.(tags.Checkpoint_Data)
+			spawn := world.spawn_point
+			check_spawn := Spawn_Point {
+				room_tag = world.current_room,
+				position = entity.pos,
+			}
+			if spawn == check_spawn {
+				data.active = true
+				if data.animation_value > 0.97 {
+					data.animation_value = 1
+				} else {
+					data.animation_value = math.lerp(data.animation_value, 1, delta * 5)
+				}
+			} else {
+				data.active = false
+				if data.animation_value < 0.06 {
+					data.animation_value = 0
+				} else {
+					data.animation_value = math.lerp(data.animation_value, 0, delta * 2.5)
+				}
+			}
+
+
 		case .Movable_Block:
 			data := &entity.data.(tags.Movable_Block_Data)
 			trigger_data := assets.room_entities[world.current_room][data.trigger_index].data.(tags.Trigger_Data)

@@ -345,7 +345,7 @@ player_ball_entity_collision :: proc() {
 				min = entity.pos,
 				max = entity.pos + {8, 8},
 			}
-			data := &entity.data.(tags.Trigger_Data)
+			data := &entity.data.(tags.Checkpoint_Data)
 			_, player_colliding := circle_aabb_collide(player.translation, player.radius, bb)
 			if player_colliding {
 				world.spawn_point = Spawn_Point {
