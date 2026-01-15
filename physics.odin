@@ -135,13 +135,12 @@ manage_player_ball_velocity :: proc(delta: f32) {
 					{
 							player.facing *
 							math.abs(
-								math.sin(player.juice_values[.Dribble_Timer] * pulse) *
+								math.sin((player.juice_values[.Dribble_Timer]) * 5 + pulse) *
 								player.radius *
 								amp,
 							),
 							0,
 						}
-				// log.debugf("Dribblin: %.2f", player.juice_values[.Dribble_Timer])
 				ball.translation = math.lerp(ball.translation, dribble_position, delta * 50)
 			} else {
 				ball.translation = math.lerp(ball.translation, player_foot_position(), delta * 80)
