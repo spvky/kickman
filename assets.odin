@@ -15,6 +15,7 @@ SCREEN_WIDTH :: 400 //25x14 16 pixel tiles
 SCREEN_HEIGHT :: 224
 
 Assets :: struct {
+	player_texture:   rl.Texture2D,
 	gameplay_texture: rl.RenderTexture,
 	ui_texture:       rl.RenderTexture,
 	raw_atlas:        rl.Texture2D,
@@ -30,6 +31,7 @@ Assets :: struct {
 assets: Assets
 
 init_assets :: proc() {
+	assets.player_texture = rl.LoadTexture("assets/player.png")
 	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
 	assets.ui_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
 	assets.raw_atlas = rl.LoadTexture("assets/cave_tiles.png")
@@ -45,6 +47,7 @@ init_assets :: proc() {
 
 delete_assets :: proc() {
 	rl.UnloadRenderTexture(assets.gameplay_texture)
+	rl.UnloadTexture(assets.player_texture)
 	rl.UnloadTexture(assets.raw_atlas)
 	rl.UnloadFont(assets.font)
 	delete(assets.room_dimensions)

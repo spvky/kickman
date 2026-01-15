@@ -75,6 +75,10 @@ init_world :: proc() {
 		}
 	}
 	world.player.translation = checkpoint_pos
+	world.player.animation.sheet_width = f32(assets.player_texture.width)
+	world.player.animation.sheet_height = f32(assets.player_texture.height)
+	world.player.animation.sprite_width = 16
+	world.player.animation.sprite_height = 20
 	init_particle_system()
 	subscribe_event(.Player_State_Transition, player_state_transition_listener)
 }

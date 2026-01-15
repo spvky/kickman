@@ -38,16 +38,16 @@ level_banner :: proc() {
 	font_size: i32 = 18
 	text_width := rl.MeasureText("Cave of Enlightenment", font_size)
 	draw_sigil({25, 20}, 40)
-	rl.DrawTextPro(
-		assets.font,
-		"Cave of Enlightenment",
-		{s_width / 2 - f32(text_width), s_height / 2 - f32(font_size) / 2},
-		{0, 0},
-		0,
-		f32(font_size),
-		0,
-		rl.WHITE,
-	)
+	// rl.DrawTextPro(
+	// 	assets.font,
+	// 	"Cave of Enlightenment",
+	// 	{s_width / 2 - f32(text_width), s_height / 2 - f32(font_size) / 2},
+	// 	{0, 0},
+	// 	0,
+	// 	f32(font_size),
+	// 	0,
+	// 	rl.WHITE,
+	// )
 }
 
 draw_sigil :: proc(origin: Vec2, radius: f32) {

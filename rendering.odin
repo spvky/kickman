@@ -91,10 +91,20 @@ draw_current_room :: proc() {
 draw_player_and_ball :: proc() {
 	player := world.player
 	ball := world.ball
-	if player_is(.Idle, .Running, .Skidding, .Rising, .Falling, .Riding) {
-		rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
+	// if player_is(.Idle, .Running, .Skidding, .Rising, .Falling, .Riding) {
+	// 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
+	// }
+	// rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
+	dest := rl.Rectangle {
+		x      = player.translation.x - (player.animation.sprite_width) / 2,
+		y      = player.translation.y - (player.animation.sprite_height) * 0.66,
+		width  = player.animation.sprite_width,
+		height = player.animation.sprite_height,
 	}
-	rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
+
+	player_frame := get_frame(player.animation)
+	rl.DrawTexturePro(assets.player_texture, player_frame, dest, VEC_0, 0, rl.WHITE)
+
 	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
 	rl.DrawCircleV(player_feet_sensor, 1, rl.RED)
 	ball_color := rl.WHITE

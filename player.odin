@@ -42,7 +42,6 @@ calculate_dash_speed :: proc "c" () -> f32 {
 	return DASH_JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
 }
 
-
 Player :: struct {
 	using rigidbody:    Rigidbody,
 	kick_angle:         Kick_Angle,
@@ -62,6 +61,7 @@ Player :: struct {
 	juice_values:       [Player_Juice_Values]f32,
 	badge_type:         Player_Badge,
 	speed:              f32,
+	animation:          Animation_Player,
 }
 
 Player_Badge :: enum u8 {
