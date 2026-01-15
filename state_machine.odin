@@ -117,11 +117,17 @@ manage_player_state :: proc() {
 		player.animation.state = .Fall
 	case .Running:
 		player.animation.state = .Run
+		if is_action_held(.Dash) {
+			player.animation.frame_length = 1.0 / 8
+		}
 	case .Riding:
 		player.animation.state = .Balance
 	case .Skidding:
 		player.animation.state = .Run
 		player.animation.frame_length = 1.0 / 12
+	case .Sliding, .Crouching:
+		player.animation.state = .Crouch
+
 	}
 }
 

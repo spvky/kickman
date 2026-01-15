@@ -106,10 +106,7 @@ draw_player_and_ball :: proc() {
 	player_frame := get_frame(player.animation, player.facing)
 	rl.DrawTexturePro(assets.player_texture, player_frame, dest, VEC_0, 0, rl.WHITE)
 
-	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
-	rl.DrawCircleV(player_feet_sensor, 1, rl.RED)
 	ball_color := rl.WHITE
-
 	if ball_is(.Revved) {
 		t := math.sin(ball.juice_values[.Rev_Flash] * 20)
 		white: [4]f32 = {255, 255, 255, 255}

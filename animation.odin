@@ -42,6 +42,7 @@ Animation_Action :: enum u8 {
 	Wall_Slide,
 	Rise,
 	Fall,
+	Crouch,
 }
 
 player_animations :: proc() -> [Animation_Action]Animation {
@@ -54,6 +55,7 @@ player_animations :: proc() -> [Animation_Action]Animation {
 		.Wall_Slide = {40, 47},
 		.Rise = {48, 53},
 		.Fall = {54, 60},
+		.Crouch = {61, 61},
 	}
 }
 
@@ -66,7 +68,6 @@ update_animation_player :: proc(anim: ^Animation_Player, delta: f32) {
 	} else {
 		anim.frame_time += delta
 		if anim.frame_time > anim.frame_length {
-			log.debug("Flipping")
 			anim.frame_time = 0
 			new_index := anim.frame + 1
 			if new_index > anim.animations[anim.state].end {
