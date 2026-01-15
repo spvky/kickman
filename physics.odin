@@ -103,11 +103,9 @@ manage_player_ball_velocity :: proc(delta: f32) {
 		player.velocity.x *= 0.997
 		if math.abs(player.velocity.x) < 10 {
 			if player.movement_delta == 0 {
-				//CHANGE ME
 				player.state = .Idle
 				player.velocity.x = 0
 			} else {
-				//CHANGE ME
 				player.state = .Running
 			}
 		}

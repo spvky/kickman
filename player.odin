@@ -12,7 +12,7 @@ DASH_JUMP_DISTANCE: f32 : 14 * TILE_SIZE
 // How long to reach jump peak (in seconds)
 TIME_TO_PEAK: f32 : 0.3
 // How long to reach height we jumped from (in seconds)
-TIME_TO_DESCENT: f32 : 0.25
+TIME_TO_DESCENT: f32 : 0.28
 // How many pixels high can we jump
 JUMP_HEIGHT: f32 : 3.5 * TILE_SIZE
 
