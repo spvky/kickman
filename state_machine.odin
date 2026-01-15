@@ -69,6 +69,7 @@ player_state_transition_listener :: proc(event: Event) {
 			player.facing = player.movement_delta
 		}
 	case .Running:
+		player.juice_values[.Dribble_Timer] = 0
 		if data.exited == .Idle {
 		}
 		if data.exited == .Skidding {

@@ -102,7 +102,7 @@ player_foot_position :: proc(direction: f32 = 1) -> Vec2 {
 	return(
 		player.translation +
 		Vec2 {
-				player.facing * direction * player.radius,
+				player.facing * direction * player.radius * 2,
 				(player.radius + world.ball.radius) / 2.5,
 			} \
 	)
@@ -121,10 +121,10 @@ manage_juice_values :: proc(delta: f32) {
 				dribble_timer^ = 0
 			}
 		case .Skid_Timer:
-			skid_timer := &player.juice_values[.Dribble_Timer]
-			if player_is(.Skidding) {
+			skid_timer := &player.juice_values[.Skid_Timer]
+			if player_is(.Skidding) && player.movement_delta != 0 {
 				skid_timer^ += delta
-				if skid_timer^ > 0.2 {
+				if skid_timer^ > 0.1 {
 					player_skid_dust(player)
 					skid_timer^ = 0.0
 				}

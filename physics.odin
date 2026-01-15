@@ -127,17 +127,21 @@ manage_player_ball_velocity :: proc(delta: f32) {
 		case .Carried:
 			ball.velocity = VEC_0
 			if player_is(.Running) && player_has(.Grounded) {
+				dashing := is_action_held(.Dash)
+				pulse: f32 = dashing ? 2.5 : 5
+				amp: f32 = dashing ? 5 : 2.5
 				dribble_position :=
 					player_foot_position() +
 					{
 							player.facing *
 							math.abs(
-								math.sin(player.juice_values[.Dribble_Timer] * 5) *
+								math.sin(player.juice_values[.Dribble_Timer] * pulse) *
 								player.radius *
-								1.5,
+								amp,
 							),
 							0,
 						}
+				// log.debugf("Dribblin: %.2f", player.juice_values[.Dribble_Timer])
 				ball.translation = math.lerp(ball.translation, dribble_position, delta * 50)
 			} else {
 				ball.translation = math.lerp(ball.translation, player_foot_position(), delta * 80)
