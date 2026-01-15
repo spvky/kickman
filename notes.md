@@ -100,3 +100,5 @@ Thu 15 Jan 2026 12:01:35 AM EST
 
 TODO##
 Fix dribbling
+
+the ball color when recalling is the color of the players magic
