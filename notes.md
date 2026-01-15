@@ -94,3 +94,9 @@ Juice Idea: Octagonal crosshair fades in and focuses on the ball when it becomes
 Wed 14 Jan 2026 01:52:48 PM EST
 
 Spirit badge is a basketball
+
+
+Thu 15 Jan 2026 12:01:35 AM EST
+
+TODO##
+Fix dribbling

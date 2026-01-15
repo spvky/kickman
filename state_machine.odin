@@ -107,6 +107,22 @@ manage_player_state :: proc() {
 	case .Riding:
 	}
 	player.state = state
+	player.animation.frame_length = 1.0 / 6
+	#partial switch player.state {
+	case .Idle:
+		player.animation.state = .Idle
+	case .Rising:
+		player.animation.state = .Rise
+	case .Falling:
+		player.animation.state = .Fall
+	case .Running:
+		player.animation.state = .Run
+	case .Riding:
+		player.animation.state = .Balance
+	case .Skidding:
+		player.animation.state = .Run
+		player.animation.frame_length = 1.0 / 12
+	}
 }
 
 determine_state_from_idle :: #force_inline proc(player: ^Player) -> (state: Player_State) {

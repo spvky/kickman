@@ -40,7 +40,7 @@ render_scene_to_texture :: proc() {
 render_ui_to_texture :: proc() {
 	rl.BeginTextureMode(assets.ui_texture)
 	rl.ClearBackground({0, 0, 0, 0})
-	level_banner()
+	draw_sigil({25, 20}, 40)
 	rl.EndTextureMode()
 }
 
@@ -95,14 +95,15 @@ draw_player_and_ball :: proc() {
 	// 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
 	// }
 	// rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
+	delta := rl.GetFrameTime()
+	update_animation_player(&world.player.animation, delta)
 	dest := rl.Rectangle {
 		x      = player.translation.x - (player.animation.sprite_width) / 2,
 		y      = player.translation.y - (player.animation.sprite_height) * 0.66,
 		width  = player.animation.sprite_width,
 		height = player.animation.sprite_height,
 	}
-
-	player_frame := get_frame(player.animation)
+	player_frame := get_frame(player.animation, player.facing)
 	rl.DrawTexturePro(assets.player_texture, player_frame, dest, VEC_0, 0, rl.WHITE)
 
 	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}

@@ -20,6 +20,7 @@ game_update :: proc() {
 	delta := rl.GetFrameTime()
 	poll_input()
 	physics_step(delta)
+	// update_animation_player(&world.player.animation, delta)
 	camera_follow_player()
 	update_particles(delta)
 	render()
