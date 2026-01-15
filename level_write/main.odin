@@ -4,6 +4,7 @@ import ldtk "../ldtk"
 import tags "../tags"
 import "core:encoding/json"
 import "core:fmt"
+import "core:log"
 import "core:os"
 import "core:time"
 
@@ -19,10 +20,12 @@ Binary_Region :: struct {
 }
 
 Binary_Room :: struct {
-	collision:   [dynamic]Binary_Collider,
-	transitions: [dynamic]Binary_Transition,
-	entities:    [dynamic]tags.Entity,
-	tooltips:    [dynamic]tags.Tooltip,
+	collision:     [dynamic]Binary_Collider,
+	transitions:   [dynamic]Binary_Transition,
+	entities:      [dynamic]tags.Entity,
+	tooltips:      [dynamic]tags.Tooltip,
+	// This is not written to file
+	movable_assoc: [dynamic]Movable_Assoc,
 }
 
 Binary_Transition :: struct {
@@ -37,6 +40,7 @@ Temp_Entity :: struct {
 	tag:  tags.Entity_Tag,
 	pos:  [2]int,
 	data: Temp_Entity_Data,
+	room: tags.Room_Tag,
 }
 
 Temp_Entity_Data :: union {
@@ -65,10 +69,22 @@ Temp_Binary_Transition :: struct {
 	level_index:       int,
 }
 
+Trigger_Map_Data :: struct {
+	room:  tags.Room_Tag,
+	index: u8,
+}
+
+Movable_Assoc :: struct {
+	index:       int,
+	trigger_eid: string,
+}
+
 main :: proc() {
 	start_time := time.now()
 	if project, ok := ldtk.load_from_file("../assets/levels/pell.ldtk", context.temp_allocator).?;
 	   ok {
+		regions_array := make([dynamic]Binary_Region, 0, 2)
+		trigger_map := make(map[string]Trigger_Map_Data, 16)
 		for world in project.worlds {
 			region: Binary_Region
 			region.name = world.identifier
@@ -82,8 +98,17 @@ main :: proc() {
 
 			for level, i in world.levels {
 				room: Binary_Room
+				room.movable_assoc = make([dynamic]Movable_Assoc, 0, 4)
 				layer_width, layer_height: int
 				collision_csv: []int
+				room_tag: tags.Room_Tag
+
+				switch world.identifier {
+				case "tutorial":
+					room_tag.region_tag = .tutorial
+				}
+				room_tag.room_index = u8(i)
+
 				entities: []ldtk.Entity_Instance
 				transition_entities: []ldtk.Entity_Instance
 				level_name := fmt.tprintf("%v_%02d", region.name, i)
@@ -266,6 +291,7 @@ main :: proc() {
 						temp_entity.tag = .Lever
 						temp_entity.pos = entity.px
 						temp_entity.id = entity.iid
+						temp_entity.room = room_tag
 						append(&temp_entities_array, temp_entity)
 					case "button":
 						temp_entity: Temp_Entity
@@ -341,7 +367,7 @@ main :: proc() {
 
 				entities_array := make([dynamic]tags.Entity, 0, len(temp_entities_array))
 
-				for te in temp_entities_array {
+				for te, oi in temp_entities_array {
 					new_entity: tags.Entity
 					new_entity.pos = [2]f32{f32(te.pos.x), f32(te.pos.y)}
 					new_entity.tag = te.tag
@@ -354,16 +380,20 @@ main :: proc() {
 						for p, i in temp_data.points {
 							data.positions[i] = [2]f32{f32(p.x * 4), f32(p.y * 4)}
 						}
-						for tte, i in temp_entities_array {
-							if tte.id == temp_data.trigger_ref {
-								data.trigger_index = i
-							}
-						}
 						data.speed = temp_data.speed
 						new_entity.data = data
+						append(
+							&room.movable_assoc,
+							Movable_Assoc{index = oi, trigger_eid = temp_data.trigger_ref},
+						)
+
 					case .Lever, .Button:
 						new_entity.data = tags.Trigger_Data {
 							on = false,
+						}
+						trigger_map[te.id] = {
+							room  = room_tag,
+							index = u8(len(entities_array)),
 						}
 					case .Checkpoint:
 						new_entity.data = tags.Checkpoint_Data{}
@@ -400,9 +430,23 @@ main :: proc() {
 					// Use temp_transition.level_index to put into proper collection
 				}
 			}
-			write_rooms_to_file(&region)
+			append(&regions_array, region)
 		}
 		// After parsing all rooms, write the region to file in binary
+
+		for &region in regions_array {
+			for room in region.rooms {
+				for assoc in room.movable_assoc {
+					if trigger, exists := trigger_map[assoc.trigger_eid]; exists {
+						movable_entity := &room.entities[assoc.index]
+						data := &movable_entity.data.(tags.Movable_Block_Data)
+						data.trigger_index = int(trigger.index)
+						data.trigger_room = trigger.room
+					}
+				}
+			}
+			write_rooms_to_file(&region)
+		}
 	}
 	free_all(context.temp_allocator)
 	end_time := time.now()

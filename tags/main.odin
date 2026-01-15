@@ -37,6 +37,7 @@ Entity_Data :: union {
 
 Movable_Block_Data :: struct {
 	trigger_index: int,
+	trigger_room:  Room_Tag,
 	positions:     [2][2]f32,
 	extents:       [2]f32,
 	velocity:      [2]f32,

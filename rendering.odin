@@ -99,7 +99,7 @@ draw_player_and_ball :: proc() {
 	update_animation_player(&world.player.animation, delta)
 	dest := rl.Rectangle {
 		x      = player.translation.x - (player.animation.sprite_width) / 2,
-		y      = player.translation.y - (player.animation.sprite_height) * 0.66,
+		y      = player.translation.y - (player.animation.sprite_height) * 0.68,
 		width  = player.animation.sprite_width,
 		height = player.animation.sprite_height,
 	}

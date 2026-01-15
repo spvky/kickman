@@ -1,5 +1,6 @@
 package main
 
+import "core:log"
 import "core:math"
 import l "core:math/linalg"
 import "tags"
@@ -114,7 +115,12 @@ update_entities :: proc(delta: f32) {
 
 		case .Movable_Block:
 			data := &entity.data.(tags.Movable_Block_Data)
-			trigger_data := assets.room_entities[world.current_room][data.trigger_index].data.(tags.Trigger_Data)
+			log.debugf("Trigger Info: %v, %v", data.trigger_index, data.trigger_room)
+
+			for ent, i in assets.room_entities[data.trigger_room] {
+				log.debugf("Entity: %v", ent)
+			}
+			trigger_data := assets.room_entities[data.trigger_room][data.trigger_index].data.(tags.Trigger_Data)
 			signal := trigger_data.on
 
 			// Lerp to location based on signal value
