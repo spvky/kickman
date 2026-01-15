@@ -254,6 +254,9 @@ player_ball_level_collision :: proc() {
 		) {
 			if player_should_collide {
 				feet_on_ground = true
+				player_remove(.Bounced)
+				player_t_remove(.Just_Bounced)
+				player_t_remove(.Just_Jumped)
 				platform_velocity.x =
 					abs(platform_velocity.x) > abs(collider.velocity.x) ? platform_velocity.x : collider.velocity.x
 				platform_velocity.y =
@@ -387,13 +390,16 @@ player_ball_collision :: proc() {
 		// When sliding, send the ball up and behind and rev it
 		if feet_touching_ball {
 			if player_can(.Bounce) {
-				ball.velocity.y = player.velocity.y
-				// ball.velocity.x *= 0.3 * player.facing
+				if ball_lacks(.Grounded) {
+					ball.velocity.y = player.velocity.y
+					ball.velocity.x *= 0.2
+				}
 				ball.spin = player.facing
-				player.velocity.y = jump_speed * 1.125
+				player.velocity.y = bounce_speed
 				player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
 				player_t_add(.Ignore_Ball, 0.1)
-				player_t_add(.Bounced, 0.1)
+				player_t_add(.Just_Bounced, 0.1)
+				player_add(.Bounced)
 				return
 			}
 

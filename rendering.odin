@@ -119,7 +119,27 @@ draw_player_and_ball :: proc() {
 			u8(float_color.b),
 			u8(float_color.a),
 		}
+	} else if ball_is(.Recalling) {
+		ball_color = {165, 134, 236, 255}
+		sigil_color: rl.Color = {ball_color.r, ball_color.g, ball_color.b, 200}
+		rl.DrawPolyLinesEx(
+			ball.translation,
+			5,
+			6,
+			-ball.juice_values[.Sigil_Rotation],
+			2,
+			sigil_color,
+		)
+		rl.DrawPolyLinesEx(
+			ball.translation,
+			3,
+			6,
+			ball.juice_values[.Sigil_Rotation],
+			2,
+			sigil_color,
+		)
 	}
+
 	rl.DrawCircleV(ball.translation, ball.radius, ball_color)
 
 	if ODIN_DEBUG {

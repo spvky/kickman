@@ -31,7 +31,20 @@ get_frame :: proc(anim: Animation_Player, facing: f32) -> (frame: rl.Rectangle) 
 
 Animation :: struct {
 	start, end: u16,
+	meta:       Animation_Meta,
 }
+
+Animation_Meta :: union #no_nil {
+	Animation_Looped,
+	Animation_Oneshot,
+}
+
+Animation_Looped :: struct {}
+
+Animation_Oneshot :: struct {
+	next: Animation_Action,
+}
+
 
 Animation_Action :: enum u8 {
 	Idle,
@@ -43,19 +56,21 @@ Animation_Action :: enum u8 {
 	Rise,
 	Fall,
 	Crouch,
+	Sleep,
 }
 
 player_animations :: proc() -> [Animation_Action]Animation {
 	return {
-		.Idle = {0, 8},
-		.Flourish = {9, 15},
-		.Balance = {16, 23},
-		.Run = {24, 31},
-		.Cling = {32, 39},
-		.Wall_Slide = {40, 47},
-		.Rise = {48, 53},
-		.Fall = {54, 60},
-		.Crouch = {61, 61},
+		.Idle = {start = 0, end = 8},
+		.Flourish = {start = 9, end = 15, meta = Animation_Oneshot{next = .Idle}},
+		.Balance = {start = 16, end = 23},
+		.Run = {start = 24, end = 31},
+		.Cling = {start = 32, end = 39},
+		.Wall_Slide = {start = 40, end = 47},
+		.Rise = {start = 48, end = 53},
+		.Fall = {start = 54, end = 60},
+		.Crouch = {start = 61, end = 61},
+		.Sleep = {start = 62, end = 63},
 	}
 }
 
@@ -71,7 +86,13 @@ update_animation_player :: proc(anim: ^Animation_Player, delta: f32) {
 			anim.frame_time = 0
 			new_index := anim.frame + 1
 			if new_index > anim.animations[anim.state].end {
-				new_index = anim.animations[anim.state].start
+				switch v in anim.animations[anim.state].meta {
+				case Animation_Looped:
+					new_index = anim.animations[anim.state].start
+				case Animation_Oneshot:
+					new_index = anim.animations[v.next].start
+					anim.state = v.next
+				}
 			}
 			anim.frame = new_index
 		}

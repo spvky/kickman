@@ -3,45 +3,6 @@ package main
 import "core:log"
 import "core:math"
 
-
-TILE_SIZE: f32 : 8
-// How far can the player jump horizontally (in pixels)
-JUMP_DISTANCE: f32 : 7 * TILE_SIZE
-// How far can the player jump horizontally while_dashing
-DASH_JUMP_DISTANCE: f32 : 14 * TILE_SIZE
-// How long to reach jump peak (in seconds)
-TIME_TO_PEAK: f32 : 0.3
-// How long to reach height we jumped from (in seconds)
-TIME_TO_DESCENT: f32 : 0.28
-// How many pixels high can we jump
-JUMP_HEIGHT: f32 : 3.5 * TILE_SIZE
-
-run_speed := calculate_ground_speed()
-dash_speed := calculate_dash_speed()
-jump_speed := calulate_jump_speed()
-rising_gravity := calculate_rising_gravity()
-falling_gravity := calculate_falling_gravity()
-
-calulate_jump_speed :: proc "c" () -> f32 {
-	return (-2 * JUMP_HEIGHT) / TIME_TO_PEAK
-}
-
-calculate_rising_gravity :: proc "c" () -> f32 {
-	return (2 * JUMP_HEIGHT) / math.pow(TIME_TO_PEAK, 2)
-}
-
-calculate_falling_gravity :: proc "c" () -> f32 {
-	return (2 * JUMP_HEIGHT) / math.pow(TIME_TO_DESCENT, 2)
-}
-
-calculate_ground_speed :: proc "c" () -> f32 {
-	return JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
-}
-
-calculate_dash_speed :: proc "c" () -> f32 {
-	return DASH_JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
-}
-
 Player :: struct {
 	using rigidbody:    Rigidbody,
 	kick_angle:         Kick_Angle,
@@ -54,8 +15,8 @@ Player :: struct {
 	facing:             f32,
 	run_direction:      f32,
 	carry_pos:          f32,
-	flags:              bit_set[Player_Flag;u8],
-	timed_flags:        bit_set[Player_Timed_Flag;u8],
+	flags:              bit_set[Player_Flag;u16],
+	timed_flags:        bit_set[Player_Timed_Flag;u16],
 	platform_velocity:  Vec2,
 	flag_timers:        [Player_Timed_Flag]f32,
 	juice_values:       [Player_Juice_Values]f32,
@@ -74,6 +35,8 @@ Player_Juice_Values :: enum u8 {
 	Dribble_Timer,
 	Skid_Timer,
 	Dash_Spark_Timer,
+	Flourish_Timer,
+	Sleep_Timer,
 }
 
 Kick_Angle :: enum u8 {
@@ -95,6 +58,7 @@ Ball :: struct {
 
 Ball_Juice_Values :: enum {
 	Rev_Flash,
+	Sigil_Rotation,
 }
 
 player_foot_position :: proc(direction: f32 = 1) -> Vec2 {
@@ -140,6 +104,28 @@ manage_juice_values :: proc(delta: f32) {
 					dash_spark_timer^ = 0.0
 				}
 			}
+		case .Flourish_Timer:
+			flourish_timer := &player.juice_values[.Flourish_Timer]
+			if player_is(.Idle) {
+				flourish_timer^ += delta
+				if flourish_timer^ >= 5 {
+					flourish_timer^ = 0
+					player.animation.state = .Flourish
+				}
+			} else {
+				flourish_timer^ = 0
+			}
+		case .Sleep_Timer:
+			sleep_timer := &player.juice_values[.Sleep_Timer]
+			if player_is(.Idle) {
+				sleep_timer^ += delta
+				if sleep_timer^ >= 15 {
+					player.animation.state = .Sleep
+				}
+			} else {
+				sleep_timer^ = 0
+			}
+
 		}
 	}
 
@@ -151,6 +137,14 @@ manage_juice_values :: proc(delta: f32) {
 			if rev_timer^ > math.PI {
 				rev_timer^ = 0
 			}
+		case .Sigil_Rotation:
+			sigil_rot := &ball.juice_values[.Sigil_Rotation]
+			if ball_is(.Revved) {
+				sigil_rot^ += delta * 720
+			} else if ball_is(.Recalling) {
+				sigil_rot^ += delta * 360
+			}
+
 		}
 	}
 }
@@ -278,7 +272,7 @@ player_jump :: proc() {
 				player.velocity += player.platform_velocity
 				player_remove(.Grounded)
 				player_t_remove(.Coyote)
-				player_t_add(.Bounced, 0.15)
+				player_t_add(.Just_Jumped, 0.15)
 				consume_action(.Jump)
 				player_jump_dust(player)
 				return

@@ -111,7 +111,13 @@ manage_player_state :: proc() {
 	player.animation.frame_length = 1.0 / 6
 	#partial switch player.state {
 	case .Idle:
-		player.animation.state = .Idle
+		if player.animation.state == .Flourish {
+			player.animation.frame_length = 1.0 / 2
+		} else if player.animation.state == .Sleep {
+			player.animation.frame_length = 1.0
+		} else {
+			player.animation.state = .Idle
+		}
 	case .Rising:
 		player.animation.state = .Rise
 	case .Falling:

@@ -1,15 +1,16 @@
 package main
 
 import "core:log"
+import "core:time"
 
-Player_Flag :: enum u8 {
+Player_Flag :: enum u16 {
 	Grounded,
 	Double_Jump,
 	Has_Ball,
-	On_Ball,
+	Bounced,
 }
 
-Player_Timed_Flag :: enum u8 {
+Player_Timed_Flag :: enum u16 {
 	Coyote,
 	Ignore_Ball,
 	No_Badge,
@@ -17,14 +18,15 @@ Player_Timed_Flag :: enum u8 {
 	No_Transition,
 	In_Slide,
 	Ignore_Oneways,
-	Bounced,
+	Just_Bounced,
+	Just_Jumped,
 }
 
-Player_Master_Flag :: enum u16 {
+Player_Master_Flag :: enum u32 {
 	Grounded,
 	Double_Jump,
 	Has_Ball,
-	On_Ball,
+	Bounced,
 	Coyote,
 	Ignore_Ball,
 	No_Badge,
@@ -32,7 +34,8 @@ Player_Master_Flag :: enum u16 {
 	No_Transition,
 	In_Slide,
 	Ignore_Oneways,
-	Bounced,
+	Just_Bounced,
+	Just_Jumped,
 }
 Ball_Flag :: enum u8 {
 	Grounded,
@@ -69,8 +72,8 @@ Player_Ball_Interaction :: enum u8 {
 player_has :: proc(set: ..Player_Master_Flag) -> bool {
 	player := &world.player
 
-	static: bit_set[Player_Flag;u8]
-	timed: bit_set[Player_Timed_Flag;u8]
+	static: bit_set[Player_Flag;u16]
+	timed: bit_set[Player_Timed_Flag;u16]
 
 	for v in set {
 		switch v {
@@ -80,8 +83,8 @@ player_has :: proc(set: ..Player_Master_Flag) -> bool {
 			static += {.Double_Jump}
 		case .Has_Ball:
 			static += {.Has_Ball}
-		case .On_Ball:
-			static += {.On_Ball}
+		case .Bounced:
+			static += {.Bounced}
 		case .Coyote:
 			timed += {.Coyote}
 		case .Ignore_Ball:
@@ -96,8 +99,10 @@ player_has :: proc(set: ..Player_Master_Flag) -> bool {
 			timed += {.In_Slide}
 		case .Ignore_Oneways:
 			timed += {.Ignore_Oneways}
-		case .Bounced:
-			timed += {.Bounced}
+		case .Just_Bounced:
+			timed += {.Just_Bounced}
+		case .Just_Jumped:
+			timed += {.Just_Jumped}
 		}
 	}
 	return static <= player.flags && timed <= player.timed_flags
@@ -125,8 +130,8 @@ player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
 				lacks = false
 				return
 			}
-		case .On_Ball:
-			if .On_Ball in player.flags {
+		case .Bounced:
+			if .Bounced in player.flags {
 				lacks = false
 				return
 			}
@@ -165,12 +170,15 @@ player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
 				lacks = false
 				return
 			}
-
-		case .Bounced:
-			if .Bounced in player.timed_flags {
+		case .Just_Bounced:
+			if .Just_Bounced in player.timed_flags {
 				lacks = false
 			}
 			return
+		case .Just_Jumped:
+			if .Just_Jumped in player.timed_flags {
+				lacks = false
+			}
 		}
 	}
 	return lacks

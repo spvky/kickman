@@ -18,10 +18,18 @@ apply_player_ball_gravity :: proc(delta: f32) {
 	ball := &world.ball
 
 	if !player_is(.Riding) {
-		if player.velocity.y < 0 {
-			player.velocity.y += rising_gravity * delta
+		if player_has(.Bounced) {
+			if player.velocity.y < 0 {
+				player.velocity.y += bounce_rising_gravity * delta
+			} else {
+				player.velocity.y += bounce_falling_gravity * delta
+			}
 		} else {
-			player.velocity.y += falling_gravity * delta
+			if player.velocity.y < 0 {
+				player.velocity.y += rising_gravity * delta
+			} else {
+				player.velocity.y += falling_gravity * delta
+			}
 		}
 	}
 
@@ -113,7 +121,8 @@ manage_player_ball_velocity :: proc(delta: f32) {
 		player.velocity.x *= 0.999
 	case .Riding:
 	case .Rising:
-		if !is_action_held(.Jump) && player_lacks(.Bounced) {
+		flag_to_check: Player_Master_Flag = player_has(.Bounced) ? .Just_Bounced : .Just_Jumped
+		if !is_action_held(.Jump) && player_lacks(flag_to_check) {
 			player.velocity.y = 0
 		}
 	case .Falling:
