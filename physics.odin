@@ -158,8 +158,16 @@ manage_player_ball_velocity :: proc(delta: f32) {
 			}
 		case .Recalling:
 			ball.velocity = VEC_0
-			player_feet := player.translation + {0, player.radius / 2}
-			ball.translation = math.lerp(ball.translation, player_feet, delta * 10)
+			if ball_has(.Recall_Rising) {
+				ball.translation.y -= 16 * delta
+			} else {
+				player_feet := player.translation + {0, player.radius / 2}
+				if l.distance(ball.translation, player.translation) > 12 {
+					ball.translation = math.lerp(ball.translation, player_feet, delta * 20)
+				} else {
+					ball.translation = player_feet
+				}
+			}
 		case .Revved, .Riding:
 			if ball_has(.Grounded) {
 				ball.velocity.x *= 0.9999
@@ -194,6 +202,7 @@ physics_step :: proc(delta: f32) {
 	apply_player_ball_gravity(delta)
 	apply_player_ball_velocity(delta)
 	update_entities(delta)
+	update_transitions()
 	update_tooltips(delta)
 	//Update timed flags before collision occurs
 	manage_player_ball_flags(delta)

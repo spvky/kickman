@@ -46,6 +46,7 @@ Ball_Flag :: enum u8 {
 Ball_Timed_Flag :: enum u8 {
 	No_Gravity,
 	Coyote,
+	Recall_Rising,
 }
 
 Ball_Master_Flag :: enum u16 {
@@ -54,6 +55,7 @@ Ball_Master_Flag :: enum u16 {
 	In_Collider,
 	No_Gravity,
 	Coyote,
+	Recall_Rising,
 }
 
 Player_Ball_Interaction :: enum u8 {
@@ -226,6 +228,8 @@ ball_has :: proc(set: ..Ball_Master_Flag) -> bool {
 			timed += {.No_Gravity}
 		case .Coyote:
 			timed += {.Coyote}
+		case .Recall_Rising:
+			timed += {.Recall_Rising}
 		}
 	}
 	return static <= ball.flags && timed <= ball.timed_flags
@@ -262,10 +266,38 @@ ball_lacks :: proc(set: ..Ball_Master_Flag) -> (lacks: bool) {
 				lacks = false
 				return
 			}
+		case .Recall_Rising:
+			if .Recall_Rising in ball.timed_flags {
+				lacks = false
+				return
+			}
 		}
 	}
 	return
 }
+
+ball_add :: proc(flag: Ball_Flag) {
+	ball := &world.ball
+	ball.flags += {flag}
+}
+
+ball_t_add :: proc(flag: Ball_Timed_Flag, time: f32) {
+	ball := &world.ball
+	ball.timed_flags += {flag}
+	ball.flag_timers[flag] = time
+}
+
+ball_remove :: proc(flag: Ball_Flag) {
+	ball := &world.ball
+	ball.flags -= {flag}
+}
+
+ball_t_remove :: proc(flag: Ball_Timed_Flag) {
+	ball := &world.ball
+	ball.timed_flags -= {flag}
+	ball.flag_timers[flag] = 0
+}
+
 player_ball_can_interact :: proc() -> bool {
 	return player_lacks(.Ignore_Ball) || !ball_is(.Carried)
 }

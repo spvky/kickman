@@ -245,6 +245,7 @@ player_badge_action :: proc() {
 			if player_can(.Recall) {
 				player.flag_timers[.No_Badge] = 1
 				ball.state = .Recalling
+				ball_t_add(.Recall_Rising, 0.75)
 				consume_action(.Badge)
 			}
 		case .Sisyphus:

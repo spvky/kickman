@@ -102,13 +102,16 @@ player_ball_transition_collision :: proc() {
 	ball := &world.ball
 	for &transition in assets.room_transitions[world.current_room] {
 		// Player Collision
-		if player_lacks(.No_Transition) {
 
-			if _, player_collided := circle_aabb_collide(
-				player.translation,
-				player.radius / 2,
-				transition.aabb,
-			); player_collided {
+		if _, player_collided := circle_aabb_collide(
+			player.translation,
+			player.radius / 2,
+			transition.aabb,
+		); player_collided {
+
+			if player_has(.No_Transition) {
+				transition.touching_player = true
+			} else if transition.active {
 				transition_extents := transition.max - transition.min
 				translation_ptr: ^Vec2
 
@@ -133,9 +136,12 @@ player_ball_transition_collision :: proc() {
 				}
 
 				world.current_room = transition.tag
-				player.flag_timers[.No_Transition] = 0.2
+				player_t_add(.No_Transition, 0.2)
+				log.debugf("Hit Transition in : %v", world.current_room)
 				clear_dust()
 			}
+		} else {
+			transition.touching_player = false
 		}
 
 		//Ball

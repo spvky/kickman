@@ -7,9 +7,12 @@ Region :: struct {
 }
 
 Room_Transition :: struct {
-	tag:                 tags.Room_Tag,
-	transition_position: [2]f32,
-	using aabb:          AABB,
+	tag:                  tags.Room_Tag,
+	transition_position:  [2]f32,
+	touching_player:      bool,
+	prev_touching_player: bool,
+	active:               bool,
+	using aabb:           AABB,
 }
 
 Spawn_Point :: struct {
