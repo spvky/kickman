@@ -102,6 +102,7 @@ player_ball_transition_collision :: proc() {
 	ball := &world.ball
 	for &transition in assets.room_transitions[world.current_room] {
 		// Player Collision
+		// log.debugf("Transition Tag: %v", transition.tag)
 
 		if _, player_collided := circle_aabb_collide(
 			player.translation,

@@ -14,6 +14,7 @@ Room_Tag :: struct {
 
 Region_Tag :: enum u8 {
 	tutorial,
+	field,
 }
 
 Entity_Tag :: enum {

@@ -43,6 +43,7 @@ init_assets :: proc() {
 	assets.room_tooltips = make(map[tags.Room_Tag][dynamic]tags.Tooltip, 10)
 	assets.font = rl.LoadFont("assets/font/dungeon-mode.ttf")
 	load_region_data(.tutorial)
+	load_region_data(.field)
 }
 
 delete_assets :: proc() {

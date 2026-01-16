@@ -66,7 +66,6 @@ Temp_Binary_Transition :: struct {
 	max:               [2]int,
 	tag:               tags.Room_Tag,
 	transition_entity: string,
-	level_index:       int,
 }
 
 Trigger_Map_Data :: struct {
@@ -83,17 +82,25 @@ main :: proc() {
 	start_time := time.now()
 	if project, ok := ldtk.load_from_file("../assets/levels/pell.ldtk", context.temp_allocator).?;
 	   ok {
-		regions_array := make([dynamic]Binary_Region, 0, 2)
+		region_map := make(map[tags.Region_Tag]Binary_Region, 2)
 		trigger_map := make(map[string]Trigger_Map_Data, 16)
+		transitions_map := make(map[string]Temp_Binary_Transition, 16)
 		for world in project.worlds {
 			region: Binary_Region
+			region_tag: tags.Region_Tag
 			region.name = world.identifier
 			region.room_count = len(world.levels)
 			region.rooms = make([dynamic]Binary_Room, 0, 10)
 
+			switch world.identifier {
+			case "tutorial":
+				region_tag = .tutorial
+			case "field":
+				region_tag = .field
+			}
+
 			write_region_to_file(region)
 			fmt.printfln("Levels Count: %v", len(world.levels))
-			transitions_map := make(map[string]Temp_Binary_Transition, 16)
 
 
 			for level, i in world.levels {
@@ -102,12 +109,8 @@ main :: proc() {
 				layer_width, layer_height: int
 				collision_csv: []int
 				room_tag: tags.Room_Tag
-
-				switch world.identifier {
-				case "tutorial":
-					room_tag.region_tag = .tutorial
-				}
 				room_tag.room_index = u8(i)
+				room_tag.region_tag = region_tag
 
 				entities: []ldtk.Entity_Instance
 				transition_entities: []ldtk.Entity_Instance
@@ -254,23 +257,12 @@ main :: proc() {
 					switch entity.identifier {
 					case "room_transition":
 						transition: Temp_Binary_Transition
-						transition.level_index = i
 						transition.min = entity.px
 						transition.max = {entity.px.x + entity.width, entity.px.y + entity.height}
+						transition.tag = room_tag
 						for fi in entity.field_instances {
 							if raw_value, exists := fi.value.?; exists {
 								switch fi.identifier {
-								case "room_index":
-									room_index := u8(raw_value.(i64))
-									transition.tag.room_index = room_index
-								case "region_tag":
-									region_string := raw_value.(string)
-									region_tag: tags.Region_Tag
-									switch region_string {
-									case "tutorial":
-										region_tag = .tutorial
-									}
-									transition.tag.region_tag = region_tag
 								case "other_exit":
 									value := raw_value.(json.Object)
 									entity_id := value["entityIid"].(string)
@@ -406,36 +398,39 @@ main :: proc() {
 				append(&region.rooms, room)
 			}
 
-			// Assign aabbs and transition points from entity refs
-			for iid, &temp_transition in transitions_map {
-				binary_transition: Binary_Transition
-				if t, ok := transitions_map[temp_transition.transition_entity]; ok {
-					center := (t.max + t.min) / 2
-					binary_transition.transition_position = {f32(center.x), f32(center.y)}
-					binary_transition.min = {
-						f32(temp_transition.min.x),
-						f32(temp_transition.min.y),
-					}
-					binary_transition.max = {
-						f32(temp_transition.max.x),
-						f32(temp_transition.max.y),
-					}
-					binary_transition.tag = temp_transition.tag
-					// Append to transitions
-					append(
-						&region.rooms[int(temp_transition.level_index)].transitions,
-						binary_transition,
-					)
-
-					// Use temp_transition.level_index to put into proper collection
-				}
-			}
-			append(&regions_array, region)
+			region_map[region_tag] = region
+			fmt.printfln("Adding region to map: %v", region_tag)
 		}
-		// After parsing all rooms, write the region to file in binary
 
-		for &region in regions_array {
+		// Handle Transition and Triggers once we have parsed all regions
+
+
+		// Assign aabbs and transition points from entity refs
+		fmt.printfln("Transitions: %v", transitions_map)
+		for iid, &temp_transition in transitions_map {
+			binary_transition: Binary_Transition
+			if t, ok := transitions_map[temp_transition.transition_entity]; ok {
+				center := (t.max + t.min) / 2
+				binary_transition.transition_position = {f32(center.x), f32(center.y)}
+				binary_transition.min = {f32(temp_transition.min.x), f32(temp_transition.min.y)}
+				binary_transition.max = {f32(temp_transition.max.x), f32(temp_transition.max.y)}
+				binary_transition.tag = t.tag
+
+				// Append to transitions
+				fmt.printfln(
+					"Transition Belongs in %v - Connects to %v",
+					temp_transition.tag,
+					t.tag,
+				)
+				region := &region_map[temp_transition.tag.region_tag]
+				room := &region.rooms[int(temp_transition.tag.room_index)]
+				append(&room.transitions, binary_transition)
+			}
+		}
+
+		for rt, &region in region_map {
 			for room in region.rooms {
+				// Associate movable blocks with the proper triggers
 				for assoc in room.movable_assoc {
 					if trigger, exists := trigger_map[assoc.trigger_eid]; exists {
 						movable_entity := &room.entities[assoc.index]
@@ -444,6 +439,7 @@ main :: proc() {
 						data.trigger_room = trigger.room
 					}
 				}
+
 			}
 			write_rooms_to_file(&region)
 		}
