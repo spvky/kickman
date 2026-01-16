@@ -78,6 +78,7 @@ render_to_screen :: proc() {
 		// UI Texture
 		rl.DrawTexturePro(assets.ui_texture.texture, source, dest, origin, rotation, rl.WHITE)
 	}
+	rl.DrawFPS(0, 0)
 	if ODIN_DEBUG {
 		player_debug()
 	}

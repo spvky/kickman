@@ -134,7 +134,6 @@ update_entities :: proc(delta: f32) {
 
 update_transitions :: proc() {
 	for &transition in assets.room_transitions[world.current_room] {
-		log.debugf("%v", transition)
 		if transition.touching_player != transition.prev_touching_player {
 			if transition.prev_touching_player && !transition.touching_player {
 				transition.active = true
