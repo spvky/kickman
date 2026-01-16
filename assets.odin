@@ -144,8 +144,7 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 
 		for t in binary_transitions {
 			transition: Room_Transition
-			transition.tag.region_tag = .tutorial
-			transition.tag.room_index = t.tag.room_index
+			transition.tag = t.tag
 			transition.transition_position = t.transition_position
 			transition.min = t.min
 			transition.max = t.max

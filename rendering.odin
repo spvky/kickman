@@ -21,7 +21,14 @@ render_scene_to_texture :: proc() {
 		world.camera.zoom = 4.8
 	}
 	rl.BeginMode2D(world.camera)
-	rl.ClearBackground({33, 38, 63, 255})
+	bg_color: rl.Color
+	switch world.current_room.region_tag {
+	case .tutorial:
+		bg_color = {33, 38, 63, 255}
+	case .field:
+		bg_color = {0, 38, 63, 255}
+	}
+	rl.ClearBackground(bg_color)
 	draw_room_entities()
 	draw_current_room()
 	draw_player_and_ball()
@@ -30,6 +37,7 @@ render_scene_to_texture :: proc() {
 	// draw_text()
 	if ODIN_DEBUG {
 		draw_level_collision()
+		draw_transitions()
 	}
 	rl.EndMode2D()
 	if world.render_mode == .Scaled {
@@ -162,5 +170,12 @@ draw_level_collision :: proc() {
 		color := .Oneway in collider.flags ? rl.YELLOW : rl.RED
 		extents := collider.max - collider.min
 		rl.DrawRectangleV(collider.min, extents, color)
+	}
+}
+
+draw_transitions :: proc() {
+	for transition in assets.room_transitions[world.current_room] {
+		extents := transition.max - transition.min
+		rl.DrawRectangleV(transition.min, extents, rl.BLUE)
 	}
 }
