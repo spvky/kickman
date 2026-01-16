@@ -1,5 +1,6 @@
 package main
 
+import "core:log"
 import l "core:math/linalg"
 import rl "vendor:raylib"
 
@@ -21,6 +22,35 @@ Input_Action :: enum {
 	Badge,
 	Slide,
 	Crouch,
+	Reset,
+}
+
+init_gamepads :: proc() {
+}
+
+check_pads_down :: proc(count: i32, button: rl.GamepadButton) -> bool {
+	for i in 0 ..< count {
+		if rl.IsGamepadButtonDown(i, button) {
+			return true
+		}
+	}
+	return false
+}
+check_pads_pressed :: proc(count: i32, button: rl.GamepadButton) -> bool {
+	for i in 0 ..< count {
+		if rl.IsGamepadButtonPressed(i, button) {
+			return true
+		}
+	}
+	return false
+}
+check_pads_released :: proc(count: i32, button: rl.GamepadButton) -> bool {
+	for i in 0 ..< count {
+		if rl.IsGamepadButtonReleased(i, button) {
+			return true
+		}
+	}
+	return false
 }
 
 update_buffer :: proc() {
@@ -67,19 +97,16 @@ is_action_held :: proc(action: Input_Action) -> bool {
 poll_input :: proc() {
 	player := &world.player
 	direction: Vec2
-	// facing := world.player.facing
-	if rl.IsKeyDown(.A) {
+	if rl.IsKeyDown(.A) || check_pads_down(3, .LEFT_FACE_LEFT) {
 		direction.x -= 1
-		// facing = -1
 	}
-	if rl.IsKeyDown(.D) {
+	if rl.IsKeyDown(.D) || check_pads_down(3, .LEFT_FACE_RIGHT) {
 		direction.x += 1
-		// facing = 1
 	}
-	if rl.IsKeyDown(.W) {
+	if rl.IsKeyDown(.W) || check_pads_down(3, .LEFT_FACE_UP) {
 		direction.y -= 1
 	}
-	if rl.IsKeyDown(.S) {
+	if rl.IsKeyDown(.S) || check_pads_down(3, .LEFT_FACE_DOWN) {
 		direction.y += 1
 	}
 
@@ -97,21 +124,23 @@ poll_input :: proc() {
 	// player.facing = facing
 	update_buffer()
 	// Buffer pressed inputs
-	if rl.IsKeyPressed(.SPACE) {
-		if rl.IsKeyDown(.S) {
+	if rl.IsKeyPressed(.SPACE) || check_pads_pressed(3, .RIGHT_FACE_DOWN) {
+		if rl.IsKeyDown(.S) || check_pads_down(3, .LEFT_FACE_DOWN) {
 			buffer_action(.Slide)
 		} else {
 			buffer_action(.Jump)
 		}
 	}
-	if rl.IsKeyPressed(.K) do buffer_action(.Kick)
-	if rl.IsKeyPressed(.J) do buffer_action(.Badge)
-	if rl.IsKeyPressed(.S) do buffer_action(.Crouch)
-	if rl.IsKeyPressed(.H) do buffer_action(.Dash)
+	if rl.IsKeyPressed(.K) || check_pads_pressed(3, .RIGHT_FACE_LEFT) do buffer_action(.Kick)
+	if rl.IsKeyPressed(.J) || check_pads_pressed(3, .RIGHT_FACE_UP) do buffer_action(.Badge)
+	if rl.IsKeyPressed(.S) || check_pads_pressed(3, .LEFT_FACE_DOWN) do buffer_action(.Crouch)
+	if rl.IsKeyPressed(.H) || check_pads_pressed(3, .RIGHT_TRIGGER_1) do buffer_action(.Dash)
+	if rl.IsKeyPressed(.R) || check_pads_pressed(3, .RIGHT_TRIGGER_2) do buffer_action(.Reset)
 
-	if rl.IsKeyReleased(.SPACE) do release_action(.Jump)
-	if rl.IsKeyReleased(.K) do release_action(.Kick)
-	if rl.IsKeyReleased(.J) do release_action(.Badge)
-	if rl.IsKeyReleased(.S) do release_action(.Crouch)
-	if rl.IsKeyReleased(.H) do release_action(.Dash)
+	if rl.IsKeyReleased(.SPACE) || check_pads_released(3, .RIGHT_FACE_DOWN) do release_action(.Jump)
+	if rl.IsKeyReleased(.K) || check_pads_released(3, .RIGHT_FACE_LEFT) do release_action(.Kick)
+	if rl.IsKeyReleased(.J) || check_pads_released(3, .RIGHT_FACE_UP) do release_action(.Badge)
+	if rl.IsKeyReleased(.S) || check_pads_released(3, .LEFT_FACE_DOWN) do release_action(.Crouch)
+	if rl.IsKeyReleased(.H) || check_pads_released(3, .RIGHT_TRIGGER_1) do release_action(.Dash)
+	if rl.IsKeyReleased(.R) || check_pads_released(3, .RIGHT_TRIGGER_2) do buffer_action(.Reset)
 }

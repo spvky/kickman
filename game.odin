@@ -14,6 +14,7 @@ game_init :: proc() {
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Kick man")
 	init_assets()
 	init_world()
+	init_gamepads()
 }
 
 game_update :: proc() {

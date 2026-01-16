@@ -66,9 +66,7 @@ init_world :: proc() {
 	world.render_mode = .Scaled
 	checkpoint_pos: Vec2
 	for entity, i in assets.room_entities[world.current_room] {
-		log.debugf("Entity %v", entity.tag)
 		if entity.tag == .Checkpoint {
-			log.debugf("Found Checkpoint %v", entity.pos)
 			world.spawn_point.room_tag = world.current_room
 			world.spawn_point.position = entity.pos
 			break

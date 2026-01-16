@@ -137,7 +137,6 @@ player_ball_transition_collision :: proc() {
 
 				world.current_room = transition.tag
 				player_t_add(.No_Transition, 0.2)
-				log.debugf("Hit Transition in : %v", world.current_room)
 				clear_dust()
 			}
 		} else {
