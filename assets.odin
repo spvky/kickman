@@ -99,7 +99,7 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 		}
 		// Textures
 		texture_path := fmt.tprintf(
-			"assets/levels/pell/png/%v_%v-collision_layer.png",
+			"assets/levels/pell/png/%v_%v-collision.png",
 			tag,
 			room_tag.room_index,
 		)

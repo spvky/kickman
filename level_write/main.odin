@@ -119,7 +119,7 @@ main :: proc() {
 				tooltips_array := make([dynamic]tags.Tooltip, 0, 4)
 
 				for layer in level.layer_instances {
-					if layer.identifier == "collision_layer" {
+					if layer.identifier == "collision" {
 						layer_width = layer.c_width
 						layer_height = layer.c_height
 						collision_csv = layer.int_grid_csv
@@ -150,7 +150,7 @@ main :: proc() {
 								x,
 								y,
 							)
-							if collision_type_value == 0 {
+							if collision_type_value == .None {
 								mark_checked(&checked, layer_width, x, y)
 								continue
 							}
@@ -227,9 +227,10 @@ main :: proc() {
 
 								flags: bit_set[tags.Collider_Flag;u8]
 								switch collision_type_value {
-								case 1:
+								case .None:
+								case .Solid:
 									flags += {.Standable}
-								case 2:
+								case .Oneway:
 									flags += {.Standable, .Oneway}
 								}
 
@@ -601,18 +602,41 @@ write_string_to_file :: #force_inline proc(
 
 
 check_csv_collision :: #force_inline proc(
-	collision_type: int,
+	collision_type: Collision_Type,
 	slice: []int,
 	width, x, y: int,
 ) -> bool {
-	return slice[x + (y * width)] == collision_type
+	return convert_collision_value(slice[x + (y * width)]) == collision_type
 }
-get_csv_collision_value :: #force_inline proc(slice: []int, width, x, y: int) -> int {
-	return slice[x + (y * width)]
+
+Collision_Type :: enum u8 {
+	None,
+	Solid,
+	Oneway,
 }
+
+get_csv_collision_value :: #force_inline proc(
+	slice: []int,
+	width, x, y: int,
+) -> (
+	collision_type: Collision_Type,
+) {
+	return convert_collision_value(slice[x + (y * width)])
+}
+
 is_checked :: #force_inline proc(checked: [dynamic]bool, width, x, y: int) -> bool {
 	return checked[x + (y * width)]
 }
 mark_checked :: #force_inline proc(checked: ^[dynamic]bool, width, x, y: int) {
 	checked[x + (y * width)] = true
+}
+
+convert_collision_value :: #force_inline proc(val: int) -> (collision_type: Collision_Type) {
+	switch val {
+	case 1 ..= 7:
+		collision_type = .Solid
+	case 8:
+		collision_type = .Oneway
+	}
+	return
 }
