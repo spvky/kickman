@@ -20,23 +20,22 @@ draw_room_entities :: proc() {
 			source := rl.Rectangle {
 				width  = 8,
 				height = 8,
-				y      = 88,
+				y      = 0,
 			}
 			if on {
-				source.x = 48
+				source.x = 40
 			} else {
-				source.x = 56
+				source.x = 48
 			}
-			rl.DrawTexturePro(assets.raw_atlas, source, dest, {0, 0}, 0, rl.WHITE)
+			rl.DrawTexturePro(assets.entities_atlas, source, dest, {0, 0}, 0, rl.WHITE)
 		case .Button:
 		case .Checkpoint:
 			draw_checkpoint(entity)
 		case .Movable_Block:
 			data := entity.data.(tags.Movable_Block_Data)
-			// rl.DrawRectangleV(entity.pos, data.extents, rl.BLACK)
 			source := rl.Rectangle {
 				x      = 0,
-				y      = 72,
+				y      = 0,
 				width  = 24,
 				height = 24,
 			}
@@ -54,7 +53,7 @@ draw_room_entities :: proc() {
 				bottom = 8,
 				layout = .NINE_PATCH,
 			}
-			rl.DrawTextureNPatch(assets.raw_atlas, patch_info, dest, {0, 0}, 0, rl.WHITE)
+			rl.DrawTextureNPatch(assets.entities_atlas, patch_info, dest, {0, 0}, 0, rl.WHITE)
 		}
 	}
 }
@@ -77,10 +76,41 @@ draw_checkpoint :: proc(entity: tags.Entity) {
 		u8(raw_sigil_color.g * 255),
 		u8(raw_sigil_color.a * 255),
 	}
-	origin := entity.pos + {4, 4} - VEC_Y * data.animation_value * 16
+	origin := entity.pos + {4, 4} - (VEC_Y * 8) - (VEC_Y * data.animation_value) * 12
+
+	holder_source := rl.Rectangle {
+		x      = 32,
+		y      = 16,
+		width  = 8,
+		height = 8,
+	}
+
+	holder_dest := rl.Rectangle {
+		x      = entity.pos.x,
+		y      = entity.pos.y,
+		width  = 8,
+		height = 8,
+	}
+
+
+	ball_source := rl.Rectangle {
+		x      = 32,
+		y      = 8,
+		width  = 8,
+		height = 8,
+	}
+
+	ball_dest := rl.Rectangle {
+		x      = origin.x - 4,
+		y      = origin.y - 4,
+		width  = 8,
+		height = 8,
+	}
 
 	triangle_rotation := 90 + data.animation_value * 180
-	rl.DrawCircleV(origin, 4, dot_color)
+	rl.DrawTexturePro(assets.entities_atlas, holder_source, holder_dest, {0, 0}, 0, rl.WHITE)
+	rl.DrawTexturePro(assets.entities_atlas, ball_source, ball_dest, {0, 0}, 0, dot_color)
+	// rl.DrawCircleV(origin, 4, dot_color)
 	rl.DrawPolyLines(origin, 3, 16, triangle_rotation, sigil_color)
 	rl.DrawPolyLines(origin, 6, 16, triangle_rotation, sigil_color)
 }

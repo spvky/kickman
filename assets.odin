@@ -18,7 +18,7 @@ Assets :: struct {
 	player_texture:   rl.Texture2D,
 	gameplay_texture: rl.RenderTexture,
 	ui_texture:       rl.RenderTexture,
-	raw_atlas:        rl.Texture2D,
+	entities_atlas:   rl.Texture2D,
 	room_textures:    map[tags.Room_Tag]rl.Texture2D,
 	room_dimensions:  map[tags.Room_Tag]Vec2,
 	room_collision:   map[tags.Room_Tag][dynamic]Collider,
@@ -34,7 +34,7 @@ init_assets :: proc() {
 	assets.player_texture = rl.LoadTexture("assets/player.png")
 	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
 	assets.ui_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
-	assets.raw_atlas = rl.LoadTexture("assets/cave_tiles.png")
+	assets.entities_atlas = rl.LoadTexture("assets/entities.png")
 	assets.room_dimensions = make(map[tags.Room_Tag]Vec2, 10)
 	assets.room_textures = make(map[tags.Room_Tag]rl.Texture2D, 10)
 	assets.room_collision = make(map[tags.Room_Tag][dynamic]Collider, 10)
@@ -49,7 +49,7 @@ init_assets :: proc() {
 delete_assets :: proc() {
 	rl.UnloadRenderTexture(assets.gameplay_texture)
 	rl.UnloadTexture(assets.player_texture)
-	rl.UnloadTexture(assets.raw_atlas)
+	rl.UnloadTexture(assets.entities_atlas)
 	rl.UnloadFont(assets.font)
 	delete(assets.room_dimensions)
 	for _, v in assets.room_textures {
