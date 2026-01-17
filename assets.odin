@@ -15,17 +15,18 @@ SCREEN_WIDTH :: 400 //25x14 16 pixel tiles
 SCREEN_HEIGHT :: 224
 
 Assets :: struct {
-	player_texture:   rl.Texture2D,
-	gameplay_texture: rl.RenderTexture,
-	ui_texture:       rl.RenderTexture,
-	entities_atlas:   rl.Texture2D,
-	room_textures:    map[tags.Room_Tag]rl.Texture2D,
-	room_dimensions:  map[tags.Room_Tag]Vec2,
-	room_collision:   map[tags.Room_Tag][dynamic]Collider,
-	room_transitions: map[tags.Room_Tag][dynamic]Room_Transition,
-	room_entities:    map[tags.Room_Tag][dynamic]tags.Entity,
-	room_tooltips:    map[tags.Room_Tag][dynamic]tags.Tooltip,
-	font:             rl.Font,
+	player_texture:     rl.Texture2D,
+	gameplay_texture:   rl.RenderTexture,
+	ui_texture:         rl.RenderTexture,
+	entities_atlas:     rl.Texture2D,
+	room_textures:      map[tags.Room_Tag]rl.Texture2D,
+	room_deco_textures: map[tags.Room_Tag]rl.Texture2D,
+	room_dimensions:    map[tags.Room_Tag]Vec2,
+	room_collision:     map[tags.Room_Tag][dynamic]Collider,
+	room_transitions:   map[tags.Room_Tag][dynamic]Room_Transition,
+	room_entities:      map[tags.Room_Tag][dynamic]tags.Entity,
+	room_tooltips:      map[tags.Room_Tag][dynamic]tags.Tooltip,
+	font:               rl.Font,
 }
 
 assets: Assets
@@ -37,6 +38,7 @@ init_assets :: proc() {
 	assets.entities_atlas = rl.LoadTexture("assets/entities.png")
 	assets.room_dimensions = make(map[tags.Room_Tag]Vec2, 10)
 	assets.room_textures = make(map[tags.Room_Tag]rl.Texture2D, 10)
+	assets.room_deco_textures = make(map[tags.Room_Tag]rl.Texture2D, 10)
 	assets.room_collision = make(map[tags.Room_Tag][dynamic]Collider, 10)
 	assets.room_transitions = make(map[tags.Room_Tag][dynamic]Room_Transition, 10)
 	assets.room_entities = make(map[tags.Room_Tag][dynamic]tags.Entity, 10)
@@ -55,6 +57,9 @@ delete_assets :: proc() {
 	for _, v in assets.room_textures {
 		rl.UnloadTexture(v)
 	}
+	for _, v in assets.room_deco_textures {
+		rl.UnloadTexture(v)
+	}
 	for _, v in assets.room_collision {
 		delete(v)
 	}
@@ -71,6 +76,7 @@ delete_assets :: proc() {
 		delete(v)
 	}
 	delete(assets.room_textures)
+	delete(assets.room_deco_textures)
 	delete(assets.room_collision)
 	delete(assets.room_transitions)
 	delete(assets.room_entities)
@@ -105,6 +111,14 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 		)
 		texture := rl.LoadTexture(
 			strings.clone_to_cstring(texture_path, allocator = context.temp_allocator),
+		)
+		deco_texture_path := fmt.tprintf(
+			"assets/levels/pell/png/%v_%v-decorations.png",
+			tag,
+			room_tag.room_index,
+		)
+		deco_texture := rl.LoadTexture(
+			strings.clone_to_cstring(deco_texture_path, allocator = context.temp_allocator),
 		)
 		// Collision
 		collision_path := fmt.tprintf(
@@ -181,6 +195,7 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 
 		assets.room_dimensions[room_tag] = Vec2{f32(texture.width), f32(texture.height)}
 		assets.room_textures[room_tag] = texture
+		assets.room_deco_textures[room_tag] = deco_texture
 		assets.room_collision[room_tag] = collision
 		assets.room_transitions[room_tag] = transitions
 		assets.room_entities[room_tag] = entities

@@ -95,6 +95,7 @@ render_to_screen :: proc() {
 
 draw_current_room :: proc() {
 	rl.DrawTexture(assets.room_textures[world.current_room], 0, 0, rl.WHITE)
+	rl.DrawTexture(assets.room_deco_textures[world.current_room], 0, 0, rl.WHITE)
 }
 
 draw_player_and_ball :: proc() {
