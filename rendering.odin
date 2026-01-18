@@ -26,7 +26,7 @@ render_scene_to_texture :: proc() {
 	case .tutorial:
 		bg_color = {33, 38, 63, 255}
 	case .field:
-		bg_color = {0, 38, 63, 255}
+		bg_color = rl.PINK
 	}
 	rl.ClearBackground(bg_color)
 	draw_paralax_layers()

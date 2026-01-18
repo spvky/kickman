@@ -7,9 +7,10 @@ import rl "vendor:raylib"
 player_debug :: proc() {
 	player := world.player
 	ball := world.ball
+	extents := assets.room_dimensions[world.current_room]
 
 	player_string := fmt.tprintf(
-		"Player:\n\tFacing | Running: %v | %v\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tPlatform Velocity: [%.1f,%.1f]\n\tCombined Velocity: [%.1f,%.1f]\n\tKick Angle: %v\n\tState: %v\n\tFlags: %v\n\tTimed Flags: %v\nCam Target: %v",
+		"Player:\n\tFacing | Running: %v | %v\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tPlatform Velocity: [%.1f,%.1f]\n\tCombined Velocity: [%.1f,%.1f]\n\tKick Angle: %v\n\tState: %v\n\tFlags: %v\n\tTimed Flags: %v\nCam Target: %v\n\tExtents: %v",
 		player.facing,
 		player.run_direction,
 		player.translation.x,
@@ -25,6 +26,7 @@ player_debug :: proc() {
 		player.flags,
 		player.timed_flags,
 		world.camera.target,
+		extents,
 	)
 	rl.DrawText(
 		strings.clone_to_cstring(player_string, allocator = context.temp_allocator),
