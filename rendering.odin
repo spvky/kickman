@@ -171,6 +171,14 @@ draw_level_collision :: proc() {
 		color := .Oneway in collider.flags ? rl.YELLOW : rl.RED
 		extents := collider.max - collider.min
 		rl.DrawRectangleV(collider.min, extents, color)
+		a := collider.min
+		b := Vec2{collider.max.x, collider.min.y}
+		c := collider.max
+		d := Vec2{collider.min.x, collider.max.y}
+		rl.DrawLineEx(a, b, 2, {255, 255, 255, 100})
+		rl.DrawLineEx(b, c, 2, {255, 255, 255, 100})
+		rl.DrawLineEx(c, d, 2, {255, 255, 255, 100})
+		rl.DrawLineEx(d, a, 2, {255, 255, 255, 100})
 	}
 }
 
