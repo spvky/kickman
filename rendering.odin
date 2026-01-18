@@ -29,6 +29,7 @@ render_scene_to_texture :: proc() {
 		bg_color = {0, 38, 63, 255}
 	}
 	rl.ClearBackground(bg_color)
+	draw_paralax_layers()
 	draw_room_entities()
 	draw_current_room()
 	draw_player_and_ball()
