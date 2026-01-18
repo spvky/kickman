@@ -2,6 +2,7 @@ package main
 
 import "core:container/queue"
 import "core:log"
+import "tags"
 
 Event :: struct {
 	type:    Event_Type,
@@ -9,11 +10,8 @@ Event :: struct {
 }
 
 Event_Type :: enum {
-	Unlocked_Door,
-	Chest_Appeared,
-	Started_Wall_Cling,
-	Player_State_Change,
 	Player_State_Transition,
+	Region_Change,
 }
 
 
@@ -21,18 +19,14 @@ Event_Player_State_Transition :: struct {
 	exited:  Player_State,
 	entered: Player_State,
 }
-Event_Player_State_Change_Payload :: struct {
-	gained: bit_set[Player_Flag;u8],
-	lost:   bit_set[Player_Flag;u8],
-}
-Event_Location_Payload :: struct {
-	location: Vec2,
+
+Event_Region_Change :: struct {
+	new_region: tags.Region_Tag,
 }
 
 Event_Payload :: union {
-	Event_Location_Payload,
-	Event_Player_State_Change_Payload,
 	Event_Player_State_Transition,
+	Event_Region_Change,
 }
 
 Event_Callback :: proc(event: Event)

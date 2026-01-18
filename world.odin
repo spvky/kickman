@@ -1,8 +1,8 @@
 package main
 
-import tags "./tags"
 import "core:container/queue"
 import "core:log"
+import "tags"
 import rl "vendor:raylib"
 
 World :: struct {
@@ -50,8 +50,6 @@ Game_State :: enum {
 	Cutscene,
 }
 
-world: World
-
 init_world :: proc() {
 	init_events_system()
 	world.player.radius = 4
@@ -81,4 +79,11 @@ init_world :: proc() {
 	world.player.animation.animations = player_animations()
 	init_particle_system()
 	subscribe_event(.Player_State_Transition, player_state_transition_listener)
+}
+
+set_room :: proc(new_room: tags.Room_Tag) {
+	if new_room.region_tag != world.current_room.region_tag {
+		publish_event(.Region_Change, Event_Region_Change{new_room.region_tag})
+	}
+	world.current_room = new_room
 }

@@ -9,12 +9,18 @@ VEC_0 :: Vec2{0, 0}
 VEC_X :: Vec2{1, 0}
 VEC_Y :: Vec2{0, 1}
 
+// Global Variables
+world: World
+assets: Assets
+ui: Ui
+
 game_init :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE})
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Kick man")
+	// Initialize our global variables
 	init_assets()
 	init_world()
-	init_gamepads()
+	init_ui()
 }
 
 game_update :: proc() {
@@ -24,6 +30,7 @@ game_update :: proc() {
 	// update_animation_player(&world.player.animation, delta)
 	camera_follow_player()
 	update_particles(delta)
+	update_ui(delta)
 	render()
 	free_all(context.temp_allocator)
 }

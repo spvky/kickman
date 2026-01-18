@@ -25,9 +25,6 @@ Input_Action :: enum {
 	Reset,
 }
 
-init_gamepads :: proc() {
-}
-
 check_pads_down :: proc(count: i32, button: rl.GamepadButton) -> bool {
 	for i in 0 ..< count {
 		if rl.IsGamepadButtonDown(i, button) {

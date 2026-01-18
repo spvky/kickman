@@ -8,13 +8,6 @@ import "core:slice"
 import "core:strings"
 import "core:time"
 
-load_region :: proc(path: string) {
-	file, read_err := os.open(path)
-	if read_err != nil {
-
-	}
-}
-
 read_room_collision_from_file :: proc(
 	filename: string,
 ) -> (
@@ -130,7 +123,7 @@ read_room_entities_from_file :: proc(
 read_room_tooltips_from_file :: proc(
 	filename: string,
 ) -> (
-	room: lvl_write.Binary_Room,
+	tooltips: [dynamic]tags.Tooltip,
 	success: bool,
 ) {
 	file, read_err := os.open(filename)
@@ -139,11 +132,11 @@ read_room_tooltips_from_file :: proc(
 		return
 	}
 	defer os.close(file)
-	tooltips: [dynamic]tags.Tooltip
 
 	bytes_read: int
 	tooltip_count: int
 	bytes_read = read_fixed_from_file(file, &tooltip_count)
+	tooltips = make([dynamic]tags.Tooltip, 0, tooltip_count)
 	for i in 0 ..< tooltip_count {
 		tooltip: tags.Tooltip
 		bytes_read += read_string_from_file(file, &tooltip.message)
@@ -152,7 +145,6 @@ read_room_tooltips_from_file :: proc(
 		bytes_read += read_fixed_from_file(file, &tooltip.extents)
 		append(&tooltips, tooltip)
 	}
-	room.tooltips = tooltips
 	success = true
 	return
 }

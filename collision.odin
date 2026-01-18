@@ -134,7 +134,7 @@ player_ball_transition_collision :: proc() {
 					catch_ball()
 				}
 
-				world.current_room = transition.tag
+				set_room(transition.tag)
 				player_t_add(.No_Transition, 0.2)
 				clear_dust()
 			}

@@ -30,8 +30,6 @@ Assets :: struct {
 	font:                     rl.Font,
 }
 
-assets: Assets
-
 init_assets :: proc() {
 	assets.player_texture = rl.LoadTexture("assets/player.png")
 	assets.gameplay_texture = rl.LoadRenderTexture(WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -197,16 +195,10 @@ load_region_data :: proc(tag: tags.Region_Tag) {
 
 		// Tooltips
 		tooltip_path := fmt.tprintf("assets/levels/entities/%v_%02d.tt", tag, room_tag.room_index)
-		tool_binary, tool_ok := lr.read_room_tooltips_from_file(tooltip_path)
+		tooltips, tool_ok := lr.read_room_tooltips_from_file(tooltip_path)
 		if !tool_ok {
 			fmt.printfln("Failed to read tooltips for %v", tooltip_path)
 			return
-		}
-		tooltips := make([dynamic]tags.Tooltip, 0, len(tool_binary.tooltips))
-
-		for t in tool_binary.tooltips {
-			// Still keeping the loop here in case there is data that needs to be instantiated at runtime
-			append(&tooltips, t)
 		}
 
 		assets.room_dimensions[room_tag] = Vec2{f32(texture.width), f32(texture.height)}
