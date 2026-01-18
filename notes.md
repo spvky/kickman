@@ -83,10 +83,7 @@ TODO##
 Basics:
 Double Jump
 Start considering saving/loading game state
-mutiple areas
-Area title text drops
 hazards, damage
-death
 
 Juice Idea: Octagonal crosshair fades in and focuses on the ball when it becomes revved
 
@@ -96,12 +93,10 @@ Wed 14 Jan 2026 01:52:48 PM EST
 Spirit badge is a basketball
 
 
-Thu 15 Jan 2026 12:01:35 AM EST
-
-TODO##
-Fix dribbling
-
 the ball color when recalling is the color of the players magic
 
-Sat 17 Jan 2026 12:27:57 AM EST
-TODO: Work on tile blending tomorrow
+Sun 18 Jan 2026 04:34:10 PM EST
+## TODO
+Dash Bug
+Fix dribbling
+Start on Sisyphus ball
