@@ -119,7 +119,7 @@ draw_player :: proc() {
 
 
 	if ODIN_DEBUG {
-		sensor, empty_sensor := player_ledge_grab_sensors(&player)
+		sensor, empty_sensor := player_cling_sensors(&player)
 		rl.DrawCircleV(empty_sensor.translation, empty_sensor.radius, {255, 0, 0, 100})
 		rl.DrawCircleV(sensor.translation, sensor.radius, {0, 255, 0, 100})
 		player_bounce_box := AABB {

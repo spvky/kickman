@@ -242,6 +242,37 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 		}
 	}
 
+	//Wall Cling Collision
+	if player_is(.Falling) {
+		cling_sensor, empty_cling_sensor := player_cling_sensors(player)
+		cling_collision := circle_sensor_level_collider_overlap(
+			cling_sensor.translation,
+			cling_sensor.radius,
+			collider,
+			{.Standable, .Clingable},
+		)
+		empty_collision := circle_sensor_level_collider_overlap(
+			empty_cling_sensor.translation,
+			empty_cling_sensor.radius,
+			collider,
+			{.Standable, .Clingable},
+		)
+
+		if cling_collision && !empty_collision {
+			new_translation: Vec2
+			if player.facing == 1 {
+				wall_point := collider.aabb.min
+				new_translation = wall_point + {-player.radius * 2, 8}
+			} else {
+				wall_point := Vec2{collider.aabb.max.x, collider.aabb.min.y}
+				new_translation = wall_point + {player.radius * 2, 8}
+			}
+			override_player_state(.Clinging)
+			player.velocity = VEC_0
+			player.translation = new_translation
+		}
+	}
+
 	if circle_sensor_level_collider_overlap(
 		player_feet_sensor,
 		1,

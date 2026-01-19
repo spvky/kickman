@@ -15,6 +15,7 @@ Player_State :: enum {
 	Falling,
 	// Override States
 	Riding,
+	Clinging,
 }
 
 Ball_State :: enum {
@@ -106,12 +107,13 @@ manage_player_state :: proc() {
 	case .Falling:
 		state = determine_state_from_falling(player)
 	case .Riding:
+	case .Clinging:
 	}
 	player.state = state
 	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
 	anim := &player.animation
 	set_frame_length(anim, 1.0 / 12)
-	#partial switch player.state {
+	switch player.state {
 	case .Idle:
 		if heavy_carry {
 			player.animation.state = .Carry_Heavy_Idle
@@ -144,6 +146,8 @@ manage_player_state :: proc() {
 		set_frame_length(anim, 1.0 / 24)
 	case .Sliding, .Crouching:
 		player.animation.state = .Crouch
+	case .Clinging:
+		player.animation.state = .Cling
 	}
 }
 

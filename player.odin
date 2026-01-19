@@ -131,7 +131,7 @@ manage_player_flags :: proc(delta: f32) {
 	}
 }
 
-player_ledge_grab_sensors :: proc(player: ^Player) -> (sensor, empty_sensor: Circle_Collider) {
+player_cling_sensors :: proc(player: ^Player) -> (sensor, empty_sensor: Circle_Collider) {
 	sensor.translation =
 		player.translation + {player.radius * 2 * player.facing, -player.radius * 1.5}
 	sensor.radius = 3

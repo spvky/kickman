@@ -17,7 +17,7 @@ apply_player_gravity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
 
-	if !player_is(.Riding) {
+	if !player_is(.Riding, .Clinging) {
 		if player_has(.Bounced) {
 			if player.velocity.y < 0 {
 				player.velocity.y += bounce_rising_gravity * delta
@@ -100,6 +100,7 @@ player_movement :: proc(delta: f32) {
 	case .Sliding:
 	case .Crouching:
 	case .Riding:
+	case .Clinging:
 	}
 }
 
@@ -128,6 +129,7 @@ manage_player_velocity :: proc(delta: f32) {
 			player.velocity.y = 0
 		}
 	case .Falling:
+	case .Clinging:
 	}
 }
 
