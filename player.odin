@@ -127,7 +127,6 @@ manage_player_flags :: proc(delta: f32) {
 			player.timed_flags -= {v}
 		}
 	}
-
 }
 
 player_kick :: proc() {

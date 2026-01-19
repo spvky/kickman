@@ -6,6 +6,7 @@ Ball :: struct {
 	using rigidbody: Rigidbody,
 	ignore_player:   f32,
 	spin:            f32,
+	rotation:        f32,
 	state:           Ball_State,
 	flags:           bit_set[Ball_Flag;u8],
 	timed_flags:     bit_set[Ball_Timed_Flag;u8],

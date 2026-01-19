@@ -108,11 +108,12 @@ manage_player_state :: proc() {
 	case .Riding:
 	}
 	player.state = state
+	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
 	anim := &player.animation
 	set_frame_length(anim, 1.0 / 12)
 	#partial switch player.state {
 	case .Idle:
-		if player.badge_type == .Sisyphus {
+		if heavy_carry {
 			player.animation.state = .Carry_Heavy_Idle
 		} else {
 			if player.animation.state == .Flourish {
@@ -128,7 +129,7 @@ manage_player_state :: proc() {
 	case .Falling:
 		player.animation.state = .Fall
 	case .Running:
-		if player.badge_type == .Sisyphus {
+		if heavy_carry {
 			player.animation.state = .Carry_Heavy_Run
 		} else {
 			player.animation.state = .Run
@@ -148,10 +149,17 @@ manage_player_state :: proc() {
 
 determine_state_from_idle :: #force_inline proc(player: ^Player) -> (state: Player_State) {
 	state = .Idle
-	if player_has(.Grounded) {
+	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
+	if player_has(.Grounded) && !heavy_carry {
 		if is_action_held(.Crouch) {
 			state = .Crouching
 		} else if player.movement_delta != 0 {
+			state = .Running
+		}
+	} else if player_has(.Grounded) && heavy_carry {
+		if player.movement_delta == 0 {
+			state = .Idle
+		} else {
 			state = .Running
 		}
 	} else {
@@ -166,7 +174,8 @@ determine_state_from_idle :: #force_inline proc(player: ^Player) -> (state: Play
 
 determine_state_from_running :: #force_inline proc(player: ^Player) -> (state: Player_State) {
 	state = .Running
-	if player_has(.Grounded) {
+	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
+	if player_has(.Grounded) && !heavy_carry {
 		if is_action_held(.Crouch) {
 			state = .Sliding
 		} else if player.movement_delta == 0 {
@@ -177,6 +186,12 @@ determine_state_from_running :: #force_inline proc(player: ^Player) -> (state: P
 			}
 		} else if math.sign(player.movement_delta) != math.sign(player.velocity.x) {
 			state = .Skidding
+		}
+	} else if player_has(.Grounded) && heavy_carry {
+		if player.movement_delta == 0 {
+			state = .Idle
+		} else {
+			state = .Running
 		}
 	} else {
 		if player.velocity.y >= 0 {

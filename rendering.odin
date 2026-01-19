@@ -164,7 +164,24 @@ draw_ball :: proc() {
 		}
 		rl.DrawCircleV(ball.translation, ball.radius, ball_color)
 	case .Sisyphus:
+		etchings_color := rl.Color{100, 100, 100, 255}
 		rl.DrawCircleV(ball.translation, ball.radius * 4, rl.WHITE)
+		rl.DrawPolyLinesEx(
+			ball.translation,
+			3,
+			(ball.radius * 4) - 2,
+			ball.rotation - 90,
+			2,
+			etchings_color,
+		)
+		rl.DrawPolyLinesEx(
+			ball.translation,
+			5,
+			ball.radius * 4,
+			ball.rotation - 270,
+			2,
+			etchings_color,
+		)
 	case .Ghost:
 	}
 }

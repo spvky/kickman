@@ -48,6 +48,7 @@ apply_ball_gravity :: proc(delta: f32) {
 
 player_movement :: proc(delta: f32) {
 	player := &world.player
+	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
 	if player_is(.Idle, .Running, .Crouching, .Rising, .Falling) {
 		if player.movement_delta != 0 {
 			player.facing = player.movement_delta
@@ -72,7 +73,7 @@ player_movement :: proc(delta: f32) {
 			}
 		}
 	case .Running:
-		if is_action_held(.Dash) && player.badge_type != .Sisyphus {
+		if is_action_held(.Dash) && !heavy_carry {
 			if math.abs(player.velocity.x) < dash_speed {
 				if math.abs(player.velocity.x) < run_speed {
 					player.velocity.x +=
@@ -183,8 +184,9 @@ manage_ball_velocity :: proc(delta: f32) {
 		case .Carried:
 			ball.translation = player.translation - (VEC_Y * world.player.carry_height)
 		case .Free:
+			ball.rotation += delta * (ball.velocity.x / 100) * 360
 			if ball_has(.Grounded) {
-				ball.velocity.x *= 0.999
+				ball.velocity.x *= 0.9999
 			}
 		}
 	case .Ghost:
