@@ -180,8 +180,11 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
 	player_should_collide := true
 	platform_velocity: Vec2
+	n_kick_pos, n_kick_radius, _, is_naked_kicking := is_player_naked_kicking(player)
+
 
 	if .Oneway in collider.flags {
+		is_naked_kicking = false
 		if player.velocity.y <= 0 ||
 		   collider.min.y < player.translation.y + (player.radius * 1.4) ||
 		   player_has(.Ignore_Oneways) {
@@ -189,6 +192,7 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 		}
 	}
 
+	// Head Collision
 	if player_is(.Idle, .Running, .Skidding, .Rising, .Falling, .Riding) && player_should_collide {
 		head_collision, head_collided := circle_aabb_collide(
 			player.translation - {0, player.radius / 2},
@@ -204,6 +208,7 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 		}
 	}
 
+	// Feet Collision
 	if player_is(.Idle, .Running, .Skidding, .Sliding, .Crouching, .Rising, .Falling) &&
 	   player_should_collide {
 		feet_collision, feet_collided := circle_aabb_collide(
@@ -213,9 +218,25 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 		)
 		if feet_collided {
 			player_resolve_level_collision(player, feet_collision)
-
 		}
 	}
+
+	// Naked Kick Collision
+	if is_naked_kicking && player_lacks(.Grounded) {
+		naked_kick_collision, naked_kick_colliding := circle_aabb_collide(
+			n_kick_pos,
+			n_kick_radius,
+			collider.aabb,
+		)
+		if naked_kick_colliding {
+			player.facing *= -1
+			player.velocity.x = player.facing * 200
+			player.velocity.y = jump_speed * 0.75
+			player_t_add(.Kicking, 0.2)
+			player_t_add(.No_Turn, 0.4)
+		}
+	}
+
 	if circle_sensor_level_collider_overlap(
 		player_feet_sensor,
 		1,

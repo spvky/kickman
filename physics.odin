@@ -25,7 +25,7 @@ apply_player_gravity :: proc(delta: f32) {
 				player.velocity.y += bounce_falling_gravity * delta
 			}
 		} else {
-			if player.velocity.y < 0 {
+			if player.velocity.y < 0 || player_has(.Kicking) {
 				player.velocity.y += rising_gravity * delta
 			} else {
 				player.velocity.y += falling_gravity * delta
@@ -50,7 +50,7 @@ player_movement :: proc(delta: f32) {
 	player := &world.player
 	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
 	if player_is(.Idle, .Running, .Crouching, .Rising, .Falling) {
-		if player.movement_delta != 0 {
+		if player.movement_delta != 0 && player_lacks(.No_Turn) {
 			player.facing = player.movement_delta
 		}
 
@@ -124,7 +124,7 @@ manage_player_velocity :: proc(delta: f32) {
 	case .Riding:
 	case .Rising:
 		flag_to_check: Player_Master_Flag = player_has(.Bounced) ? .Just_Bounced : .Just_Jumped
-		if !is_action_held(.Jump) && player_lacks(flag_to_check) {
+		if !is_action_held(.Jump) && player_lacks(flag_to_check) && player_lacks(.Kicking) {
 			player.velocity.y = 0
 		}
 	case .Falling:

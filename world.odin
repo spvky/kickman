@@ -31,6 +31,7 @@ Unlock_Flag :: enum u32 {
 	Spirit_Badge,
 	Double_Jump,
 	Lantern,
+	Rubber_Toed_Boots,
 }
 
 Region_Entered_Flag :: enum u16 {
@@ -56,7 +57,7 @@ init_world :: proc() {
 	world.player.flags += {.Has_Ball}
 	world.player.facing = 1
 	world.player.carry_height = 16
-	world.player.badge_type = .Sisyphus
+	world.player.badge_type = .Striker
 	world.player.time_to_run_speed = 0.25
 	world.player.time_to_dash_speed = 1.5
 	world.ball.radius = 3

@@ -19,6 +19,8 @@ Player_Timed_Flag :: enum u16 {
 	Ignore_Oneways,
 	Just_Bounced,
 	Just_Jumped,
+	Kicking,
+	No_Turn,
 }
 
 Player_Master_Flag :: enum u32 {
@@ -35,6 +37,8 @@ Player_Master_Flag :: enum u32 {
 	Ignore_Oneways,
 	Just_Bounced,
 	Just_Jumped,
+	Kicking,
+	No_Turn,
 }
 Ball_Flag :: enum u8 {
 	Grounded,
@@ -104,6 +108,10 @@ player_has :: proc(set: ..Player_Master_Flag) -> bool {
 			timed += {.Just_Bounced}
 		case .Just_Jumped:
 			timed += {.Just_Jumped}
+		case .Kicking:
+			timed += {.Kicking}
+		case .No_Turn:
+			timed += {.No_Turn}
 		}
 	}
 	return static <= player.flags && timed <= player.timed_flags
@@ -178,6 +186,14 @@ player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
 			return
 		case .Just_Jumped:
 			if .Just_Jumped in player.timed_flags {
+				lacks = false
+			}
+		case .Kicking:
+			if .Kicking in player.timed_flags {
+				lacks = false
+			}
+		case .No_Turn:
+			if .No_Turn in player.timed_flags {
 				lacks = false
 			}
 		}
@@ -307,11 +323,7 @@ player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 	if player_has(.Ignore_Ball) do return
 	switch i {
 	case .Kick:
-		able =
-			player_has(.Has_Ball) &&
-			player_is(.Idle, .Running, .Skidding, .Rising, .Falling) &&
-			ball_is(.Carried) &&
-			ball_lacks(.In_Collider)
+		able = player_is(.Idle, .Running, .Skidding, .Rising, .Falling) && player_lacks(.Kicking)
 	case .Slide:
 		able =
 			player_has(.Grounded) &&

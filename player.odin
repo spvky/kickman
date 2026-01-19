@@ -9,6 +9,7 @@ Player :: struct {
 	queued_state:       Player_State,
 	state:              Player_State,
 	prev_state:         Player_State,
+	naked_kick_angle:   Kick_Angle,
 	time_to_run_speed:  f32,
 	time_to_dash_speed: f32,
 	movement_delta:     f32,
@@ -146,38 +147,79 @@ player_kick :: proc() {
 			}
 		} else {
 			if player_can(.Kick) {
-				ball_angle: Vec2
-				unscaled_velo: Vec2
-				switch player.kick_angle {
-				case .Up:
-					ball_angle = Vec2{0, -1}
-					ball.translation = player_foot_position(-1)
-					ball.spin = player.facing
-					unscaled_velo = {player.facing * player.radius * 2.5, -50}
-					player.flag_timers[.Ignore_Ball] = 0.2
-					ball.state = .Free
-					ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
-				case .Forward:
-					ball_angle = Vec2{player.facing, 0} //-0.4}
-					ball.flag_timers[.No_Gravity] = 0.15
-					ball.state = .Free
-					ball.translation = player_foot_position() - {0, 2}
-					ball.spin = player.facing
-					player.flag_timers[.Ignore_Ball] = 0.1
-					ball.velocity = (200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
-				case .Down:
-					ball.spin = player.facing
-					ball.state = .Revved
-					ball.translation = player_foot_position()
-					player.flag_timers[.Ignore_Ball] = 0.3
-					ball.velocity = {-player.facing * 30, -175} + {player.velocity.x, 0}
+				if player_has(.Has_Ball) && ball_lacks(.In_Collider) {
+					switch player.badge_type {
+					case .Striker:
+						ball_angle: Vec2
+						unscaled_velo: Vec2
+						switch player.kick_angle {
+						case .Up:
+							ball_angle = Vec2{0, -1}
+							ball.translation = player_foot_position(-1)
+							ball.spin = player.facing
+							unscaled_velo = {player.facing * player.radius * 2.5, -50}
+							player.flag_timers[.Ignore_Ball] = 0.2
+							ball.state = .Free
+							ball.velocity =
+								(200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
+						case .Forward:
+							ball_angle = Vec2{player.facing, 0} //-0.4}
+							ball.flag_timers[.No_Gravity] = 0.15
+							ball.state = .Free
+							ball.translation = player_foot_position() - {0, 2}
+							ball.spin = player.facing
+							player.flag_timers[.Ignore_Ball] = 0.1
+							ball.velocity =
+								(200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
+						case .Down:
+							ball.spin = player.facing
+							ball.state = .Revved
+							ball.translation = player_foot_position()
+							player.flag_timers[.Ignore_Ball] = 0.3
+							ball.velocity = {-player.facing * 30, -175} + {player.velocity.x, 0}
+						}
+						player.flags -= {.Has_Ball}
+						player_t_add(.Kicking, 0.3)
+					case .Sisyphus:
+					case .Ghost:
+					}
+				} else {
+					//Naked Kick
+					naked_kick(player)
 				}
-				player.flags -= {.Has_Ball}
 				player.flag_timers[.No_Badge] = 0.5
 				consume_action(.Kick)
 			}
 		}
 	}
+}
+
+naked_kick :: proc(player: ^Player) {
+	if player_lacks(.Grounded) {
+		if player.velocity.y > -75 {
+			player.velocity.y = -75
+		}
+	}
+	player.naked_kick_angle = player.kick_angle
+	player_t_add(.Kicking, 0.5)
+	player_t_add(.No_Turn, 0.2)
+}
+
+is_player_naked_kicking :: proc(
+	player: ^Player,
+) -> (
+	kick_position: Vec2,
+	kick_radius: f32,
+	angle: Kick_Angle,
+	is_kicking: bool,
+) {
+	if player_has(.Kicking) && player.flag_timers[.Kicking] > 0.4 {
+		kick_position = player.translation + (VEC_X) * 6 * player.facing
+		kick_radius = 6
+		angle = player.naked_kick_angle
+		is_kicking = true
+	}
+	return
 }
 
 player_slide :: proc() {

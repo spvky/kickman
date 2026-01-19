@@ -112,6 +112,10 @@ draw_player :: proc() {
 	}
 	player_frame := get_frame(player.animation, player.facing)
 	rl.DrawTexturePro(assets.player_texture, player_frame, dest, VEC_0, 0, rl.WHITE)
+	kick_pos, kick_radius, _, is_kicking := is_player_naked_kicking(&player)
+	if is_kicking {
+		rl.DrawCircleV(kick_pos, kick_radius, rl.WHITE)
+	}
 
 
 	if ODIN_DEBUG {
