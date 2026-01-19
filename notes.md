@@ -96,7 +96,10 @@ Spirit badge is a basketball
 the ball color when recalling is the color of the players magic
 
 Sun 18 Jan 2026 04:34:10 PM EST
-## TODO
-Dash Bug
-Fix dribbling
-Start on Sisyphus ball
+
+
+Mon 19 Jan 2026 04:33:53 PM EST
+Known Bugs:
+- Dash Bug
+- Dribbling Animation
+- NakedKick With Ball

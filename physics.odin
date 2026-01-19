@@ -200,7 +200,7 @@ apply_player_velocity :: proc(delta: f32) {
 		player.translation = ball.translation - {0, player.radius * 2}
 		player.facing = math.sign(ball.spin)
 	} else {
-		player.translation += (player.velocity + player.platform_velocity) * delta
+		player.translation += (player.velocity + player.standing_platform_velocity) * delta
 	}
 }
 

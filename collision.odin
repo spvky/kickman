@@ -16,6 +16,11 @@ AABB :: struct {
 	min, max: Vec2,
 }
 
+Circle_Collider :: struct {
+	translation: Vec2,
+	radius:      f32,
+}
+
 Collision :: struct {
 	normal: Vec2,
 	mtv:    Vec2,
@@ -329,7 +334,7 @@ player_ball_level_collision :: proc() {
 	if feet_on_ground {
 		player.flags += {.Grounded, .Double_Jump}
 		player.flag_timers[.Coyote] = 0.10
-		player.platform_velocity = {platform_velocity.x, platform_velocity.y * 0.3}
+		player.standing_platform_velocity = {platform_velocity.x, platform_velocity.y * 0.3}
 	} else {
 		player.flags -= {.Grounded}
 	}

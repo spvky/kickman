@@ -118,7 +118,6 @@ poll_input :: proc() {
 
 	player.movement_delta = direction.x
 	player.kick_angle = kick_angle
-	// player.facing = facing
 	update_buffer()
 	// Buffer pressed inputs
 	if rl.IsKeyPressed(.SPACE) || check_pads_pressed(3, .RIGHT_FACE_DOWN) {

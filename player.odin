@@ -4,27 +4,28 @@ import "core:log"
 import "core:math"
 
 Player :: struct {
-	using rigidbody:    Rigidbody,
-	kick_angle:         Kick_Angle,
-	queued_state:       Player_State,
-	state:              Player_State,
-	prev_state:         Player_State,
-	naked_kick_angle:   Kick_Angle,
-	time_to_run_speed:  f32,
-	time_to_dash_speed: f32,
-	movement_delta:     f32,
-	facing:             f32,
-	run_direction:      f32,
-	carry_pos:          f32,
-	carry_height:       f32,
-	flags:              bit_set[Player_Flag;u16],
-	timed_flags:        bit_set[Player_Timed_Flag;u16],
-	platform_velocity:  Vec2,
-	flag_timers:        [Player_Timed_Flag]f32,
-	juice_values:       [Player_Juice_Values]f32,
-	badge_type:         Player_Badge,
-	speed:              f32,
-	animation:          Animation_Player,
+	using rigidbody:            Rigidbody,
+	kick_angle:                 Kick_Angle,
+	queued_state:               Player_State,
+	state:                      Player_State,
+	prev_state:                 Player_State,
+	naked_kick_angle:           Kick_Angle,
+	time_to_run_speed:          f32,
+	time_to_dash_speed:         f32,
+	movement_delta:             f32,
+	facing:                     f32,
+	run_direction:              f32,
+	carry_pos:                  f32,
+	carry_height:               f32,
+	flags:                      bit_set[Player_Flag;u16],
+	timed_flags:                bit_set[Player_Timed_Flag;u16],
+	standing_platform_velocity: Vec2,
+	clinging_platform_velocity: Vec2,
+	flag_timers:                [Player_Timed_Flag]f32,
+	juice_values:               [Player_Juice_Values]f32,
+	badge_type:                 Player_Badge,
+	speed:                      f32,
+	animation:                  Animation_Player,
 }
 
 Player_Badge :: enum u8 {
@@ -128,6 +129,16 @@ manage_player_flags :: proc(delta: f32) {
 			player.timed_flags -= {v}
 		}
 	}
+}
+
+player_ledge_grab_sensors :: proc(player: ^Player) -> (sensor, empty_sensor: Circle_Collider) {
+	sensor.translation =
+		player.translation + {player.radius * 2 * player.facing, -player.radius * 1.5}
+	sensor.radius = 3
+	empty_sensor.translation =
+		player.translation + {player.radius * 2 * player.facing, -player.radius * 3}
+	empty_sensor.radius = 3
+	return
 }
 
 player_kick :: proc() {
@@ -266,7 +277,7 @@ player_jump :: proc() {
 			if player_has(.Grounded) || player_has(.Coyote) {
 
 				player.velocity.y = jump_speed
-				player.velocity += player.platform_velocity
+				player.velocity += player.standing_platform_velocity
 				player_remove(.Grounded)
 				player_t_remove(.Coyote)
 				player_t_add(.Just_Jumped, 0.15)

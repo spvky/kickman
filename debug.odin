@@ -10,17 +10,13 @@ player_debug :: proc() {
 	extents := assets.room_dimensions[world.current_room]
 
 	player_string := fmt.tprintf(
-		"Player:\n\tFacing | Running: %v | %v\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tPlatform Velocity: [%.1f,%.1f]\n\tCombined Velocity: [%.1f,%.1f]\n\tKick Angle: %v\n\tState: %v\n\tFlags: %v\n\tTimed Flags: %v\nCam Target: %v\n\tExtents: %v",
+		"Player:\n\tFacing | Running: %v | %v\n\tTranslation: [%.1f,%.1f]\n\tVelocity: [%.1f,%.1f]\n\tKick Angle: %v\n\tState: %v\n\tFlags: %v\n\tTimed Flags: %v\nCam Target: %v\n\tExtents: %v",
 		player.facing,
 		player.run_direction,
 		player.translation.x,
 		player.translation.y,
 		player.velocity.x,
 		player.velocity.y,
-		player.platform_velocity.x,
-		player.platform_velocity.y,
-		player.velocity.x + player.platform_velocity.x,
-		player.velocity.y + player.platform_velocity.y,
 		player.kick_angle,
 		player.state,
 		player.flags,
