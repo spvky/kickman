@@ -1,344 +1,290 @@
 package main
 
 import "core:log"
-import "core:time"
+import "core:math"
 
-Player_Flag :: enum u16 {
-	Grounded,
-	Double_Jump,
-	Has_Ball,
-	Bounced,
+Player_State :: enum {
+	// Grounded
+	Idle,
+	Running,
+	Skidding,
+	Sliding,
+	Crouching,
+	// Airborne
+	Rising,
+	Falling,
+	// Override States
+	Riding,
 }
 
-Player_Timed_Flag :: enum u16 {
-	Coyote,
-	Ignore_Ball,
-	No_Badge,
-	No_Control,
-	No_Transition,
-	In_Slide,
-	Ignore_Oneways,
-	Just_Bounced,
-	Just_Jumped,
+Ball_State :: enum {
+	Carried,
+	Free,
+	Recalling,
+	Revved,
+	Riding,
 }
 
-Player_Master_Flag :: enum u32 {
-	Grounded,
-	Double_Jump,
-	Has_Ball,
-	Bounced,
-	Coyote,
-	Ignore_Ball,
-	No_Badge,
-	No_Control,
-	No_Transition,
-	In_Slide,
-	Ignore_Oneways,
-	Just_Bounced,
-	Just_Jumped,
-}
-Ball_Flag :: enum u8 {
-	Grounded,
-	Bounced,
-	In_Collider,
-}
-
-Ball_Timed_Flag :: enum u8 {
-	No_Gravity,
-	Coyote,
-	Recall_Rising,
-}
-
-Ball_Master_Flag :: enum u16 {
-	Grounded,
-	Bounced,
-	In_Collider,
-	No_Gravity,
-	Coyote,
-	Recall_Rising,
-}
-
-Player_Ball_Interaction :: enum u8 {
-	Header,
-	Bounce,
-	Ride,
-	Recall,
-	Catch,
-	Kick,
-	Slide,
-	Dismount,
-	Rev_Shot,
-}
-
-@(require_results)
-player_has :: proc(set: ..Player_Master_Flag) -> bool {
+// Returns true if the player state matches ANY of the passed states
+player_is :: proc(states: ..Player_State) -> (matches: bool) {
 	player := &world.player
-
-	static: bit_set[Player_Flag;u16]
-	timed: bit_set[Player_Timed_Flag;u16]
-
-	for v in set {
-		switch v {
-		case .Grounded:
-			static += {.Grounded}
-		case .Double_Jump:
-			static += {.Double_Jump}
-		case .Has_Ball:
-			static += {.Has_Ball}
-		case .Bounced:
-			static += {.Bounced}
-		case .Coyote:
-			timed += {.Coyote}
-		case .Ignore_Ball:
-			timed += {.Ignore_Ball}
-		case .No_Badge:
-			timed += {.No_Badge}
-		case .No_Control:
-			timed += {.No_Control}
-		case .No_Transition:
-			timed += {.No_Transition}
-		case .In_Slide:
-			timed += {.In_Slide}
-		case .Ignore_Oneways:
-			timed += {.Ignore_Oneways}
-		case .Just_Bounced:
-			timed += {.Just_Bounced}
-		case .Just_Jumped:
-			timed += {.Just_Jumped}
-		}
-	}
-	return static <= player.flags && timed <= player.timed_flags
-}
-
-@(require_results)
-player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
-	player := &world.player
-	lacks = true
-
-	for v in set {
-		switch v {
-		case .Grounded:
-			if .Grounded in player.flags {
-				lacks = false
-				return
-			}
-		case .Double_Jump:
-			if .Double_Jump in player.flags {
-				lacks = false
-				return
-			}
-		case .Has_Ball:
-			if .Has_Ball in player.flags {
-				lacks = false
-				return
-			}
-		case .Bounced:
-			if .Bounced in player.flags {
-				lacks = false
-				return
-			}
-		case .Coyote:
-			if .Coyote in player.timed_flags {
-				lacks = false
-				return
-			}
-		case .Ignore_Ball:
-			if .Ignore_Ball in player.timed_flags {
-				lacks = false
-				return
-			}
-		case .No_Badge:
-			if .No_Badge in player.timed_flags {
-				lacks = false
-				return
-			}
-		case .No_Control:
-			if .No_Control in player.timed_flags {
-				lacks = false
-				return
-			}
-		case .No_Transition:
-			if .No_Transition in player.timed_flags {
-				lacks = false
-				return
-			}
-		case .In_Slide:
-			if .In_Slide in player.timed_flags {
-				lacks = false
-				return
-			}
-		case .Ignore_Oneways:
-			if .Ignore_Oneways in player.timed_flags {
-				lacks = false
-				return
-			}
-		case .Just_Bounced:
-			if .Just_Bounced in player.timed_flags {
-				lacks = false
-			}
-			return
-		case .Just_Jumped:
-			if .Just_Jumped in player.timed_flags {
-				lacks = false
-			}
-		}
-	}
-	return lacks
-}
-
-player_add :: proc(flag: Player_Flag) {
-	player := &world.player
-	player.flags += {flag}
-}
-
-player_t_add :: proc(flag: Player_Timed_Flag, time: f32) {
-	player := &world.player
-	player.timed_flags += {flag}
-	player.flag_timers[flag] = time
-}
-
-player_remove :: proc(flag: Player_Flag) {
-	player := &world.player
-	player.flags -= {flag}
-}
-
-player_t_remove :: proc(flag: Player_Timed_Flag) {
-	player := &world.player
-	player.timed_flags -= {flag}
-	player.flag_timers[flag] = 0
-}
-
-
-@(require_results)
-ball_has :: proc(set: ..Ball_Master_Flag) -> bool {
-	ball := &world.ball
-
-	static: bit_set[Ball_Flag;u8]
-	timed: bit_set[Ball_Timed_Flag;u8]
-
-	for v in set {
-		switch v {
-		case .Grounded:
-			static += {.Grounded}
-		case .Bounced:
-			static += {.Bounced}
-		case .In_Collider:
-			static += {.In_Collider}
-		case .No_Gravity:
-			timed += {.No_Gravity}
-		case .Coyote:
-			timed += {.Coyote}
-		case .Recall_Rising:
-			timed += {.Recall_Rising}
-		}
-	}
-	return static <= ball.flags && timed <= ball.timed_flags
-}
-
-@(require_results)
-ball_lacks :: proc(set: ..Ball_Master_Flag) -> (lacks: bool) {
-	ball := &world.ball
-	lacks = true
-	for v in set {
-		switch v {
-		case .Grounded:
-			if .Grounded in ball.flags {
-				lacks = false
-				return
-			}
-		case .Bounced:
-			if .Bounced in ball.flags {
-				lacks = false
-				return
-			}
-		case .In_Collider:
-			if .In_Collider in ball.flags {
-				lacks = false
-				return
-			}
-		case .No_Gravity:
-			if .No_Gravity in ball.timed_flags {
-				lacks = false
-				return
-			}
-		case .Coyote:
-			if .Coyote in ball.timed_flags {
-				lacks = false
-				return
-			}
-		case .Recall_Rising:
-			if .Recall_Rising in ball.timed_flags {
-				lacks = false
-				return
-			}
+	for v in states {
+		if player.state == v {
+			matches = true
 		}
 	}
 	return
 }
 
-ball_add :: proc(flag: Ball_Flag) {
+// Returns true if the ball state matches ANY of the passed states
+ball_is :: proc(states: ..Ball_State) -> (matches: bool) {
 	ball := &world.ball
-	ball.flags += {flag}
+	for v in states {
+		if ball.state == v {
+			matches = true
+		}
+	}
+	return
 }
 
-ball_t_add :: proc(flag: Ball_Timed_Flag, time: f32) {
-	ball := &world.ball
-	ball.timed_flags += {flag}
-	ball.flag_timers[flag] = time
-}
-
-ball_remove :: proc(flag: Ball_Flag) {
-	ball := &world.ball
-	ball.flags -= {flag}
-}
-
-ball_t_remove :: proc(flag: Ball_Timed_Flag) {
-	ball := &world.ball
-	ball.timed_flags -= {flag}
-	ball.flag_timers[flag] = 0
-}
-
-player_ball_can_interact :: proc() -> bool {
-	return player_lacks(.Ignore_Ball) || !ball_is(.Carried)
-}
-
-player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
+handle_state_transitions :: proc() {
 	player := &world.player
-	ball := &world.ball
-	if player_has(.Ignore_Ball) do return
-	switch i {
-	case .Kick:
-		able =
-			player_has(.Has_Ball) &&
-			player_is(.Idle, .Running, .Skidding, .Rising, .Falling) &&
-			ball_is(.Carried) &&
-			ball_lacks(.In_Collider)
-	case .Slide:
-		able =
-			player_has(.Grounded) &&
-			player_is(.Idle, .Running, .Skidding, .Crouching, .Sliding) &&
-			player_lacks(.In_Slide)
-	case .Catch:
-		able =
-			player_lacks(.Has_Ball, .Ignore_Ball) &&
-				(player_is(.Idle, .Running, .Skidding, .Crouching) &&
-						ball_is(.Free, .Recalling)) ||
-			(player_is(.Rising, .Falling) && ball_is(.Recalling))
-	case .Header:
-		able =
-			player_lacks(.Ignore_Ball) &&
-			player_is(.Idle, .Running, .Skidding, .Rising, .Falling) &&
-			ball_is(.Free)
-	case .Ride:
-		able = player_lacks(.Ignore_Ball) && ball_is(.Revved)
-	case .Bounce:
-		able = player_lacks(.Ignore_Ball, .Grounded) && ball_is(.Free)
-	case .Recall:
-		able = player_lacks(.No_Badge) && ball_has(.Bounced) && ball_is(.Revved, .Free)
-	case .Dismount:
-		able = player_is(.Riding)
-	case .Rev_Shot:
-		able = player_is(.Sliding) && ball_is(.Free)
+	if player.state != player.prev_state {
+		publish_event(
+			.Player_State_Transition,
+			Event_Player_State_Transition{player.prev_state, player.state},
+		)
+	}
+	player.prev_state = player.state
+}
+
+player_state_transition_listener :: proc(event: Event) {
+	data := event.payload.(Event_Player_State_Transition)
+	player := &world.player
+
+	// Should handle all transitions here
+	#partial switch data.entered {
+	case .Skidding:
+		if player.movement_delta != 0 {
+			player.facing = player.movement_delta
+		}
+	case .Running:
+		player.juice_values[.Dribble_Timer] = 0
+		if data.exited == .Idle {
+		}
+		if data.exited == .Skidding {
+			if player.run_direction != player.facing {
+				speed_to_add := is_action_held(.Dash) ? dash_speed : run_speed
+				player.velocity.x = player.facing * speed_to_add * 0.9
+			}
+		}
+		player.run_direction = player.facing
+	}
+}
+
+override_player_state :: proc(state: Player_State) {
+	world.player.state = state
+}
+
+
+manage_player_state :: proc() {
+	player := &world.player
+	state := player.state
+	switch player.state {
+	case .Idle:
+		state = determine_state_from_idle(player)
+	case .Running:
+		state = determine_state_from_running(player)
+	case .Skidding:
+		state = determine_state_from_skidding(player)
+	case .Sliding:
+		state = determine_state_from_sliding(player)
+	case .Crouching:
+		state = determine_state_from_crouching(player)
+	case .Rising:
+		state = determine_state_from_rising(player)
+	case .Falling:
+		state = determine_state_from_falling(player)
+	case .Riding:
+	}
+	player.state = state
+	player.animation.frame_length = 1.0 / 6
+	#partial switch player.state {
+	case .Idle:
+		if player.animation.state == .Flourish {
+			player.animation.frame_length = 1.0 / 2
+		} else if player.animation.state == .Sleep {
+			player.animation.frame_length = 1.0
+		} else {
+			player.animation.state = .Idle
+		}
+	case .Rising:
+		player.animation.state = .Rise
+	case .Falling:
+		player.animation.state = .Fall
+	case .Running:
+		player.animation.state = .Run
+		if is_action_held(.Dash) {
+			player.animation.frame_length = 1.0 / 8
+		}
+	case .Riding:
+		player.animation.state = .Balance
+	case .Skidding:
+		player.animation.state = .Run
+		player.animation.frame_length = 1.0 / 12
+	case .Sliding, .Crouching:
+		player.animation.state = .Crouch
+	}
+}
+
+determine_state_from_idle :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Idle
+	if player_has(.Grounded) {
+		if is_action_held(.Crouch) {
+			state = .Crouching
+		} else if player.movement_delta != 0 {
+			state = .Running
+		}
+	} else {
+		if player.velocity.y >= 0 {
+			state = .Falling
+		} else {
+			state = .Rising
+		}
+	}
+	return
+}
+
+determine_state_from_running :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Running
+	if player_has(.Grounded) {
+		if is_action_held(.Crouch) {
+			state = .Sliding
+		} else if player.movement_delta == 0 {
+			if math.abs(player.velocity.x) < 20 {
+				state = .Idle
+			} else {
+				state = .Skidding
+			}
+		} else if math.sign(player.movement_delta) != math.sign(player.velocity.x) {
+			state = .Skidding
+		}
+	} else {
+		if player.velocity.y >= 0 {
+			state = .Falling
+		} else {
+			state = .Rising
+		}
+	}
+	return
+}
+
+determine_state_from_skidding :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Skidding
+	if player_has(.Grounded) {
+		if is_action_held(.Crouch) {
+			state = .Sliding
+		} else if player.movement_delta == 0 {
+			if math.abs(player.velocity.x) < 20 {
+				state = .Idle
+			}
+		} else if math.sign(player.movement_delta) == math.sign(player.velocity.x) {
+			// state = .Running
+		}
+	} else {
+		if player.velocity.y >= 0 {
+			state = .Falling
+		} else {
+			state = .Rising
+		}
+	}
+	return
+}
+
+determine_state_from_sliding :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Sliding
+	if player_has(.Grounded) {
+		if player_has(.In_Slide) {
+			if math.abs(player.velocity.x) <= 25 {
+				if is_action_held(.Crouch) {
+					state = .Crouching
+				} else {
+					state = .Idle
+				}
+			}
+		} else {
+			if is_action_held(.Crouch) {
+				if math.abs(player.velocity.x) <= 25 {
+					state = .Crouching
+				}
+			} else if player.movement_delta != 0 {
+				state = .Running
+			} else {
+				state = .Idle
+			}
+		}
+	} else {
+		if player.velocity.y >= 0 {
+			state = .Falling
+			player.flag_timers[.In_Slide] = 0
+		} else {
+			state = .Rising
+			player.flag_timers[.In_Slide] = 0
+		}
+	}
+	return
+}
+
+determine_state_from_crouching :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Crouching
+	if player_has(.Grounded) {
+		if player_has(.In_Slide) {
+			state = .Sliding
+		}
+		if !is_action_held(.Crouch) {
+			state = .Idle
+		}
+	} else {
+		if player.velocity.y >= 0 {
+			state = .Falling
+		} else {
+			state = .Rising
+		}
+	}
+	return
+}
+
+determine_state_from_rising :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Rising
+	if player.velocity.y >= 0 {
+		state = .Falling
+	}
+	return
+}
+
+determine_state_from_falling :: #force_inline proc(player: ^Player) -> (state: Player_State) {
+	state = .Falling
+	if player_has(.Grounded) {
+		if is_action_held(.Crouch) {
+			state = .Crouching
+		} else {
+			if player.movement_delta == 0 {
+				state = .Idle
+			} else {
+				if math.sign(player.movement_delta) == math.sign(player.velocity.x) {
+					state = .Running
+				} else {
+					state = .Skidding
+				}
+			}
+		}
+		if player_has(.In_Slide) {
+			state = .Idle
+		}
+	} else {
+		if player.velocity.y < 0 {
+			state = .Rising
+		}
 	}
 	return
 }

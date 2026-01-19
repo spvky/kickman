@@ -13,7 +13,7 @@ Rigidbody :: struct {
 	radius:      f32,
 }
 
-apply_player_ball_gravity :: proc(delta: f32) {
+apply_player_gravity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
 
@@ -32,6 +32,10 @@ apply_player_ball_gravity :: proc(delta: f32) {
 			}
 		}
 	}
+}
+
+apply_ball_gravity :: proc(delta: f32) {
+	ball := &world.ball
 
 	if ball_is(.Free, .Revved, .Riding) {
 		if ball.velocity.y < 0 {
@@ -98,11 +102,8 @@ player_movement :: proc(delta: f32) {
 	}
 }
 
-manage_player_ball_velocity :: proc(delta: f32) {
+manage_player_velocity :: proc(delta: f32) {
 	player := &world.player
-	ball := &world.ball
-	// This can now be switch statements based on badge_type
-	// Player Velocity is generally independent of the current badge
 	switch player.state {
 	case .Idle, .Running:
 	case .Crouching:
@@ -127,7 +128,11 @@ manage_player_ball_velocity :: proc(delta: f32) {
 		}
 	case .Falling:
 	}
-	// Ball Velocity is dependant on the balls state
+}
+
+manage_ball_velocity :: proc(delta: f32) {
+	player := &world.player
+	ball := &world.ball
 	switch player.badge_type {
 	case .Striker:
 		switch ball.state {
@@ -178,7 +183,7 @@ manage_player_ball_velocity :: proc(delta: f32) {
 	}
 }
 
-apply_player_ball_velocity :: proc(delta: f32) {
+apply_player_velocity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
 	if player_is(.Riding) {
@@ -187,25 +192,24 @@ apply_player_ball_velocity :: proc(delta: f32) {
 	} else {
 		player.translation += (player.velocity + player.platform_velocity) * delta
 	}
+}
+
+apply_ball_velocity :: proc(delta: f32) {
+	ball := &world.ball
 	if ball_is(.Free, .Revved, .Riding) {
 		ball.translation += ball.velocity * delta
 	}
 }
 
-physics_step :: proc(delta: f32) {
-	manage_player_state()
-	handle_state_transitions()
-	process_events()
-	manage_player_ball_velocity(delta)
-	manage_juice_values(delta)
+dynamics_step :: proc(delta: f32) {
+	manage_player_velocity(delta)
+	manage_ball_velocity(delta)
+
 	player_controls(delta)
-	apply_player_ball_gravity(delta)
-	apply_player_ball_velocity(delta)
-	update_entities(delta)
-	update_transitions()
-	update_tooltips(delta)
-	//Update timed flags before collision occurs
-	manage_player_ball_flags(delta)
-	collision_step()
-	kill_player_oob()
+
+	apply_player_gravity(delta)
+	apply_ball_gravity(delta)
+
+	apply_player_velocity(delta)
+	apply_ball_velocity(delta)
 }
