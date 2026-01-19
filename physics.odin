@@ -72,7 +72,7 @@ player_movement :: proc(delta: f32) {
 			}
 		}
 	case .Running:
-		if is_action_held(.Dash) {
+		if is_action_held(.Dash) && player.badge_type != .Sisyphus {
 			if math.abs(player.velocity.x) < dash_speed {
 				if math.abs(player.velocity.x) < run_speed {
 					player.velocity.x +=
@@ -181,7 +181,7 @@ manage_ball_velocity :: proc(delta: f32) {
 	case .Sisyphus:
 		#partial switch ball.state {
 		case .Carried:
-			ball.translation = player.translation - (VEC_Y * 16)
+			ball.translation = player.translation - (VEC_Y * world.player.carry_height)
 		case .Free:
 			if ball_has(.Grounded) {
 				ball.velocity.x *= 0.999

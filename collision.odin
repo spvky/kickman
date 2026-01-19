@@ -248,10 +248,11 @@ ball_static_collision :: proc(collider: Collider, on_ground, in_collider: ^bool)
 		}
 	}
 	if ball_should_collide {
-		ball_ground_sensor := ball.translation + Vec2{0, ball.radius}
+		radius := world.player.badge_type == .Sisyphus ? ball.radius * 4 : ball.radius
+		ball_ground_sensor := ball.translation + Vec2{0, radius}
 		ball_collision, ball_collided := circle_aabb_collide(
 			ball.translation,
-			ball.radius,
+			radius,
 			collider.aabb,
 		)
 		if ball_collided {

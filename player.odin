@@ -15,6 +15,7 @@ Player :: struct {
 	facing:             f32,
 	run_direction:      f32,
 	carry_pos:          f32,
+	carry_height:       f32,
 	flags:              bit_set[Player_Flag;u16],
 	timed_flags:        bit_set[Player_Timed_Flag;u16],
 	platform_velocity:  Vec2,
@@ -291,6 +292,20 @@ kill_player_oob :: proc() {
 	   player.translation.y < 0 ||
 	   player.translation.y > extents.y {
 		spawn_player()
+	}
+}
+
+handle_player_animation :: proc(delta: f32) {
+	player := &world.player
+	update_animation_player(&player.animation, delta)
+	if player.animation.frame == 66 || player.animation.frame == 70 {
+		player.carry_height = 17
+	} else if player.animation.frame == 76 ||
+	   player.animation.frame == 77 ||
+	   player.animation.frame == 78 {
+		player.carry_height = 15
+	} else {
+		player.carry_height = 16
 	}
 }
 

@@ -58,6 +58,7 @@ Animation_Action :: enum u8 {
 	Crouch,
 	Sleep,
 	Carry_Heavy_Run,
+	Carry_Heavy_Idle,
 }
 
 player_animations :: proc() -> [Animation_Action]Animation {
@@ -73,6 +74,7 @@ player_animations :: proc() -> [Animation_Action]Animation {
 		.Crouch = {start = 61, end = 61},
 		.Sleep = {start = 62, end = 63},
 		.Carry_Heavy_Run = {start = 64, end = 71},
+		.Carry_Heavy_Idle = {start = 72, end = 79},
 	}
 }
 

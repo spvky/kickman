@@ -112,21 +112,29 @@ manage_player_state :: proc() {
 	set_frame_length(anim, 1.0 / 12)
 	#partial switch player.state {
 	case .Idle:
-		if player.animation.state == .Flourish {
-			set_frame_length(anim, 1.0 / 4)
-		} else if player.animation.state == .Sleep {
-			set_frame_length(anim, 1.0)
+		if player.badge_type == .Sisyphus {
+			player.animation.state = .Carry_Heavy_Idle
 		} else {
-			player.animation.state = .Idle
+			if player.animation.state == .Flourish {
+				set_frame_length(anim, 1.0 / 4)
+			} else if player.animation.state == .Sleep {
+				set_frame_length(anim, 1.0)
+			} else {
+				player.animation.state = .Idle
+			}
 		}
 	case .Rising:
 		player.animation.state = .Rise
 	case .Falling:
 		player.animation.state = .Fall
 	case .Running:
-		player.animation.state = .Run
-		if is_action_held(.Dash) {
-			set_frame_length(anim, 1.0 / 16)
+		if player.badge_type == .Sisyphus {
+			player.animation.state = .Carry_Heavy_Run
+		} else {
+			player.animation.state = .Run
+			if is_action_held(.Dash) {
+				set_frame_length(anim, 1.0 / 16)
+			}
 		}
 	case .Riding:
 		player.animation.state = .Balance
