@@ -108,13 +108,14 @@ manage_player_state :: proc() {
 	case .Riding:
 	}
 	player.state = state
-	player.animation.frame_length = 1.0 / 6
+	anim := &player.animation
+	set_frame_length(anim, 1.0 / 12)
 	#partial switch player.state {
 	case .Idle:
 		if player.animation.state == .Flourish {
-			player.animation.frame_length = 1.0 / 2
+			set_frame_length(anim, 1.0 / 4)
 		} else if player.animation.state == .Sleep {
-			player.animation.frame_length = 1.0
+			set_frame_length(anim, 1.0)
 		} else {
 			player.animation.state = .Idle
 		}
@@ -125,13 +126,13 @@ manage_player_state :: proc() {
 	case .Running:
 		player.animation.state = .Run
 		if is_action_held(.Dash) {
-			player.animation.frame_length = 1.0 / 8
+			set_frame_length(anim, 1.0 / 16)
 		}
 	case .Riding:
 		player.animation.state = .Balance
 	case .Skidding:
 		player.animation.state = .Run
-		player.animation.frame_length = 1.0 / 12
+		set_frame_length(anim, 1.0 / 24)
 	case .Sliding, .Crouching:
 		player.animation.state = .Crouch
 	}

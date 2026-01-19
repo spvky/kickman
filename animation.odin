@@ -74,7 +74,9 @@ player_animations :: proc() -> [Animation_Action]Animation {
 	}
 }
 
-f_time: f32
+set_frame_length :: proc(anim: ^Animation_Player, frame_length: f32) {
+	anim.frame_length = frame_length
+}
 
 update_animation_player :: proc(anim: ^Animation_Player, delta: f32) {
 	if anim.state != anim.prev_state {

@@ -74,6 +74,7 @@ pre_render :: proc(delta: f32) {
 	camera_follow_player()
 	update_particles(delta)
 	update_ui(delta)
+	update_animation_player(&world.player.animation, delta)
 }
 
 flags_step :: proc(delta: f32) {

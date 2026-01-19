@@ -53,9 +53,9 @@ Game_State :: enum {
 init_world :: proc() {
 	init_events_system()
 	world.player.radius = 4
-	world.player.flags += {.Has_Ball}
+	// world.player.flags += {.Has_Ball}
 	world.player.facing = 1
-	world.player.badge_type = .Striker
+	world.player.badge_type = .Sisyphus
 	world.player.time_to_run_speed = 0.25
 	world.player.time_to_dash_speed = 1.5
 	world.ball.radius = 3

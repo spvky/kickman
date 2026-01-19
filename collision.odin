@@ -368,62 +368,68 @@ player_ball_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if player_ball_can_interact() {
-		// Calculate player hitboxes for ball interactions
-		player_head := player.translation - {0, player.radius / 2}
-		ball_above_head := ball.translation.y < player_head.y
-		player_feet := player.translation + {0, player.radius / 2}
-		player_bounce_box := AABB {
-			player.translation - {player.radius * 1.5, player.radius * 0.25},
-			player.translation + ({player.radius * 1.5, player.radius * 2}),
-		}
-
-		if player_can(.Header) {
-			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
-				ball_magnitude := l.length(ball.velocity)
-				player_magnitude := l.length(player.velocity)
-				head_normal := l.normalize0(ball.translation - player_head)
-				ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
-				player.flag_timers[.Ignore_Ball] = 0.2
-				ball.flags += {.Bounced}
-				return
+		switch player.badge_type {
+		case .Striker:
+			// Calculate player hitboxes for ball interactions
+			player_head := player.translation - {0, player.radius / 2}
+			ball_above_head := ball.translation.y < player_head.y
+			player_feet := player.translation + {0, player.radius / 2}
+			player_bounce_box := AABB {
+				player.translation - {player.radius * 1.5, player.radius * 0.25},
+				player.translation + ({player.radius * 1.5, player.radius * 2}),
 			}
-		}
-		ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
-		feet_touching_ball := l.distance(ball_feet_nearest, ball.translation) < ball.radius
 
-		// When sliding, send the ball up and behind and rev it
-		if feet_touching_ball {
-			if player_can(.Bounce) {
-				if ball_lacks(.Grounded) {
-					ball.velocity.y = player.velocity.y
-					ball.velocity.x *= 0.2
+			if player_can(.Header) {
+				if l.distance(player_head, ball.translation) < player.radius + ball.radius {
+					ball_magnitude := l.length(ball.velocity)
+					player_magnitude := l.length(player.velocity)
+					head_normal := l.normalize0(ball.translation - player_head)
+					ball.velocity =
+						((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
+					player.flag_timers[.Ignore_Ball] = 0.2
+					ball.flags += {.Bounced}
+					return
 				}
-				ball.spin = player.facing
-				player.velocity.y = bounce_speed
-				player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
-				player_t_add(.Ignore_Ball, 0.1)
-				player_t_add(.Just_Bounced, 0.1)
-				player_add(.Bounced)
-				return
 			}
+			ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
+			feet_touching_ball := l.distance(ball_feet_nearest, ball.translation) < ball.radius
 
-			if player_can(.Ride) {
-				override_player_state(.Riding)
-				ball.state = .Riding
-				return
-			}
+			// When sliding, send the ball up and behind and rev it
+			if feet_touching_ball {
+				if player_can(.Bounce) {
+					if ball_lacks(.Grounded) {
+						ball.velocity.y = player.velocity.y
+						ball.velocity.x *= 0.2
+					}
+					ball.spin = player.facing
+					player.velocity.y = bounce_speed
+					player.translation.y = ball.translation.y - ball.radius - (player.radius * 1.5)
+					player_t_add(.Ignore_Ball, 0.1)
+					player_t_add(.Just_Bounced, 0.1)
+					player_add(.Bounced)
+					return
+				}
 
-			if player_can(.Rev_Shot) {
-				ball.spin = player.facing
-				ball.state = .Revved
-				ball.velocity = {-player.facing * 30, -175}
-				ball.flags -= {.Bounced}
-				player.flag_timers[.Ignore_Ball] = 0.3
-			}
+				if player_can(.Ride) {
+					override_player_state(.Riding)
+					ball.state = .Riding
+					return
+				}
 
-			if player_can(.Catch) {
-				catch_ball()
+				if player_can(.Rev_Shot) {
+					ball.spin = player.facing
+					ball.state = .Revved
+					ball.velocity = {-player.facing * 30, -175}
+					ball.flags -= {.Bounced}
+					player.flag_timers[.Ignore_Ball] = 0.3
+				}
+
+				if player_can(.Catch) {
+					catch_ball()
+				}
 			}
+		case .Sisyphus:
+		case .Ghost:
 		}
 	}
 }

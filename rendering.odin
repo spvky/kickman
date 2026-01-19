@@ -102,12 +102,7 @@ draw_current_room :: proc() {
 draw_player_and_ball :: proc() {
 	player := world.player
 	ball := world.ball
-	// if player_is(.Idle, .Running, .Skidding, .Rising, .Falling, .Riding) {
-	// 	rl.DrawCircleV(player.translation - {0, player.radius / 2}, player.radius, rl.BLUE)
-	// }
-	// rl.DrawCircleV(player.translation + {0, player.radius / 2}, player.radius, rl.BLUE)
 	delta := rl.GetFrameTime()
-	update_animation_player(&world.player.animation, delta)
 	dest := rl.Rectangle {
 		x      = player.translation.x - (player.animation.sprite_width) / 2,
 		y      = player.translation.y - (player.animation.sprite_height) * 0.68,
@@ -117,41 +112,46 @@ draw_player_and_ball :: proc() {
 	player_frame := get_frame(player.animation, player.facing)
 	rl.DrawTexturePro(assets.player_texture, player_frame, dest, VEC_0, 0, rl.WHITE)
 
-	ball_color := rl.WHITE
-	if ball_is(.Revved) {
-		t := math.sin(ball.juice_values[.Rev_Flash] * 20)
-		white: [4]f32 = {255, 255, 255, 255}
-		red: [4]f32 = {255, 0, 0, 255}
-		float_color := math.lerp(white, red, t)
+	switch player.badge_type {
+	case .Striker:
+		ball_color := rl.WHITE
+		if ball_is(.Revved) {
+			t := math.sin(ball.juice_values[.Rev_Flash] * 20)
+			white: [4]f32 = {255, 255, 255, 255}
+			red: [4]f32 = {255, 0, 0, 255}
+			float_color := math.lerp(white, red, t)
 
-		ball_color = rl.Color {
-			u8(float_color.r),
-			u8(float_color.g),
-			u8(float_color.b),
-			u8(float_color.a),
+			ball_color = rl.Color {
+				u8(float_color.r),
+				u8(float_color.g),
+				u8(float_color.b),
+				u8(float_color.a),
+			}
+		} else if ball_is(.Recalling) {
+			ball_color = {165, 134, 236, 255}
+			sigil_color: rl.Color = {ball_color.r, ball_color.g, ball_color.b, 200}
+			rl.DrawPolyLinesEx(
+				ball.translation,
+				5,
+				6,
+				-ball.juice_values[.Sigil_Rotation],
+				2,
+				sigil_color,
+			)
+			rl.DrawPolyLinesEx(
+				ball.translation,
+				3,
+				6,
+				ball.juice_values[.Sigil_Rotation],
+				2,
+				sigil_color,
+			)
 		}
-	} else if ball_is(.Recalling) {
-		ball_color = {165, 134, 236, 255}
-		sigil_color: rl.Color = {ball_color.r, ball_color.g, ball_color.b, 200}
-		rl.DrawPolyLinesEx(
-			ball.translation,
-			5,
-			6,
-			-ball.juice_values[.Sigil_Rotation],
-			2,
-			sigil_color,
-		)
-		rl.DrawPolyLinesEx(
-			ball.translation,
-			3,
-			6,
-			ball.juice_values[.Sigil_Rotation],
-			2,
-			sigil_color,
-		)
+		rl.DrawCircleV(ball.translation, ball.radius, ball_color)
+	case .Sisyphus:
+		rl.DrawCircleV(ball.translation, ball.radius * 4, rl.WHITE)
+	case .Ghost:
 	}
-
-	rl.DrawCircleV(ball.translation, ball.radius, ball_color)
 
 	if ODIN_DEBUG {
 		player_bounce_box := AABB {
