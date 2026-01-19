@@ -175,6 +175,101 @@ player_tooltip_collision :: proc() {
 	}
 }
 
+player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
+	player := &world.player
+	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
+	player_should_collide := true
+	platform_velocity: Vec2
+
+	if .Oneway in collider.flags {
+		if player.velocity.y <= 0 ||
+		   collider.min.y < player.translation.y + (player.radius * 1.4) ||
+		   player_has(.Ignore_Oneways) {
+			player_should_collide = false
+		}
+	}
+
+	if player_is(.Idle, .Running, .Skidding, .Rising, .Falling, .Riding) && player_should_collide {
+		head_collision, head_collided := circle_aabb_collide(
+			player.translation - {0, player.radius / 2},
+			player.radius,
+			collider.aabb,
+		)
+		if head_collided && .Oneway not_in collider.flags {
+			//TODO: Head collision while riding
+			if player_is(.Riding) {
+			} else {
+				player_resolve_level_collision(player, head_collision)
+			}
+		}
+	}
+
+	if player_is(.Idle, .Running, .Skidding, .Sliding, .Crouching, .Rising, .Falling) &&
+	   player_should_collide {
+		feet_collision, feet_collided := circle_aabb_collide(
+			player.translation + {0, player.radius / 2},
+			player.radius,
+			collider.aabb,
+		)
+		if feet_collided {
+			player_resolve_level_collision(player, feet_collision)
+
+		}
+	}
+	if circle_sensor_level_collider_overlap(
+		player_feet_sensor,
+		1,
+		collider,
+		{.Standable, .Oneway},
+	) {
+		if player_should_collide {
+			on_ground^ = true
+			player_remove(.Bounced)
+			player_t_remove(.Just_Bounced)
+			player_t_remove(.Just_Jumped)
+			platform_velocity.x =
+				abs(platform_velocity.x) > abs(collider.velocity.x) ? platform_velocity.x : collider.velocity.x
+			platform_velocity.y =
+				abs(platform_velocity.y) > abs(collider.velocity.y) ? platform_velocity.y : collider.velocity.y
+		}
+	}
+}
+
+ball_static_collision :: proc(collider: Collider, on_ground, in_collider: ^bool) {
+	ball := &world.ball
+	ball_should_collide := true
+
+
+	if .Oneway in collider.flags {
+		if ball.velocity.y <= 0 {
+			if collider.min.y < ball.translation.y + ball.radius {
+				ball_should_collide = false
+			}
+		}
+	}
+	if ball_should_collide {
+		ball_ground_sensor := ball.translation + Vec2{0, ball.radius}
+		ball_collision, ball_collided := circle_aabb_collide(
+			ball.translation,
+			ball.radius,
+			collider.aabb,
+		)
+		if ball_collided {
+			if ball_is(.Free, .Revved, .Riding) {
+				ball_resolve_level_collision(ball, ball_collision)
+			} else {
+				in_collider^ = true
+			}
+		}
+		
+				//odinfmt: disable
+			if circle_sensor_level_collider_overlap( ball_ground_sensor, 0.06, collider, {.Standable}) {
+				on_ground^ = true
+			}
+			//odinfmt: enable
+	}
+}
+
 player_ball_level_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
@@ -183,6 +278,7 @@ player_ball_level_collision :: proc() {
 	feet_on_ground, ball_on_ground, ball_in_collider: bool
 	falling := player.velocity.y > 0
 
+	// Concat level collision with moving blocks to test collision against a single slice of colliders
 	entity_colliders := make([dynamic]Collider, 0, 4, allocator = context.temp_allocator)
 	for entity in assets.room_entities[world.current_room] {
 		if entity.tag == .Movable_Block {
@@ -196,101 +292,18 @@ player_ball_level_collision :: proc() {
 			append(&entity_colliders, collider)
 		}
 	}
-
 	collision_slice: []Collider = slice.concatenate(
 		[][]Collider{assets.room_collision[world.current_room][:], entity_colliders[:]},
 		allocator = context.temp_allocator,
 	)
 
+	// Calculate collision for the player and ball for each collider in the slice
 	for collider in collision_slice {
-		// Player
-
-		player_should_collide := true
-		ball_should_collide := true
-
-		if .Oneway in collider.flags {
-
-			if player.velocity.y <= 0 ||
-			   collider.min.y < player.translation.y + (player.radius * 1.4) ||
-			   player_has(.Ignore_Oneways) {
-				player_should_collide = false
-			}
-
-			if ball.velocity.y <= 0 {if collider.min.y < ball.translation.y + ball.radius {
-					ball_should_collide = false
-				}
-			}
-		}
-
-		if player_is(.Idle, .Running, .Skidding, .Rising, .Falling, .Riding) &&
-		   player_should_collide {
-			head_collision, head_collided := circle_aabb_collide(
-				player.translation - {0, player.radius / 2},
-				player.radius,
-				collider.aabb,
-			)
-			if head_collided && .Oneway not_in collider.flags {
-				//TODO: Head collision while riding
-				if player_is(.Riding) {
-				} else {
-					player_resolve_level_collision(player, head_collision)
-				}
-			}
-		}
-
-		if player_is(.Idle, .Running, .Skidding, .Sliding, .Crouching, .Rising, .Falling) &&
-		   player_should_collide {
-			feet_collision, feet_collided := circle_aabb_collide(
-				player.translation + {0, player.radius / 2},
-				player.radius,
-				collider.aabb,
-			)
-			if feet_collided {
-				player_resolve_level_collision(player, feet_collision)
-
-			}
-		}
-		if circle_sensor_level_collider_overlap(
-			player_feet_sensor,
-			1,
-			collider,
-			{.Standable, .Oneway},
-		) {
-			if player_should_collide {
-				feet_on_ground = true
-				player_remove(.Bounced)
-				player_t_remove(.Just_Bounced)
-				player_t_remove(.Just_Jumped)
-				platform_velocity.x =
-					abs(platform_velocity.x) > abs(collider.velocity.x) ? platform_velocity.x : collider.velocity.x
-				platform_velocity.y =
-					abs(platform_velocity.y) > abs(collider.velocity.y) ? platform_velocity.y : collider.velocity.y
-			}
-		}
-
-		// Ball
-		if ball_should_collide {
-			ball_ground_sensor := ball.translation + Vec2{0, ball.radius}
-			ball_collision, ball_collided := circle_aabb_collide(
-				ball.translation,
-				ball.radius,
-				collider.aabb,
-			)
-			if ball_collided {
-				if ball_is(.Free, .Revved, .Riding) {
-					ball_resolve_level_collision(ball, ball_collision)
-				} else {
-					ball_in_collider = true
-				}
-			}
-			
-					//odinfmt: disable
-			if circle_sensor_level_collider_overlap( ball_ground_sensor, 0.06, collider, {.Standable}) {
-				ball_on_ground = true
-			}
-			//odinfmt: enable
-		}
+		player_static_collision(collider, &feet_on_ground)
+		ball_static_collision(collider, &ball_on_ground, &ball_in_collider)
 	}
+
+	// Update flags based on collision result
 	if feet_on_ground {
 		player.flags += {.Grounded, .Double_Jump}
 		player.flag_timers[.Coyote] = 0.10

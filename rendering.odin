@@ -32,7 +32,8 @@ render_scene_to_texture :: proc() {
 	draw_paralax_layers()
 	draw_room_entities()
 	draw_current_room()
-	draw_player_and_ball()
+	draw_ball()
+	draw_player()
 	draw_dust()
 	draw_tooltips()
 	// draw_text()
@@ -99,7 +100,7 @@ draw_current_room :: proc() {
 	rl.DrawTexture(assets.room_deco_textures[world.current_room], 0, 0, rl.WHITE)
 }
 
-draw_player_and_ball :: proc() {
+draw_player :: proc() {
 	player := world.player
 	ball := world.ball
 	delta := rl.GetFrameTime()
@@ -112,6 +113,20 @@ draw_player_and_ball :: proc() {
 	player_frame := get_frame(player.animation, player.facing)
 	rl.DrawTexturePro(assets.player_texture, player_frame, dest, VEC_0, 0, rl.WHITE)
 
+
+	if ODIN_DEBUG {
+		player_bounce_box := AABB {
+			player.translation - {player.radius * 1.5, 0},
+			player.translation + ({player.radius * 1.5, player.radius * 2}),
+		}
+		box_extents := player_bounce_box.max - player_bounce_box.min
+		rl.DrawRectangleV(player_bounce_box.min, box_extents, {255, 255, 255, 100})
+	}
+}
+
+draw_ball :: proc() {
+	player := world.player
+	ball := world.ball
 	switch player.badge_type {
 	case .Striker:
 		ball_color := rl.WHITE
@@ -151,15 +166,6 @@ draw_player_and_ball :: proc() {
 	case .Sisyphus:
 		rl.DrawCircleV(ball.translation, ball.radius * 4, rl.WHITE)
 	case .Ghost:
-	}
-
-	if ODIN_DEBUG {
-		player_bounce_box := AABB {
-			player.translation - {player.radius * 1.5, 0},
-			player.translation + ({player.radius * 1.5, player.radius * 2}),
-		}
-		box_extents := player_bounce_box.max - player_bounce_box.min
-		rl.DrawRectangleV(player_bounce_box.min, box_extents, {255, 255, 255, 100})
 	}
 }
 

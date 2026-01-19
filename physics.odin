@@ -179,6 +179,14 @@ manage_ball_velocity :: proc(delta: f32) {
 			}
 		}
 	case .Sisyphus:
+		#partial switch ball.state {
+		case .Carried:
+			ball.translation = player.translation - (VEC_Y * 16)
+		case .Free:
+			if ball_has(.Grounded) {
+				ball.velocity.x *= 0.999
+			}
+		}
 	case .Ghost:
 	}
 }
