@@ -57,7 +57,7 @@ init_world :: proc() {
 	world.player.flags += {.Has_Ball}
 	world.player.facing = 1
 	world.player.carry_height = 16
-	world.player.badge_type = .Striker
+	world.player.badge_type = .Sisyphus
 	world.player.time_to_run_speed = 0.25
 	world.player.time_to_dash_speed = 1.5
 	world.ball.radius = 3

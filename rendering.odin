@@ -137,19 +137,7 @@ draw_ball :: proc() {
 	switch player.badge_type {
 	case .Striker:
 		ball_color := rl.WHITE
-		if ball_is(.Revved) {
-			t := math.sin(ball.juice_values[.Rev_Flash] * 20)
-			white: [4]f32 = {255, 255, 255, 255}
-			red: [4]f32 = {255, 0, 0, 255}
-			float_color := math.lerp(white, red, t)
-
-			ball_color = rl.Color {
-				u8(float_color.r),
-				u8(float_color.g),
-				u8(float_color.b),
-				u8(float_color.a),
-			}
-		} else if ball_is(.Recalling) {
+		if ball_is(.Recalling) {
 			ball_color = {165, 134, 236, 255}
 			sigil_color: rl.Color = {ball_color.r, ball_color.g, ball_color.b, 200}
 			rl.DrawPolyLinesEx(
@@ -172,11 +160,11 @@ draw_ball :: proc() {
 		rl.DrawCircleV(ball.translation, ball.radius, ball_color)
 	case .Sisyphus:
 		etchings_color := rl.Color{100, 100, 100, 255}
-		rl.DrawCircleV(ball.translation, ball.radius * 4, rl.WHITE)
+		rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
 		rl.DrawPolyLinesEx(
 			ball.translation,
 			3,
-			(ball.radius * 4) - 2,
+			(ball.radius) - 2,
 			ball.rotation - 90,
 			2,
 			etchings_color,
@@ -184,7 +172,7 @@ draw_ball :: proc() {
 		rl.DrawPolyLinesEx(
 			ball.translation,
 			5,
-			ball.radius * 4,
+			ball.radius,
 			ball.rotation - 270,
 			2,
 			etchings_color,

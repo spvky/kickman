@@ -37,7 +37,7 @@ apply_player_gravity :: proc(delta: f32) {
 apply_ball_gravity :: proc(delta: f32) {
 	ball := &world.ball
 
-	if ball_is(.Free, .Revved, .Riding) {
+	if ball_is(.Free, .Riding) {
 		if ball.velocity.y < 0 {
 			ball.velocity.y += rising_gravity * delta
 		} else {
@@ -48,8 +48,9 @@ apply_ball_gravity :: proc(delta: f32) {
 
 player_movement :: proc(delta: f32) {
 	player := &world.player
+	ball := &world.ball
 	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
-	if player_is(.Idle, .Running, .Crouching, .Rising, .Falling) {
+	if player_is(.Idle, .Running, .Crouching, .Rising, .Falling, .Riding) {
 		if player.movement_delta != 0 && player_lacks(.No_Turn) {
 			player.facing = player.movement_delta
 		}
@@ -113,6 +114,7 @@ player_movement :: proc(delta: f32) {
 
 manage_player_velocity :: proc(delta: f32) {
 	player := &world.player
+	ball := &world.ball
 	switch player.state {
 	case .Idle, .Running:
 	case .Crouching:
@@ -130,6 +132,8 @@ manage_player_velocity :: proc(delta: f32) {
 	case .Sliding:
 		player.velocity.x *= 0.999
 	case .Riding:
+		player.velocity = VEC_0
+		player.translation = ball.translation - {0, ball.radius + player.radius}
 	case .Rising:
 		flag_to_check: Player_Master_Flag = player_has(.Bounced) ? .Just_Bounced : .Just_Jumped
 		if !is_action_held(.Jump) && player_lacks(flag_to_check) && player_lacks(.Kicking) {
@@ -183,10 +187,7 @@ manage_ball_velocity :: proc(delta: f32) {
 					ball.translation = player_feet
 				}
 			}
-		case .Revved, .Riding:
-			if ball_has(.Grounded) {
-				ball.velocity.x *= 0.9999
-			}
+		case .Riding:
 		}
 	case .Sisyphus:
 		#partial switch ball.state {
@@ -197,6 +198,22 @@ manage_ball_velocity :: proc(delta: f32) {
 			if ball_has(.Grounded) {
 				ball.velocity.x *= 0.9999
 			}
+		case .Riding:
+			if player.movement_delta != 0 {
+				velo_to_add := player.movement_delta * 200 * delta
+				matching_sign := math.sign(player.movement_delta) == math.sign(ball.velocity.x)
+				if math.abs(ball.velocity.x) < 300 {
+					ball.velocity.x += velo_to_add
+				} else if !matching_sign {
+					ball.velocity.x *= 0.99
+					ball.velocity.x += velo_to_add
+				}
+			} else {
+				if ball_has(.Grounded) {
+					ball.velocity.x *= 0.9999
+				}
+			}
+			ball.rotation += delta * (ball.velocity.x / 100) * 360
 		}
 	case .Ghost:
 	}
@@ -204,18 +221,12 @@ manage_ball_velocity :: proc(delta: f32) {
 
 apply_player_velocity :: proc(delta: f32) {
 	player := &world.player
-	ball := &world.ball
-	if player_is(.Riding) {
-		player.translation = ball.translation - {0, player.radius * 2}
-		player.facing = math.sign(ball.spin)
-	} else {
-		player.translation += (player.velocity + player.standing_platform_velocity) * delta
-	}
+	player.translation += (player.velocity + player.standing_platform_velocity) * delta
 }
 
 apply_ball_velocity :: proc(delta: f32) {
 	ball := &world.ball
-	if ball_is(.Free, .Revved, .Riding) {
+	if ball_is(.Free, .Riding) {
 		ball.translation += ball.velocity * delta
 	}
 }

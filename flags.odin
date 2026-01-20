@@ -322,7 +322,7 @@ ball_t_remove :: proc(flag: Ball_Timed_Flag) {
 }
 
 player_ball_can_interact :: proc() -> bool {
-	return player_lacks(.Ignore_Ball) || !ball_is(.Carried)
+	return player_lacks(.Ignore_Ball, .Has_Ball, .Ignore_Ball) && !player_is(.Riding)
 }
 
 player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
@@ -349,11 +349,11 @@ player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 			player_is(.Idle, .Running, .Skidding, .Rising, .Falling) &&
 			ball_is(.Free)
 	case .Ride:
-		able = player_lacks(.Ignore_Ball) && ball_is(.Revved)
+		able = player_lacks(.Ignore_Ball) && player.badge_type == .Sisyphus
 	case .Bounce:
 		able = player_lacks(.Ignore_Ball, .Grounded) && ball_is(.Free)
 	case .Recall:
-		able = player_lacks(.No_Badge) && ball_has(.Bounced) && ball_is(.Revved, .Free)
+		able = player_lacks(.No_Badge) && ball_has(.Bounced) && player.badge_type == .Striker
 	case .Dismount:
 		able = player_is(.Riding)
 	case .Rev_Shot:

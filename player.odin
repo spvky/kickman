@@ -146,16 +146,16 @@ player_kick :: proc() {
 	ball := &world.ball
 	if is_action_buffered(.Kick) {
 		if player_is(.Riding) {
-			if player_can(.Dismount) {
-				//CHANGE ME
-				player.state = .Rising
-				ball.state = .Free
-				player.flag_timers[.Ignore_Ball] = 0.2
-				player.velocity = {player.facing * -60, -100}
-				player.flag_timers[.No_Control] = 0.1
-				ball.spin = -player.facing
-				ball.velocity = {player.facing * 75, -150}
-			}
+			// if player_can(.Dismount) {
+			// 	//CHANGE ME
+			// 	player.state = .Rising
+			// 	ball.state = .Free
+			// 	player.flag_timers[.Ignore_Ball] = 0.2
+			// 	player.velocity = {player.facing * -60, -100}
+			// 	player.flag_timers[.No_Control] = 0.1
+			// 	ball.spin = -player.facing
+			// 	ball.velocity = {player.facing * 75, -150}
+			// }
 		} else {
 			if player_can(.Kick) {
 				if player_has(.Has_Ball) && ball_lacks(.In_Collider) {
@@ -183,15 +183,24 @@ player_kick :: proc() {
 							ball.velocity =
 								(200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
 						case .Down:
-							ball.spin = player.facing
-							ball.state = .Revved
-							ball.translation = player_foot_position()
-							player.flag_timers[.Ignore_Ball] = 0.3
-							ball.velocity = {-player.facing * 30, -175} + {player.velocity.x, 0}
 						}
-						player.flags -= {.Has_Ball}
+						player_remove(.Has_Ball)
 						player_t_add(.Kicking, 0.3)
 					case .Sisyphus:
+						switch player.kick_angle {
+						case .Up:
+							ball.state = .Free
+							player_remove(.Has_Ball)
+							ball.velocity = {player.velocity.x, -300}
+							player.flag_timers[.Ignore_Ball] = 0.3
+						case .Forward:
+							ball.state = .Free
+							player_remove(.Has_Ball)
+							ball.velocity = {player.velocity.x + (200 * player.facing), 0}
+							player.flag_timers[.Ignore_Ball] = 0.3
+						case .Down:
+						}
+
 					case .Ghost:
 					}
 				} else {
@@ -266,20 +275,28 @@ player_jump :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if is_action_buffered(.Jump) {
-		if player_is(.Riding) && ball_is(.Riding) {
-			if ball_has(.Grounded) || ball_has(.Coyote) {
-				ball.velocity.y = jump_speed
-				ball.timed_flags -= {.Coyote}
-				consume_action(.Jump)
-				return
-			}
+		// if player_is(.Riding) && ball_is(.Riding) {
+		// 	if ball_has(.Grounded) || ball_has(.Coyote) {
+		// 		ball.velocity.y = jump_speed
+		// 		ball.timed_flags -= {.Coyote}
+		// 		consume_action(.Jump)
+		// 		return
+		// 	}
+		// } else
+		if player_is(.Riding) {
+			player.velocity.y = jump_speed * 0.7
+			player.velocity.x = ball.velocity.x
+			player_t_add(.Ignore_Ball, 0.1)
+			player_t_add(.Just_Jumped, 0.2)
+			override_player_state(.Rising)
+			ball.state = .Free
 		} else if player_is(.Clinging) {
 			player.velocity.y = jump_speed * 0.7
 			player_t_add(.Just_Jumped, 0.2)
 			override_player_state(.Rising)
+			return
 		} else {
 			if player_has(.Grounded) || player_has(.Coyote) {
-
 				player.velocity.y = jump_speed
 				player.velocity += player.standing_platform_velocity
 				player_remove(.Grounded)

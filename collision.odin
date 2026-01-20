@@ -86,18 +86,7 @@ ball_resolve_level_collision :: proc(ball: ^Ball, collision: Collision) {
 	}
 	if y_dot > 0.7 {
 		y_velo := ball.velocity.y
-		if ball_is(.Revved) {
-			ball.velocity.y = y_velo * -0.3
-		} else {
-			ball.velocity.y = y_velo * -0.6
-		}
-		// Roll based on spin if our x velo is low enough
-		if math.abs(ball.velocity.x) < 25 && !ball_is(.Revved) {
-			ball.velocity.x = y_velo * 0.2 * ball.spin
-		} else if ball_is(.Revved) && ball_lacks(.Bounced) {
-			// If Revved and hasn't bounced yet apply rev speed
-			ball.velocity.x = 300 * ball.spin
-		}
+		ball.velocity.y = y_velo * -0.6
 		ball.flags += {.Bounced}
 	}
 }
@@ -305,15 +294,14 @@ ball_static_collision :: proc(collider: Collider, on_ground, in_collider: ^bool)
 		}
 	}
 	if ball_should_collide {
-		radius := world.player.badge_type == .Sisyphus ? ball.radius * 4 : ball.radius
-		ball_ground_sensor := ball.translation + Vec2{0, radius}
+		ball_ground_sensor := ball.translation + Vec2{0, ball.radius}
 		ball_collision, ball_collided := circle_aabb_collide(
 			ball.translation,
-			radius,
+			ball.radius,
 			collider.aabb,
 		)
 		if ball_collided {
-			if ball_is(.Free, .Revved, .Riding) {
+			if ball_is(.Free, .Riding) {
 				ball_resolve_level_collision(ball, ball_collision)
 			} else {
 				in_collider^ = true
@@ -370,7 +358,7 @@ player_ball_level_collision :: proc() {
 		player.flags -= {.Grounded}
 	}
 
-	if ball_on_ground && ball_lacks(.No_Gravity) && ball_is(.Free, .Revved, .Riding) {
+	if ball_on_ground && ball_lacks(.No_Gravity) && ball_is(.Free, .Riding) {
 		ball.flags += {.Grounded}
 		ball.flag_timers[.Coyote] = 0.10
 	} else {
@@ -438,13 +426,14 @@ player_ball_entity_collision :: proc() {
 player_ball_collision :: proc() {
 	player := &world.player
 	ball := &world.ball
+	player_head := player.translation - {0, player.radius / 2}
+	player_feet := player.translation + {0, player.radius / 2}
 	if player_ball_can_interact() {
 		switch player.badge_type {
 		case .Striker:
 			// Calculate player hitboxes for ball interactions
 			player_head := player.translation - {0, player.radius / 2}
 			ball_above_head := ball.translation.y < player_head.y
-			player_feet := player.translation + {0, player.radius / 2}
 			player_bounce_box := AABB {
 				player.translation - {player.radius * 1.5, player.radius * 0.25},
 				player.translation + ({player.radius * 1.5, player.radius * 2}),
@@ -505,17 +494,7 @@ player_ball_collision :: proc() {
 				}
 
 				if player_can(.Ride) {
-					override_player_state(.Riding)
-					ball.state = .Riding
-					return
-				}
-
-				if player_can(.Rev_Shot) {
-					ball.spin = player.facing
-					ball.state = .Revved
-					ball.velocity = {-player.facing * 30, -175}
-					ball.flags -= {.Bounced}
-					player.flag_timers[.Ignore_Ball] = 0.3
+					ride_ball()
 					return
 				}
 
@@ -525,6 +504,15 @@ player_ball_collision :: proc() {
 				}
 			}
 		case .Sisyphus:
+			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
+				catch_ball()
+				return
+			}
+
+			if l.distance(player_feet, ball.translation) < player.radius + ball.radius {
+				ride_ball()
+				return
+			}
 		case .Ghost:
 		}
 	}

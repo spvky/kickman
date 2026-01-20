@@ -22,7 +22,6 @@ Ball_State :: enum {
 	Carried,
 	Free,
 	Recalling,
-	Revved,
 	Riding,
 }
 

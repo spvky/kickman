@@ -1,5 +1,6 @@
 package main
 
+import "core:log"
 import "core:math"
 
 Ball :: struct {
@@ -31,9 +32,7 @@ manage_ball_juice_values :: proc(delta: f32) {
 			}
 		case .Sigil_Rotation:
 			sigil_rot := &ball.juice_values[.Sigil_Rotation]
-			if ball_is(.Revved) {
-				sigil_rot^ += delta * 720
-			} else if ball_is(.Recalling) {
+			if ball_is(.Recalling) {
 				sigil_rot^ += delta * 360
 			}
 		}
@@ -53,12 +52,35 @@ manage_ball_flags :: proc(delta: f32) {
 	}
 }
 
+manage_ball_shape :: proc() {
+	ball := &world.ball
+	switch world.player.badge_type {
+	case .Striker:
+		ball.radius = 3
+	case .Sisyphus:
+		ball.radius = 12
+	case .Ghost:
+	}
+}
+
+ride_ball :: proc() {
+	world.ball.state = .Riding
+	override_player_state(.Riding)
+}
+
 catch_ball :: proc() {
+	log.debug("CAUGHT")
 	player := &world.player
 	ball := &world.ball
 	ball.state = .Carried
 	ball.flags -= {.Bounced}
 	ball.velocity = Vec2{0, 0}
-	ball.translation = player_foot_position()
+	switch player.badge_type {
+	case .Striker:
+		ball.translation = player_foot_position()
+	case .Sisyphus:
+		ball.translation = player.translation - VEC_Y * player.carry_height
+	case .Ghost:
+	}
 	player.flags += {.Has_Ball}
 }
