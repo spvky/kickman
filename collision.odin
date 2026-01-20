@@ -227,7 +227,7 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 	}
 
 	// Naked Kick Collision
-	if is_naked_kicking && player_lacks(.Grounded) {
+	if is_naked_kicking && player_lacks(.Grounded) && player.translation.y > collider.min.y {
 		naked_kick_collision, naked_kick_colliding := circle_aabb_collide(
 			n_kick_pos,
 			n_kick_radius,
@@ -243,7 +243,7 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 	}
 
 	//Wall Cling Collision
-	if player_is(.Falling) {
+	if player_is(.Falling) && player_lacks(.No_Cling) {
 		cling_sensor, empty_cling_sensor := player_cling_sensors(player)
 		cling_collision := circle_sensor_level_collider_overlap(
 			cling_sensor.translation,

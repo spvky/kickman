@@ -210,6 +210,8 @@ naked_kick :: proc(player: ^Player) {
 		if player.velocity.y > -75 {
 			player.velocity.y = -75
 		}
+	} else {
+		player.velocity.y = -75
 	}
 	player.naked_kick_angle = player.kick_angle
 	player_t_add(.Kicking, 0.5)
@@ -273,6 +275,10 @@ player_jump :: proc() {
 				consume_action(.Jump)
 				return
 			}
+		} else if player_is(.Clinging) {
+			player.velocity.y = jump_speed * 0.7
+			player_t_add(.Just_Jumped, 0.2)
+			override_player_state(.Rising)
 		} else {
 			if player_has(.Grounded) || player_has(.Coyote) {
 

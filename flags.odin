@@ -21,6 +21,7 @@ Player_Timed_Flag :: enum u16 {
 	Just_Jumped,
 	Kicking,
 	No_Turn,
+	No_Cling,
 }
 
 Player_Master_Flag :: enum u32 {
@@ -39,6 +40,7 @@ Player_Master_Flag :: enum u32 {
 	Just_Jumped,
 	Kicking,
 	No_Turn,
+	No_Cling,
 }
 Ball_Flag :: enum u8 {
 	Grounded,
@@ -112,6 +114,8 @@ player_has :: proc(set: ..Player_Master_Flag) -> bool {
 			timed += {.Kicking}
 		case .No_Turn:
 			timed += {.No_Turn}
+		case .No_Cling:
+			timed += {.No_Cling}
 		}
 	}
 	return static <= player.flags && timed <= player.timed_flags
@@ -194,6 +198,10 @@ player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
 			}
 		case .No_Turn:
 			if .No_Turn in player.timed_flags {
+				lacks = false
+			}
+		case .No_Cling:
+			if .No_Cling in player.timed_flags {
 				lacks = false
 			}
 		}

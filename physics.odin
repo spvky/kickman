@@ -62,6 +62,9 @@ player_movement :: proc(delta: f32) {
 	case .Idle:
 		player.velocity.x *= 0.99
 	case .Rising, .Falling:
+		if is_action_held(.Crouch) {
+			player_t_add(.No_Cling, 0.1)
+		}
 		if math.abs(player.velocity.x) < run_speed {
 			player.velocity.x +=
 				(run_speed * player.movement_delta) * (delta * (1 / player.time_to_run_speed * 2))
@@ -101,6 +104,10 @@ player_movement :: proc(delta: f32) {
 	case .Crouching:
 	case .Riding:
 	case .Clinging:
+		if is_action_held(.Crouch) {
+			override_player_state(.Falling)
+			player_t_add(.No_Cling, 0.15)
+		}
 	}
 }
 
