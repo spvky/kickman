@@ -462,8 +462,31 @@ player_ball_collision :: proc() {
 					return
 				}
 			}
+
+			// Naked Kick
+			n_kick_pos, n_kick_radius, n_kick_angle, is_naked_kicking := is_player_naked_kicking(
+				player,
+			)
+
+			if l.distance(n_kick_pos, ball.translation) < n_kick_radius + ball.radius {
+				kick_velo: Vec2
+				switch n_kick_angle {
+				case .Up:
+					kick_velo = {player.facing * 40, -300}
+				case .Forward:
+					kick_velo = {player.facing * 300, -100}
+				case .Down:
+				}
+				player.flag_timers[.Ignore_Ball] = 0.2
+				ball.flags += {.Bounced}
+				ball.velocity = kick_velo
+				return
+			}
+
+
 			ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
 			feet_touching_ball := l.distance(ball_feet_nearest, ball.translation) < ball.radius
+
 
 			// When sliding, send the ball up and behind and rev it
 			if feet_touching_ball {
@@ -493,10 +516,12 @@ player_ball_collision :: proc() {
 					ball.velocity = {-player.facing * 30, -175}
 					ball.flags -= {.Bounced}
 					player.flag_timers[.Ignore_Ball] = 0.3
+					return
 				}
 
 				if player_can(.Catch) {
 					catch_ball()
+					return
 				}
 			}
 		case .Sisyphus:

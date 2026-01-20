@@ -168,7 +168,7 @@ player_kick :: proc() {
 							ball_angle = Vec2{0, -1}
 							ball.translation = player_foot_position(-1)
 							ball.spin = player.facing
-							unscaled_velo = {player.facing * player.radius * 2.5, -50}
+							unscaled_velo = {player.facing * player.radius * 5, -50}
 							player.flag_timers[.Ignore_Ball] = 0.2
 							ball.state = .Free
 							ball.velocity =
@@ -210,8 +210,6 @@ naked_kick :: proc(player: ^Player) {
 		if player.velocity.y > -75 {
 			player.velocity.y = -75
 		}
-	} else {
-		player.velocity.y = -75
 	}
 	player.naked_kick_angle = player.kick_angle
 	player_t_add(.Kicking, 0.5)
