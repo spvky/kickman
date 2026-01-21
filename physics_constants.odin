@@ -19,6 +19,10 @@ BOUNCE_TIME_TO_PEAK: f32 : 0.4
 BOUNCE_TIME_TO_DESCENT: f32 : 0.3
 // How many pixels high is a full bounce
 BOUNCE_HEIGHT: f32 : 4 * TILE_SIZE
+// How many tiles per second the ball can roll at max speed
+MAX_SISYPHUS_ROLL_SPEED: f32 : TILE_SIZE * 40
+// How many seconds from a standstill does it take to reach max roll speed
+TIME_TO_MAX_ROLL_SPEED: f32 : 5
 
 run_speed := calculate_ground_speed()
 dash_speed := calculate_dash_speed()
@@ -28,6 +32,8 @@ falling_gravity := calculate_falling_gravity()
 bounce_speed := calculate_bounce_speed()
 bounce_rising_gravity := calculate_bounce_rising_gravity()
 bounce_falling_gravity := calculate_bounce_falling_gravity()
+roll_acceleration := calculate_roll_acceleration()
+roll_pivot_acceleration := calculate_roll_pivot_acceleration()
 
 // Jumping
 calulate_jump_speed :: proc "c" () -> f32 {
@@ -61,4 +67,12 @@ calculate_ground_speed :: proc "c" () -> f32 {
 
 calculate_dash_speed :: proc "c" () -> f32 {
 	return DASH_JUMP_DISTANCE / (TIME_TO_PEAK + TIME_TO_DESCENT)
+}
+// Sisyphus
+calculate_roll_acceleration :: proc "c" () -> f32 {
+	return MAX_SISYPHUS_ROLL_SPEED / TIME_TO_MAX_ROLL_SPEED
+}
+
+calculate_roll_pivot_acceleration :: proc "c" () -> f32 {
+	return MAX_SISYPHUS_ROLL_SPEED / (TIME_TO_MAX_ROLL_SPEED / 2)
 }

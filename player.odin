@@ -21,6 +21,7 @@ Player :: struct {
 	timed_flags:                bit_set[Player_Timed_Flag;u16],
 	standing_platform_velocity: Vec2,
 	clinging_platform_velocity: Vec2,
+	touching_velocity:          Vec2,
 	flag_timers:                [Player_Timed_Flag]f32,
 	juice_values:               [Player_Juice_Values]f32,
 	badge_type:                 Player_Badge,
@@ -131,6 +132,10 @@ manage_player_flags :: proc(delta: f32) {
 	}
 }
 
+reset_player_touching_velo :: proc() {
+	// world.player.touching_velocity = VEC_0
+}
+
 player_cling_sensors :: proc(player: ^Player) -> (sensor, empty_sensor: Circle_Collider) {
 	sensor.translation =
 		player.translation + {player.radius * 2 * player.facing, -player.radius * 1.5}
@@ -223,6 +228,8 @@ naked_kick :: proc(player: ^Player) {
 	player.naked_kick_angle = player.kick_angle
 	player_t_add(.Kicking, 0.5)
 	player_t_add(.No_Turn, 0.2)
+	player.juice_values[.Sleep_Timer] = 0
+	player.juice_values[.Flourish_Timer] = 0
 }
 
 is_player_naked_kicking :: proc(
@@ -275,14 +282,6 @@ player_jump :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if is_action_buffered(.Jump) {
-		// if player_is(.Riding) && ball_is(.Riding) {
-		// 	if ball_has(.Grounded) || ball_has(.Coyote) {
-		// 		ball.velocity.y = jump_speed
-		// 		ball.timed_flags -= {.Coyote}
-		// 		consume_action(.Jump)
-		// 		return
-		// 	}
-		// } else
 		if player_is(.Riding) {
 			player.velocity.y = jump_speed * 0.7
 			player.velocity.x = ball.velocity.x

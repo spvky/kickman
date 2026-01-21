@@ -61,7 +61,9 @@ player_movement :: proc(delta: f32) {
 	}
 	switch player.state {
 	case .Idle:
-		player.velocity.x *= 0.99
+		if player_lacks(.Outside_Force) {
+			player.velocity.x *= 0.99
+		}
 	case .Rising, .Falling:
 		if is_action_held(.Crouch) {
 			player_t_add(.No_Cling, 0.1)
@@ -200,9 +202,10 @@ manage_ball_velocity :: proc(delta: f32) {
 			}
 		case .Riding:
 			if player.movement_delta != 0 {
-				velo_to_add := player.movement_delta * 200 * delta
 				matching_sign := math.sign(player.movement_delta) == math.sign(ball.velocity.x)
-				if math.abs(ball.velocity.x) < 300 {
+				velo_to_add :=
+					matching_sign ? player.movement_delta * roll_acceleration * delta : player.movement_delta * roll_pivot_acceleration * delta
+				if math.abs(ball.velocity.x) < MAX_SISYPHUS_ROLL_SPEED {
 					ball.velocity.x += velo_to_add
 				} else if !matching_sign {
 					ball.velocity.x *= 0.99
@@ -221,13 +224,31 @@ manage_ball_velocity :: proc(delta: f32) {
 
 apply_player_velocity :: proc(delta: f32) {
 	player := &world.player
-	player.translation += (player.velocity + player.standing_platform_velocity) * delta
+
+	// player.velocity +=
+	// 	(player.clinging_platform_velocity +
+	// 		player.standing_platform_velocity +
+	// 		player.touching_velocity) /
+	// 	2
+	// player.translation +=
+	// 	(player.velocity +
+	// 		player.clinging_platform_velocity +
+	// 		player.standing_platform_velocity +
+	// 		player.touching_velocity) *
+	// 	delta
+	player.translation += player.velocity * delta
+	// player.standing_platform_velocity = VEC_0
+	// player.clinging_platform_velocity = VEC_0
+	// player.touching_velocity = VEC_0
 }
 
 apply_ball_velocity :: proc(delta: f32) {
 	ball := &world.ball
 	if ball_is(.Free, .Riding) {
+		// ball.translation += (ball.velocity + ball.touching_velocity) * delta
+		// ball.velocity += ball.touching_velocity / 2
 		ball.translation += ball.velocity * delta
+		// ball.touching_velocity = VEC_0
 	}
 }
 

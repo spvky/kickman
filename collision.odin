@@ -504,14 +504,57 @@ player_ball_collision :: proc() {
 				}
 			}
 		case .Sisyphus:
-			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
+			n_kick_pos, n_kick_radius, n_kick_angle, is_naked_kicking := is_player_naked_kicking(
+				player,
+			)
+
+			if l.distance(n_kick_pos, ball.translation) < n_kick_radius + ball.radius {
+				kick_velo: Vec2
+				switch n_kick_angle {
+				case .Up:
+					kick_velo = {-player.facing * 30, -250} + {player.velocity.x, 0}
+				case .Forward:
+					kick_velo = {player.facing * 200, -200}
+				case .Down:
+				}
+				player.flag_timers[.Ignore_Ball] = 0.2
+				ball.flags += {.Bounced}
+				ball.velocity = kick_velo
+				return
+			}
+
+			bottom_of_ball := bottom_of_ball_box()
+			if _, collision := circle_aabb_collide(player_head, player.radius, bottom_of_ball);
+			   collision {
 				catch_ball()
 				return
 			}
 
-			if l.distance(player_feet, ball.translation) < player.radius + ball.radius {
+			top_of_ball := top_of_ball_box()
+			if _, collision := circle_aabb_collide(player_feet, player.radius, top_of_ball);
+			   collision {
 				ride_ball()
 				return
+			}
+
+			p_ball_distance := l.distance(player.translation, ball.translation)
+
+			if p_ball_distance < player.radius + ball.radius && player_ball_can_interact() {
+				// 	diff := ball.translation.x - player.translation.x
+				// 	player.touching_velocity.x += ball.velocity.x
+				// 	ball.touching_velocity.x += player.velocity.x
+				// 	pen_depth := (player.radius + ball.radius) - p_ball_distance
+				// 	log.debugf("COLLISION PUSH - Depth %.2f", pen_depth)
+				// 	if player.translation.x < ball.translation.x {
+				// 		player.translation.x -= pen_depth * 0.33
+				// 		ball.translation.x += pen_depth * 0.33
+				// 	} else {
+				// 		player.translation.x += pen_depth * 0.66
+				// 		ball.translation.x -= pen_depth * 0.33
+				// 	}
+				player_t_add(.Outside_Force, 0.15)
+				player.velocity.x += ball.velocity.x
+				// 	return
 			}
 		case .Ghost:
 		}
@@ -519,6 +562,8 @@ player_ball_collision :: proc() {
 }
 
 collision_step :: proc() {
+	// reset_player_touching_velo()
+	// reset_ball_touching_velo()
 	player_ball_level_collision()
 	player_ball_entity_collision()
 	player_ball_transition_collision()

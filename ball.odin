@@ -4,15 +4,16 @@ import "core:log"
 import "core:math"
 
 Ball :: struct {
-	using rigidbody: Rigidbody,
-	ignore_player:   f32,
-	spin:            f32,
-	rotation:        f32,
-	state:           Ball_State,
-	flags:           bit_set[Ball_Flag;u8],
-	timed_flags:     bit_set[Ball_Timed_Flag;u8],
-	flag_timers:     [Ball_Timed_Flag]f32,
-	juice_values:    [Ball_Juice_Values]f32,
+	using rigidbody:   Rigidbody,
+	ignore_player:     f32,
+	spin:              f32,
+	rotation:          f32,
+	touching_velocity: Vec2,
+	state:             Ball_State,
+	flags:             bit_set[Ball_Flag;u8],
+	timed_flags:       bit_set[Ball_Timed_Flag;u8],
+	flag_timers:       [Ball_Timed_Flag]f32,
+	juice_values:      [Ball_Juice_Values]f32,
 }
 
 Ball_Juice_Values :: enum {
@@ -52,6 +53,10 @@ manage_ball_flags :: proc(delta: f32) {
 	}
 }
 
+reset_ball_touching_velo :: proc() {
+	// world.ball.touching_velocity = VEC_0
+}
+
 manage_ball_shape :: proc() {
 	ball := &world.ball
 	switch world.player.badge_type {
@@ -66,6 +71,22 @@ manage_ball_shape :: proc() {
 ride_ball :: proc() {
 	world.ball.state = .Riding
 	override_player_state(.Riding)
+}
+
+top_of_ball_box :: proc() -> AABB {
+	ball := world.ball
+	return AABB {
+		min = {ball.translation.x - ball.radius / 2.5, ball.translation.y - ball.radius},
+		max = {ball.translation.x + ball.radius / 2.5, ball.translation.y - (ball.radius * 0.75)},
+	}
+}
+
+bottom_of_ball_box :: proc() -> AABB {
+	ball := world.ball
+	return AABB {
+		min = {ball.translation.x - ball.radius / 3, ball.translation.y + ball.radius / 2},
+		max = {ball.translation.x + ball.radius / 3, ball.translation.y + ball.radius},
+	}
 }
 
 catch_ball :: proc() {

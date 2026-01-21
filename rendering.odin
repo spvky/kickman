@@ -177,6 +177,23 @@ draw_ball :: proc() {
 			2,
 			etchings_color,
 		)
+		bottom_of_ball := AABB {
+			min = {ball.translation.x - ball.radius / 3, ball.translation.y + ball.radius / 2},
+			max = {ball.translation.x + ball.radius / 3, ball.translation.y + ball.radius},
+		}
+		bottom_extents := bottom_of_ball.max - bottom_of_ball.min
+		top_of_ball := AABB {
+			min = {ball.translation.x - ball.radius / 2.5, ball.translation.y - ball.radius},
+			max = {
+				ball.translation.x + ball.radius / 2.5,
+				ball.translation.y - (ball.radius * 0.75),
+			},
+		}
+		top_extents := top_of_ball.max - top_of_ball.min
+		rl.DrawRectangleV(top_of_ball.min, top_extents, rl.BLACK)
+		rl.DrawRectangleV(bottom_of_ball.min, bottom_extents, rl.BLACK)
+	// rl.DrawCircleV(top_of_ball, ball.radius / 2, rl.BLACK)
+
 	case .Ghost:
 	}
 }
