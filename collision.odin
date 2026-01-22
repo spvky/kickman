@@ -109,6 +109,7 @@ player_ball_transition_collision :: proc() {
 				translation_ptr: ^Vec2
 
 				if player_is(.Riding) {
+					log.debugf("Hit transition while riding: %v", world.current_room)
 					translation_ptr = &ball.translation
 				} else {
 					translation_ptr = &player.translation
@@ -553,7 +554,11 @@ player_ball_collision :: proc() {
 				// 		ball.translation.x -= pen_depth * 0.33
 				// 	}
 				player_t_add(.Outside_Force, 0.15)
-				player.velocity.x += ball.velocity.x
+				// if math.sign(player.velocity.x) == math.sign(ball.velocity.x) {
+				// 	player.velocity.x += -ball.velocity.x
+				// } else {
+				// 	player.velocity.x += ball.velocity.x
+				// }
 				// 	return
 			}
 		case .Ghost:

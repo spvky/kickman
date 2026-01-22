@@ -24,6 +24,8 @@ MAX_SISYPHUS_ROLL_SPEED: f32 : TILE_SIZE * 40
 // How many seconds from a standstill does it take to reach max roll speed
 TIME_TO_MAX_ROLL_SPEED: f32 : 5
 
+MAX_CHAIN_LENGTH: f32 : TILE_SIZE * 20
+
 run_speed := calculate_ground_speed()
 dash_speed := calculate_dash_speed()
 jump_speed := calulate_jump_speed()

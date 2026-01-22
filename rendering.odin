@@ -177,22 +177,16 @@ draw_ball :: proc() {
 			2,
 			etchings_color,
 		)
-		bottom_of_ball := AABB {
-			min = {ball.translation.x - ball.radius / 3, ball.translation.y + ball.radius / 2},
-			max = {ball.translation.x + ball.radius / 3, ball.translation.y + ball.radius},
-		}
+		bottom_of_ball := bottom_of_ball_box()
 		bottom_extents := bottom_of_ball.max - bottom_of_ball.min
-		top_of_ball := AABB {
-			min = {ball.translation.x - ball.radius / 2.5, ball.translation.y - ball.radius},
-			max = {
-				ball.translation.x + ball.radius / 2.5,
-				ball.translation.y - (ball.radius * 0.75),
-			},
-		}
+		top_of_ball := top_of_ball_box()
 		top_extents := top_of_ball.max - top_of_ball.min
 		rl.DrawRectangleV(top_of_ball.min, top_extents, rl.BLACK)
 		rl.DrawRectangleV(bottom_of_ball.min, bottom_extents, rl.BLACK)
-	// rl.DrawCircleV(top_of_ball, ball.radius / 2, rl.BLACK)
+		// rl.DrawCircleV(top_of_ball, ball.radius / 2, rl.BLACK)
+		if ball.state == .Free {
+			rl.DrawLineV(ball.translation, player.translation, rl.YELLOW)
+		}
 
 	case .Ghost:
 	}

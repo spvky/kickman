@@ -117,6 +117,14 @@ player_movement :: proc(delta: f32) {
 manage_player_velocity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
+	if player.badge_type == .Sisyphus && ball.state == .Free {
+		ball_dist := l.distance(player.translation, ball.translation)
+		if ball_dist > MAX_CHAIN_LENGTH {
+			ball_dir := l.normalize0(ball.translation - player.translation)
+			player.velocity += ball_dir * l.length(ball.velocity)
+			ball.velocity += -ball_dir * (l.length(ball.velocity) * 0.5)
+		}
+	}
 	switch player.state {
 	case .Idle, .Running:
 	case .Crouching:
@@ -138,7 +146,9 @@ manage_player_velocity :: proc(delta: f32) {
 		player.translation = ball.translation - {0, ball.radius + player.radius}
 	case .Rising:
 		flag_to_check: Player_Master_Flag = player_has(.Bounced) ? .Just_Bounced : .Just_Jumped
-		if !is_action_held(.Jump) && player_lacks(flag_to_check) && player_lacks(.Kicking) {
+		if !is_action_held(.Jump) &&
+		   player_lacks(flag_to_check) &&
+		   player_lacks(.Kicking, .Outside_Force) {
 			player.velocity.y = 0
 		}
 	case .Falling:

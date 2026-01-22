@@ -2,6 +2,7 @@ package main
 
 import "core:log"
 import "core:math"
+import l "core:math/linalg"
 
 Player :: struct {
 	using rigidbody:            Rigidbody,
@@ -266,12 +267,21 @@ player_badge_action :: proc() {
 		switch player.badge_type {
 		case .Striker:
 			if player_can(.Recall) {
-				player.flag_timers[.No_Badge] = 1
+				player_t_add(.No_Badge, 1)
 				ball.state = .Recalling
 				ball_t_add(.Recall_Rising, 0.75)
 				consume_action(.Badge)
 			}
 		case .Sisyphus:
+			if player_lacks(.No_Badge) {
+				ball_dir := l.normalize0(ball.translation - player.translation)
+				player.velocity += (ball_dir * 250) + {0, -100}
+				ball.velocity += (-ball_dir * 150) + {0, -150}
+				player_t_add(.No_Badge, 1)
+				player_t_add(.Outside_Force, .5)
+				consume_action(.Badge)
+				log.debug("YANK")
+			}
 		case .Ghost:
 		}
 	}

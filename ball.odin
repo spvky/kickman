@@ -84,7 +84,7 @@ top_of_ball_box :: proc() -> AABB {
 bottom_of_ball_box :: proc() -> AABB {
 	ball := world.ball
 	return AABB {
-		min = {ball.translation.x - ball.radius / 3, ball.translation.y + ball.radius / 2},
+		min = {ball.translation.x - ball.radius / 3, ball.translation.y + ball.radius * 0.75},
 		max = {ball.translation.x + ball.radius / 3, ball.translation.y + ball.radius},
 	}
 }

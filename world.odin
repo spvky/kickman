@@ -57,7 +57,7 @@ init_world :: proc() {
 	world.player.flags += {.Has_Ball}
 	world.player.facing = 1
 	world.player.carry_height = 16
-	world.player.badge_type = .Sisyphus
+	world.player.badge_type = .Striker
 	world.player.time_to_run_speed = 0.25
 	world.player.time_to_dash_speed = 1.5
 	world.ball.radius = 3
@@ -88,4 +88,7 @@ set_room :: proc(new_room: tags.Room_Tag) {
 		publish_event(.Region_Change, Event_Region_Change{new_room.region_tag})
 	}
 	world.current_room = new_room
+	if player_is(.Riding) {
+		log.debugf("Set Room While Riding: %v", world.current_room)
+	}
 }
