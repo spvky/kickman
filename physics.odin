@@ -37,7 +37,7 @@ apply_player_gravity :: proc(delta: f32) {
 apply_ball_gravity :: proc(delta: f32) {
 	ball := &world.ball
 
-	if ball_is(.Free, .Riding) {
+	if ball_is(.Free, .Riding, .Revved) {
 		if ball.velocity.y < 0 {
 			ball.velocity.y += rising_gravity * delta
 		} else {
@@ -49,8 +49,10 @@ apply_ball_gravity :: proc(delta: f32) {
 player_movement :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
-	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
-	if player_is(.Idle, .Running, .Crouching, .Rising, .Falling, .Riding) {
+	if player_is(.Riding) {
+		player.facing = ball.spin
+	}
+	if player_is(.Idle, .Running, .Crouching, .Rising, .Falling) {
 		if player.movement_delta != 0 && player_lacks(.No_Turn) {
 			player.facing = player.movement_delta
 		}
@@ -79,7 +81,7 @@ player_movement :: proc(delta: f32) {
 			}
 		}
 	case .Running:
-		if is_action_held(.Dash) && !heavy_carry {
+		if is_action_held(.Dash) {
 			if math.abs(player.velocity.x) < dash_speed {
 				if math.abs(player.velocity.x) < run_speed {
 					player.velocity.x +=
@@ -117,14 +119,6 @@ player_movement :: proc(delta: f32) {
 manage_player_velocity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
-	if player.badge_type == .Sisyphus && ball.state == .Free {
-		ball_dist := l.distance(player.translation, ball.translation)
-		if ball_dist > MAX_CHAIN_LENGTH {
-			ball_dir := l.normalize0(ball.translation - player.translation)
-			player.velocity += ball_dir * l.length(ball.velocity)
-			ball.velocity += -ball_dir * (l.length(ball.velocity) * 0.5)
-		}
-	}
 	switch player.state {
 	case .Idle, .Running:
 	case .Crouching:
@@ -159,106 +153,48 @@ manage_player_velocity :: proc(delta: f32) {
 manage_ball_velocity :: proc(delta: f32) {
 	player := &world.player
 	ball := &world.ball
-	switch player.badge_type {
-	case .Striker:
-		switch ball.state {
-		case .Carried:
-			ball.velocity = VEC_0
-			if player_is(.Running) && player_has(.Grounded) {
-				dashing := is_action_held(.Dash)
-				pulse: f32 = dashing ? 2.5 : 5
-				amp: f32 = dashing ? 5 : 2.5
-				dribble_position :=
-					player_foot_position() +
-					{
-							player.facing *
-							math.abs(
-								math.sin((player.juice_values[.Dribble_Timer]) * 5 + pulse) *
-								player.radius *
-								amp,
-							),
-							0,
-						}
-				ball.translation = math.lerp(ball.translation, dribble_position, delta * 50)
-			} else {
-				ball.translation = math.lerp(ball.translation, player_foot_position(), delta * 80)
-			}
-		case .Free:
-			if ball_has(.Grounded) {
-				ball.velocity.x *= 0.999
-			}
-		case .Recalling:
-			ball.velocity = VEC_0
-			if ball_has(.Recall_Rising) {
-				ball.translation.y -= 16 * delta
-			} else {
-				player_feet := player.translation + {0, player.radius / 2}
-				if l.distance(ball.translation, player.translation) > 12 {
-					ball.translation = math.lerp(ball.translation, player_feet, delta * 20)
-				} else {
-					ball.translation = player_feet
-				}
-			}
-		case .Riding:
+	switch ball.state {
+	case .Free:
+		if ball_has(.Grounded) {
+			ball.velocity.x *= 0.999
 		}
-	case .Sisyphus:
-		#partial switch ball.state {
-		case .Carried:
-			ball.translation = player.translation - (VEC_Y * world.player.carry_height)
-		case .Free:
-			ball.rotation += delta * (ball.velocity.x / 100) * 360
-			if ball_has(.Grounded) {
-				ball.velocity.x *= 0.9999
+	case .Recalling:
+		ball.velocity = VEC_0
+		if ball_has(.Recall_Rising) {
+			ball.translation.y -= 16 * delta
+		} else {
+			player_feet := player.translation + {0, player.radius / 2}
+			ball_target_position: Vec2 = {
+				player.translation.x + (player.facing * player.radius * 8),
+				player_feet.y - 8,
 			}
-		case .Riding:
-			if player.movement_delta != 0 {
-				matching_sign := math.sign(player.movement_delta) == math.sign(ball.velocity.x)
-				velo_to_add :=
-					matching_sign ? player.movement_delta * roll_acceleration * delta : player.movement_delta * roll_pivot_acceleration * delta
-				if math.abs(ball.velocity.x) < MAX_SISYPHUS_ROLL_SPEED {
-					ball.velocity.x += velo_to_add
-				} else if !matching_sign {
-					ball.velocity.x *= 0.99
-					ball.velocity.x += velo_to_add
-				}
+			if l.distance(ball.translation, ball_target_position) > 12 {
+				ball.translation = math.lerp(ball.translation, ball_target_position, delta * 20)
 			} else {
-				if ball_has(.Grounded) {
-					ball.velocity.x *= 0.9999
-				}
+				ball.translation = ball_target_position
+				ball.state = .Free
 			}
-			ball.rotation += delta * (ball.velocity.x / 100) * 360
 		}
-	case .Ghost:
+	case .Riding:
+		if ball_has(.Grounded) {
+			ball.velocity.x *= 0.99999
+		}
+	case .Revved:
+		if ball_has(.Grounded) {
+			ball.velocity.x *= 0.9999
+		}
 	}
 }
 
 apply_player_velocity :: proc(delta: f32) {
 	player := &world.player
-
-	// player.velocity +=
-	// 	(player.clinging_platform_velocity +
-	// 		player.standing_platform_velocity +
-	// 		player.touching_velocity) /
-	// 	2
-	// player.translation +=
-	// 	(player.velocity +
-	// 		player.clinging_platform_velocity +
-	// 		player.standing_platform_velocity +
-	// 		player.touching_velocity) *
-	// 	delta
 	player.translation += player.velocity * delta
-	// player.standing_platform_velocity = VEC_0
-	// player.clinging_platform_velocity = VEC_0
-	// player.touching_velocity = VEC_0
 }
 
 apply_ball_velocity :: proc(delta: f32) {
 	ball := &world.ball
-	if ball_is(.Free, .Riding) {
-		// ball.translation += (ball.velocity + ball.touching_velocity) * delta
-		// ball.velocity += ball.touching_velocity / 2
+	if ball_is(.Free, .Riding, .Revved) {
 		ball.translation += ball.velocity * delta
-		// ball.touching_velocity = VEC_0
 	}
 }
 

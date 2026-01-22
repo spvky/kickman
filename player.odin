@@ -22,22 +22,13 @@ Player :: struct {
 	timed_flags:                bit_set[Player_Timed_Flag;u16],
 	standing_platform_velocity: Vec2,
 	clinging_platform_velocity: Vec2,
-	touching_velocity:          Vec2,
 	flag_timers:                [Player_Timed_Flag]f32,
 	juice_values:               [Player_Juice_Values]f32,
-	badge_type:                 Player_Badge,
 	speed:                      f32,
 	animation:                  Animation_Player,
 }
 
-Player_Badge :: enum u8 {
-	Striker,
-	Sisyphus,
-	Ghost,
-}
-
 Player_Juice_Values :: enum u8 {
-	Dribble_Timer,
 	Skid_Timer,
 	Dash_Spark_Timer,
 	Flourish_Timer,
@@ -65,13 +56,6 @@ manage_player_juice_values :: proc(delta: f32) {
 	player := &world.player
 	for v in Player_Juice_Values {
 		switch v {
-		case .Dribble_Timer:
-			dribble_timer := &player.juice_values[.Dribble_Timer]
-			dribble_timer^ += delta
-			// 2 radian
-			if dribble_timer^ > math.PI {
-				dribble_timer^ = 0
-			}
 		case .Skid_Timer:
 			skid_timer := &player.juice_values[.Skid_Timer]
 			if player_is(.Skidding) && player.movement_delta != 0 {
@@ -150,90 +134,38 @@ player_cling_sensors :: proc(player: ^Player) -> (sensor, empty_sensor: Circle_C
 player_kick :: proc() {
 	player := &world.player
 	ball := &world.ball
-	if is_action_buffered(.Kick) {
+	if is_action_buffered(.Kick) && player_can(.Kick) {
 		if player_is(.Riding) {
-			// if player_can(.Dismount) {
-			// 	//CHANGE ME
-			// 	player.state = .Rising
-			// 	ball.state = .Free
-			// 	player.flag_timers[.Ignore_Ball] = 0.2
-			// 	player.velocity = {player.facing * -60, -100}
-			// 	player.flag_timers[.No_Control] = 0.1
-			// 	ball.spin = -player.facing
-			// 	ball.velocity = {player.facing * 75, -150}
-			// }
+			dismount_ball(player, ball)
 		} else {
-			if player_can(.Kick) {
-				if player_has(.Has_Ball) && ball_lacks(.In_Collider) {
-					switch player.badge_type {
-					case .Striker:
-						ball_angle: Vec2
-						unscaled_velo: Vec2
-						switch player.kick_angle {
-						case .Up:
-							ball_angle = Vec2{0, -1}
-							ball.translation = player_foot_position(-1)
-							ball.spin = player.facing
-							unscaled_velo = {player.facing * player.radius * 5, -50}
-							player.flag_timers[.Ignore_Ball] = 0.2
-							ball.state = .Free
-							ball.velocity =
-								(200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
-						case .Forward:
-							ball_angle = Vec2{player.facing, 0} //-0.4}
-							ball.flag_timers[.No_Gravity] = 0.15
-							ball.state = .Free
-							ball.translation = player_foot_position() - {0, 2}
-							ball.spin = player.facing
-							player.flag_timers[.Ignore_Ball] = 0.1
-							ball.velocity =
-								(200 * ball_angle) + {player.velocity.x, 0} + unscaled_velo
-						case .Down:
-						}
-						player_remove(.Has_Ball)
-						player_t_add(.Kicking, 0.3)
-					case .Sisyphus:
-						switch player.kick_angle {
-						case .Up:
-							ball.state = .Free
-							player_remove(.Has_Ball)
-							ball.velocity = {player.velocity.x, -300}
-							player.flag_timers[.Ignore_Ball] = 0.3
-						case .Forward:
-							ball.state = .Free
-							player_remove(.Has_Ball)
-							ball.velocity = {player.velocity.x + (200 * player.facing), 0}
-							player.flag_timers[.Ignore_Ball] = 0.3
-						case .Down:
-						}
-
-					case .Ghost:
-					}
-				} else {
-					//Naked Kick
-					naked_kick(player)
+			if player_lacks(.Grounded) {
+				if player.velocity.y > -75 {
+					player.velocity.y = -75
 				}
-				player.flag_timers[.No_Badge] = 0.5
-				consume_action(.Kick)
 			}
+			player.naked_kick_angle = player.kick_angle
+			player_t_add(.Kicking, 0.5)
+			player_t_add(.No_Turn, 0.2)
+			player.juice_values[.Sleep_Timer] = 0
+			player.juice_values[.Flourish_Timer] = 0
 		}
+		player.flag_timers[.No_Badge] = 0.5
+		consume_action(.Kick)
 	}
 }
 
-naked_kick :: proc(player: ^Player) {
-	if player_lacks(.Grounded) {
-		if player.velocity.y > -75 {
-			player.velocity.y = -75
-		}
-	}
-	player.naked_kick_angle = player.kick_angle
-	player_t_add(.Kicking, 0.5)
-	player_t_add(.No_Turn, 0.2)
-	player.juice_values[.Sleep_Timer] = 0
-	player.juice_values[.Flourish_Timer] = 0
+dismount_ball :: proc(player: ^Player, ball: ^Ball) {
+	player.state = .Rising
+	ball.state = .Free
+	player.flag_timers[.Ignore_Ball] = 0.2
+	player.velocity = {player.facing * -60, -100}
+	player.flag_timers[.No_Control] = 0.1
+	ball.spin = -player.facing
+	ball.velocity = {player.facing * 75, -150}
 }
 
-is_player_naked_kicking :: proc(
+
+player_kick_hitbox :: proc(
 	player: ^Player,
 ) -> (
 	kick_position: Vec2,
@@ -264,25 +196,8 @@ player_badge_action :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if is_action_buffered(.Badge) {
-		switch player.badge_type {
-		case .Striker:
-			if player_can(.Recall) {
-				player_t_add(.No_Badge, 1.5)
-				ball.state = .Recalling
-				ball_t_add(.Recall_Rising, 0.75)
-				consume_action(.Badge)
-			}
-		case .Sisyphus:
-			if player_lacks(.No_Badge) {
-				ball_dir := l.normalize0(ball.translation - player.translation)
-				player.velocity += (ball_dir * 250) + {0, -100}
-				ball.velocity += (-ball_dir * 150) + {0, -150}
-				player_t_add(.No_Badge, 1)
-				player_t_add(.Outside_Force, .5)
-				consume_action(.Badge)
-				log.debug("YANK")
-			}
-		case .Ghost:
+		if player_can(.Recall) {
+			recall_ball(ball)
 		}
 	}
 }
@@ -292,13 +207,9 @@ player_jump :: proc() {
 	player := &world.player
 	ball := &world.ball
 	if is_action_buffered(.Jump) {
-		if player_is(.Riding) {
-			player.velocity.y = jump_speed * 0.7
-			player.velocity.x = ball.velocity.x
-			player_t_add(.Ignore_Ball, 0.1)
-			player_t_add(.Just_Jumped, 0.2)
-			override_player_state(.Rising)
-			ball.state = .Free
+		if player_is(.Riding) && (ball_has(.Grounded) || ball_has(.Coyote)) {
+			ball.velocity.y = jump_speed
+			ball_t_remove(.Coyote)
 		} else if player_is(.Clinging) {
 			player.velocity.y = jump_speed * 0.7
 			player_t_add(.Just_Jumped, 0.2)
@@ -369,10 +280,11 @@ player_land :: proc() {
 kill_player_oob :: proc() {
 	player := &world.player
 	extents := assets.room_dimensions[world.current_room]
-	if player.translation.x < 0 ||
-	   player.translation.x > extents.x ||
+	if player.translation.x < 0 - player.radius * 10 ||
+	   player.translation.x > extents.x + player.radius * 10 ||
 	   player.translation.y < 0 ||
 	   player.translation.y > extents.y {
+		log.debug("KILL")
 		spawn_player()
 	}
 }
@@ -395,6 +307,6 @@ spawn_player :: proc() {
 	world.current_room = world.spawn_point.room_tag
 	world.player.radius = 4
 	world.player.translation = world.spawn_point.position
-	world.player.flags = {.Has_Ball}
 	world.player.facing = 1
+	summon_ball()
 }

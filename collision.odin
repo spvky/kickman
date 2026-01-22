@@ -85,8 +85,14 @@ ball_resolve_level_collision :: proc(ball: ^Ball, collision: Collision) {
 		ball.spin = -1 * math.sign(ball.spin)
 	}
 	if y_dot > 0.7 {
-		y_velo := ball.velocity.y
-		ball.velocity.y = y_velo * -0.6
+		if ball_is(.Revved) {
+			ball.velocity.y = ball.velocity.y * -0.3
+			if ball_lacks(.Bounced) {
+				ball.velocity.x = 300 * ball.spin
+			}
+		} else {
+			ball.velocity.y = ball.velocity.y * -0.6
+		}
 		ball.flags += {.Bounced}
 	}
 }
@@ -125,9 +131,9 @@ player_ball_transition_collision :: proc() {
 					translation_ptr.x = transition.transition_position.x + x_offset
 				}
 
-				if !player_is(.Riding) {
-					catch_ball()
-				}
+				// if !player_is(.Riding) {
+				// 	// catch_ball()
+				// }
 
 				set_room(transition.tag)
 				player_t_add(.No_Transition, 0.2)
@@ -175,15 +181,27 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
 	player_should_collide := true
 	platform_velocity: Vec2
-	n_kick_pos, n_kick_radius, _, is_naked_kicking := is_player_naked_kicking(player)
+	kick_pos, kick_radius, _, is_hitbox_active := player_kick_hitbox(player)
 
 
 	if .Oneway in collider.flags {
-		is_naked_kicking = false
+		is_hitbox_active = false
 		if player.velocity.y <= 0 ||
 		   collider.min.y < player.translation.y + (player.radius * 1.4) ||
 		   player_has(.Ignore_Oneways) {
 			player_should_collide = false
+		}
+	}
+
+	// Kick Collision
+	if is_hitbox_active && player_lacks(.Grounded) && player.translation.y > collider.min.y {
+		kick_collision, kick_colliding := circle_aabb_collide(kick_pos, kick_radius, collider.aabb)
+		if kick_colliding {
+			player.facing *= -1
+			player.velocity.x = player.facing * 200
+			player.velocity.y = jump_speed * 0.75
+			player_t_add(.Kicking, 0.2)
+			player_t_add(.No_Turn, 0.4)
 		}
 	}
 
@@ -216,21 +234,6 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 		}
 	}
 
-	// Naked Kick Collision
-	if is_naked_kicking && player_lacks(.Grounded) && player.translation.y > collider.min.y {
-		naked_kick_collision, naked_kick_colliding := circle_aabb_collide(
-			n_kick_pos,
-			n_kick_radius,
-			collider.aabb,
-		)
-		if naked_kick_colliding {
-			player.facing *= -1
-			player.velocity.x = player.facing * 200
-			player.velocity.y = jump_speed * 0.75
-			player_t_add(.Kicking, 0.2)
-			player_t_add(.No_Turn, 0.4)
-		}
-	}
 
 	//Wall Cling Collision
 	if player_is(.Falling) && player_lacks(.No_Cling) {
@@ -302,7 +305,7 @@ ball_static_collision :: proc(collider: Collider, on_ground, in_collider: ^bool)
 			collider.aabb,
 		)
 		if ball_collided {
-			if ball_is(.Free, .Riding) {
+			if ball_is(.Free, .Riding, .Revved) {
 				ball_resolve_level_collision(ball, ball_collision)
 			} else {
 				in_collider^ = true
@@ -388,7 +391,7 @@ player_ball_entity_collision :: proc() {
 			player_colliding: bool
 			ball_colliding: bool
 			_, player_colliding = circle_aabb_collide(player.translation, player.radius, bb)
-			if !ball_is(.Recalling, .Carried) {
+			if !ball_is(.Recalling) {
 				_, ball_colliding = circle_aabb_collide(ball.translation, ball.radius, bb)
 			}
 			touching_this_frame := player_colliding || ball_colliding
@@ -430,41 +433,37 @@ player_ball_collision :: proc() {
 	player_head := player.translation - {0, player.radius / 2}
 	player_feet := player.translation + {0, player.radius / 2}
 	if player_ball_can_interact() {
-		switch player.badge_type {
-		case .Striker:
-			// Calculate player hitboxes for ball interactions
-			player_head := player.translation - {0, player.radius / 2}
-			ball_above_head := ball.translation.y < player_head.y
-			player_bounce_box := AABB {
-				player.translation - {player.radius * 1.5, player.radius * 0.25},
-				player.translation + ({player.radius * 1.5, player.radius * 2}),
+		// Calculate player hitboxes for ball interactions
+		player_head := player.translation - {0, player.radius / 2}
+		ball_above_head := ball.translation.y < player_head.y
+		player_bounce_box := AABB {
+			player.translation - {player.radius * 1.5, player.radius * 0.25},
+			player.translation + ({player.radius * 1.5, player.radius * 2}),
+		}
+
+		if player_can(.Header) {
+			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
+				ball_magnitude := l.length(ball.velocity)
+				player_magnitude := l.length(player.velocity)
+				head_normal := l.normalize0(ball.translation - player_head)
+				ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
+				player.flag_timers[.Ignore_Ball] = 0.2
+				ball.flags += {.Bounced}
+				return
 			}
+		}
 
-			if player_can(.Header) {
-				if l.distance(player_head, ball.translation) < player.radius + ball.radius {
-					ball_magnitude := l.length(ball.velocity)
-					player_magnitude := l.length(player.velocity)
-					head_normal := l.normalize0(ball.translation - player_head)
-					ball.velocity =
-						((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
-					player.flag_timers[.Ignore_Ball] = 0.2
-					ball.flags += {.Bounced}
-					return
-				}
-			}
+		// Kick Hitbox
+		kick_pos, kick_radius, kick_angle, is_active := player_kick_hitbox(player)
 
-			// Naked Kick
-			n_kick_pos, n_kick_radius, n_kick_angle, is_naked_kicking := is_player_naked_kicking(
-				player,
-			)
-
-			if l.distance(n_kick_pos, ball.translation) < n_kick_radius + ball.radius {
+		if is_active {
+			if l.distance(kick_pos, ball.translation) < kick_radius + ball.radius {
 				kick_velo: Vec2
-				switch n_kick_angle {
+				switch kick_angle {
 				case .Up:
-					kick_velo = {player.facing * 40, -300}
+					kick_velo = {(player.facing * 25) + player.velocity.x, -300}
 				case .Forward:
-					kick_velo = {player.facing * 300, -100}
+					kick_velo = {(player.facing * 250) + player.velocity.x, -100}
 				case .Down:
 				}
 				player.flag_timers[.Ignore_Ball] = 0.2
@@ -472,14 +471,35 @@ player_ball_collision :: proc() {
 				ball.velocity = kick_velo
 				return
 			}
+		}
+
+		ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
+		feet_touching_ball := l.distance(ball_feet_nearest, ball.translation) < ball.radius
+
+		// When sliding, send the ball up and behind and rev it
+		if feet_touching_ball {
+			if player_can(.Ride) {
+				ride_ball()
+				return
+			}
+			if player_has(.Grounded) {
+				if player_can(.Rev_Shot) {
+					log.debug("Rev Shot")
+					// Rev Shot
+					ball.spin = player.facing
+					ball.state = .Revved
+					ball.velocity = {-player.facing * 30, -175}
+					ball.flags -= {.Bounced}
+					player.flag_timers[.Ignore_Ball] = 0.3
+					return
+				}
+
+				if math.abs(player.velocity.x) > 50 {
+					ball.velocity.x = (player.facing * 150) + player.velocity.x
+				}
 
 
-			ball_feet_nearest := aabb_nearest_point(player_bounce_box, ball.translation)
-			feet_touching_ball := l.distance(ball_feet_nearest, ball.translation) < ball.radius
-
-
-			// When sliding, send the ball up and behind and rev it
-			if feet_touching_ball {
+			} else {
 				if player_can(.Bounce) {
 					if ball_lacks(.Grounded) {
 						ball.velocity.y = player.velocity.y
@@ -493,82 +513,14 @@ player_ball_collision :: proc() {
 					player_add(.Bounced)
 					return
 				}
-
-				if player_can(.Ride) {
-					ride_ball()
-					return
-				}
-
-				if player_can(.Catch) {
-					catch_ball()
-					return
-				}
-			}
-		case .Sisyphus:
-			n_kick_pos, n_kick_radius, n_kick_angle, is_naked_kicking := is_player_naked_kicking(
-				player,
-			)
-
-			if l.distance(n_kick_pos, ball.translation) < n_kick_radius + ball.radius {
-				kick_velo: Vec2
-				switch n_kick_angle {
-				case .Up:
-					kick_velo = {-player.facing * 30, -250} + {player.velocity.x, 0}
-				case .Forward:
-					kick_velo = {player.facing * 200, -200}
-				case .Down:
-				}
-				player.flag_timers[.Ignore_Ball] = 0.2
-				ball.flags += {.Bounced}
-				ball.velocity = kick_velo
-				return
 			}
 
-			bottom_of_ball := bottom_of_ball_box()
-			if _, collision := circle_aabb_collide(player_head, player.radius, bottom_of_ball);
-			   collision {
-				catch_ball()
-				return
-			}
 
-			top_of_ball := top_of_ball_box()
-			if _, collision := circle_aabb_collide(player_feet, player.radius, top_of_ball);
-			   collision {
-				ride_ball()
-				return
-			}
-
-			p_ball_distance := l.distance(player.translation, ball.translation)
-
-			if p_ball_distance < player.radius + ball.radius && player_ball_can_interact() {
-				// 	diff := ball.translation.x - player.translation.x
-				// 	player.touching_velocity.x += ball.velocity.x
-				// 	ball.touching_velocity.x += player.velocity.x
-				// 	pen_depth := (player.radius + ball.radius) - p_ball_distance
-				// 	log.debugf("COLLISION PUSH - Depth %.2f", pen_depth)
-				// 	if player.translation.x < ball.translation.x {
-				// 		player.translation.x -= pen_depth * 0.33
-				// 		ball.translation.x += pen_depth * 0.33
-				// 	} else {
-				// 		player.translation.x += pen_depth * 0.66
-				// 		ball.translation.x -= pen_depth * 0.33
-				// 	}
-				player_t_add(.Outside_Force, 0.15)
-				// if math.sign(player.velocity.x) == math.sign(ball.velocity.x) {
-				// 	player.velocity.x += -ball.velocity.x
-				// } else {
-				// 	player.velocity.x += ball.velocity.x
-				// }
-				// 	return
-			}
-		case .Ghost:
 		}
 	}
 }
 
 collision_step :: proc() {
-	// reset_player_touching_velo()
-	// reset_ball_touching_velo()
 	player_ball_level_collision()
 	player_ball_entity_collision()
 	player_ball_transition_collision()

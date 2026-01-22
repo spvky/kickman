@@ -19,10 +19,10 @@ Player_State :: enum {
 }
 
 Ball_State :: enum {
-	Carried,
 	Free,
 	Recalling,
 	Riding,
+	Revved,
 }
 
 // Returns true if the player state matches ANY of the passed states
@@ -69,7 +69,6 @@ player_state_transition_listener :: proc(event: Event) {
 			player.facing = player.movement_delta
 		}
 	case .Running:
-		player.juice_values[.Dribble_Timer] = 0
 		if data.exited == .Idle {
 		}
 		if data.exited == .Skidding {
@@ -109,34 +108,25 @@ manage_player_state :: proc() {
 	case .Clinging:
 	}
 	player.state = state
-	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
 	anim := &player.animation
 	set_frame_length(anim, 1.0 / 12)
 	switch player.state {
 	case .Idle:
-		if heavy_carry {
-			player.animation.state = .Carry_Heavy_Idle
+		if player.animation.state == .Flourish {
+			set_frame_length(anim, 1.0 / 4)
+		} else if player.animation.state == .Sleep {
+			set_frame_length(anim, 1.0)
 		} else {
-			if player.animation.state == .Flourish {
-				set_frame_length(anim, 1.0 / 4)
-			} else if player.animation.state == .Sleep {
-				set_frame_length(anim, 1.0)
-			} else {
-				player.animation.state = .Idle
-			}
+			player.animation.state = .Idle
 		}
 	case .Rising:
 		player.animation.state = .Rise
 	case .Falling:
 		player.animation.state = .Fall
 	case .Running:
-		if heavy_carry {
-			player.animation.state = .Carry_Heavy_Run
-		} else {
-			player.animation.state = .Run
-			if is_action_held(.Dash) {
-				set_frame_length(anim, 1.0 / 16)
-			}
+		player.animation.state = .Run
+		if is_action_held(.Dash) {
+			set_frame_length(anim, 1.0 / 16)
 		}
 	case .Riding:
 		player.animation.state = .Balance
@@ -152,14 +142,13 @@ manage_player_state :: proc() {
 
 determine_state_from_idle :: #force_inline proc(player: ^Player) -> (state: Player_State) {
 	state = .Idle
-	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
-	if player_has(.Grounded) && !heavy_carry {
+	if player_has(.Grounded) {
 		if is_action_held(.Crouch) {
 			state = .Crouching
 		} else if player.movement_delta != 0 {
 			state = .Running
 		}
-	} else if player_has(.Grounded) && heavy_carry {
+	} else if player_has(.Grounded) {
 		if player.movement_delta == 0 {
 			state = .Idle
 		} else {
@@ -177,8 +166,7 @@ determine_state_from_idle :: #force_inline proc(player: ^Player) -> (state: Play
 
 determine_state_from_running :: #force_inline proc(player: ^Player) -> (state: Player_State) {
 	state = .Running
-	heavy_carry := player.badge_type == .Sisyphus && player_has(.Has_Ball)
-	if player_has(.Grounded) && !heavy_carry {
+	if player_has(.Grounded) {
 		if is_action_held(.Crouch) {
 			state = .Sliding
 		} else if player.movement_delta == 0 {
@@ -190,7 +178,7 @@ determine_state_from_running :: #force_inline proc(player: ^Player) -> (state: P
 		} else if math.sign(player.movement_delta) != math.sign(player.velocity.x) {
 			state = .Skidding
 		}
-	} else if player_has(.Grounded) && heavy_carry {
+	} else if player_has(.Grounded) {
 		if player.movement_delta == 0 {
 			state = .Idle
 		} else {

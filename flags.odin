@@ -5,7 +5,6 @@ import "core:time"
 Player_Flag :: enum u16 {
 	Grounded,
 	Double_Jump,
-	Has_Ball,
 	Bounced,
 }
 
@@ -28,7 +27,6 @@ Player_Timed_Flag :: enum u16 {
 Player_Master_Flag :: enum u32 {
 	Grounded,
 	Double_Jump,
-	Has_Ball,
 	Bounced,
 	Coyote,
 	Ignore_Ball,
@@ -44,6 +42,7 @@ Player_Master_Flag :: enum u32 {
 	No_Cling,
 	Outside_Force,
 }
+
 Ball_Flag :: enum u8 {
 	Grounded,
 	Bounced,
@@ -54,6 +53,7 @@ Ball_Timed_Flag :: enum u8 {
 	No_Gravity,
 	Coyote,
 	Recall_Rising,
+	Recall_Falling,
 }
 
 Ball_Master_Flag :: enum u16 {
@@ -63,6 +63,7 @@ Ball_Master_Flag :: enum u16 {
 	No_Gravity,
 	Coyote,
 	Recall_Rising,
+	Recall_Falling,
 }
 
 Player_Ball_Interaction :: enum u8 {
@@ -70,10 +71,8 @@ Player_Ball_Interaction :: enum u8 {
 	Bounce,
 	Ride,
 	Recall,
-	Catch,
 	Kick,
 	Slide,
-	Dismount,
 	Rev_Shot,
 }
 
@@ -90,8 +89,6 @@ player_has :: proc(set: ..Player_Master_Flag) -> bool {
 			static += {.Grounded}
 		case .Double_Jump:
 			static += {.Double_Jump}
-		case .Has_Ball:
-			static += {.Has_Ball}
 		case .Bounced:
 			static += {.Bounced}
 		case .Coyote:
@@ -139,11 +136,6 @@ player_lacks :: proc(set: ..Player_Master_Flag) -> (lacks: bool) {
 			}
 		case .Double_Jump:
 			if .Double_Jump in player.flags {
-				lacks = false
-				return
-			}
-		case .Has_Ball:
-			if .Has_Ball in player.flags {
 				lacks = false
 				return
 			}
@@ -261,6 +253,8 @@ ball_has :: proc(set: ..Ball_Master_Flag) -> bool {
 			timed += {.Coyote}
 		case .Recall_Rising:
 			timed += {.Recall_Rising}
+		case .Recall_Falling:
+			timed += {.Recall_Falling}
 		}
 	}
 	return static <= ball.flags && timed <= ball.timed_flags
@@ -302,6 +296,11 @@ ball_lacks :: proc(set: ..Ball_Master_Flag) -> (lacks: bool) {
 				lacks = false
 				return
 			}
+		case .Recall_Falling:
+			if .Recall_Falling in ball.timed_flags {
+				lacks = false
+				return
+			}
 		}
 	}
 	return
@@ -330,7 +329,7 @@ ball_t_remove :: proc(flag: Ball_Timed_Flag) {
 }
 
 player_ball_can_interact :: proc() -> bool {
-	return player_lacks(.Ignore_Ball, .Has_Ball, .Ignore_Ball) && !player_is(.Riding)
+	return player_lacks(.Ignore_Ball, .Ignore_Ball) && !player_is(.Riding)
 }
 
 player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
@@ -339,31 +338,25 @@ player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
 	if player_has(.Ignore_Ball) do return
 	switch i {
 	case .Kick:
-		able = player_is(.Idle, .Running, .Skidding, .Rising, .Falling) && player_lacks(.Kicking)
+		able =
+			player_is(.Idle, .Running, .Skidding, .Rising, .Falling, .Riding) &&
+			player_lacks(.Kicking)
 	case .Slide:
 		able =
 			player_has(.Grounded) &&
 			player_is(.Idle, .Running, .Skidding, .Crouching, .Sliding) &&
 			player_lacks(.In_Slide)
-	case .Catch:
-		able =
-			player_lacks(.Has_Ball, .Ignore_Ball) &&
-				(player_is(.Idle, .Running, .Skidding, .Crouching) &&
-						ball_is(.Free, .Recalling)) ||
-			(player_is(.Rising, .Falling) && ball_is(.Recalling))
 	case .Header:
 		able =
 			player_lacks(.Ignore_Ball) &&
 			player_is(.Idle, .Running, .Skidding, .Rising, .Falling) &&
 			ball_is(.Free)
 	case .Ride:
-		able = player_lacks(.Ignore_Ball) && player.badge_type == .Sisyphus
+		able = player_lacks(.Ignore_Ball) && ball_is(.Revved) && ball_has(.Bounced)
 	case .Bounce:
 		able = player_lacks(.Ignore_Ball, .Grounded) && ball_is(.Free)
 	case .Recall:
-		able = player_lacks(.No_Badge) && ball_has(.Bounced) && player.badge_type == .Striker
-	case .Dismount:
-		able = player_is(.Riding)
+		able = player_lacks(.No_Badge) && ball_has(.Bounced)
 	case .Rev_Shot:
 		able = player_is(.Sliding) && ball_is(.Free)
 	}

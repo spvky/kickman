@@ -60,7 +60,7 @@ pre_update :: proc(delta: f32) {
 	process_events()
 	manage_player_juice_values(delta)
 	manage_ball_juice_values(delta)
-	manage_ball_shape()
+	manage_ball_apperance(delta)
 }
 
 post_update :: proc() {

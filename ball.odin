@@ -4,16 +4,17 @@ import "core:log"
 import "core:math"
 
 Ball :: struct {
-	using rigidbody:   Rigidbody,
-	ignore_player:     f32,
-	spin:              f32,
-	rotation:          f32,
-	touching_velocity: Vec2,
-	state:             Ball_State,
-	flags:             bit_set[Ball_Flag;u8],
-	timed_flags:       bit_set[Ball_Timed_Flag;u8],
-	flag_timers:       [Ball_Timed_Flag]f32,
-	juice_values:      [Ball_Juice_Values]f32,
+	using rigidbody: Rigidbody,
+	ignore_player:   f32,
+	spin:            f32,
+	rotation:        f32,
+	f_color:         [3]f32,
+	target_f_color:  [3]f32,
+	state:           Ball_State,
+	flags:           bit_set[Ball_Flag;u8],
+	timed_flags:     bit_set[Ball_Timed_Flag;u8],
+	flag_timers:     [Ball_Timed_Flag]f32,
+	juice_values:    [Ball_Juice_Values]f32,
 }
 
 Ball_Juice_Values :: enum {
@@ -53,19 +54,20 @@ manage_ball_flags :: proc(delta: f32) {
 	}
 }
 
-reset_ball_touching_velo :: proc() {
-	// world.ball.touching_velocity = VEC_0
-}
-
-manage_ball_shape :: proc() {
+manage_ball_apperance :: proc(delta: f32) {
 	ball := &world.ball
-	switch world.player.badge_type {
-	case .Striker:
-		ball.radius = 3
-	case .Sisyphus:
-		ball.radius = 12
-	case .Ghost:
+	ball.radius = 3
+	switch ball.state {
+	case .Free:
+		ball.target_f_color = {255, 255, 255}
+	case .Riding, .Revved:
+		ball.target_f_color = {203, 178, 112}
+	case .Recalling:
+		ball.target_f_color = {165, 134, 236}
 	}
+	ball.f_color = math.lerp(ball.f_color, ball.target_f_color, delta * 10)
+
+
 }
 
 ride_ball :: proc() {
@@ -73,35 +75,12 @@ ride_ball :: proc() {
 	override_player_state(.Riding)
 }
 
-top_of_ball_box :: proc() -> AABB {
-	ball := world.ball
-	return AABB {
-		min = {ball.translation.x - ball.radius / 2.5, ball.translation.y - ball.radius},
-		max = {ball.translation.x + ball.radius / 2.5, ball.translation.y - (ball.radius * 0.75)},
-	}
+summon_ball :: proc() {
 }
 
-bottom_of_ball_box :: proc() -> AABB {
-	ball := world.ball
-	return AABB {
-		min = {ball.translation.x - ball.radius / 3, ball.translation.y + ball.radius * 0.75},
-		max = {ball.translation.x + ball.radius / 3, ball.translation.y + ball.radius},
-	}
-}
-
-catch_ball :: proc() {
-	log.debug("CAUGHT")
-	player := &world.player
-	ball := &world.ball
-	ball.state = .Carried
-	ball.flags -= {.Bounced}
-	ball.velocity = Vec2{0, 0}
-	switch player.badge_type {
-	case .Striker:
-		ball.translation = player_foot_position()
-	case .Sisyphus:
-		ball.translation = player.translation - VEC_Y * player.carry_height
-	case .Ghost:
-	}
-	player.flags += {.Has_Ball}
+recall_ball :: proc(ball: ^Ball) {
+	player_t_add(.No_Badge, 1.5)
+	ball.state = .Recalling
+	ball_t_add(.Recall_Rising, 0.5)
+	consume_action(.Badge)
 }

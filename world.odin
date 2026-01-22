@@ -54,17 +54,13 @@ Game_State :: enum {
 init_world :: proc() {
 	init_events_system()
 	world.player.radius = 4
-	world.player.flags += {.Has_Ball}
 	world.player.facing = 1
 	world.player.carry_height = 16
-	world.player.badge_type = .Striker
 	world.player.time_to_run_speed = 0.25
 	world.player.time_to_dash_speed = 1.5
-	world.ball.radius = 3
-	world.ball.state = .Carried
+	world.ball.radius = 5
 	world.current_room = tags.Room_Tag{.tutorial, 0}
 	world.render_mode = .Scaled
-	checkpoint_pos: Vec2
 	for entity, i in assets.room_entities[world.current_room] {
 		if entity.tag == .Checkpoint {
 			world.spawn_point.room_tag = world.current_room
@@ -72,7 +68,7 @@ init_world :: proc() {
 			break
 		}
 	}
-	world.player.translation = checkpoint_pos
+	world.player.translation = world.spawn_point.position
 	world.player.animation.sheet_width = f32(assets.player_texture.width)
 	world.player.animation.sheet_height = f32(assets.player_texture.height)
 	world.player.animation.frame_length = 1.0 / 6

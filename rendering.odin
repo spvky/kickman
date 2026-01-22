@@ -112,8 +112,8 @@ draw_player :: proc() {
 	}
 	player_frame := get_frame(player.animation, player.facing)
 	rl.DrawTexturePro(assets.player_texture, player_frame, dest, VEC_0, 0, rl.WHITE)
-	kick_pos, kick_radius, _, is_kicking := is_player_naked_kicking(&player)
-	if is_kicking {
+	kick_pos, kick_radius, _, is_hitbox_active := player_kick_hitbox(&player)
+	if is_hitbox_active {
 		rl.DrawCircleV(kick_pos, kick_radius, rl.WHITE)
 	}
 
@@ -134,62 +134,27 @@ draw_player :: proc() {
 draw_ball :: proc() {
 	player := world.player
 	ball := world.ball
-	switch player.badge_type {
-	case .Striker:
-		ball_color := rl.WHITE
-		if ball_is(.Recalling) {
-			ball_color = {165, 134, 236, 255}
-			sigil_color: rl.Color = {ball_color.r, ball_color.g, ball_color.b, 200}
-			rl.DrawPolyLinesEx(
-				ball.translation,
-				5,
-				6,
-				-ball.juice_values[.Sigil_Rotation],
-				2,
-				sigil_color,
-			)
-			rl.DrawPolyLinesEx(
-				ball.translation,
-				3,
-				6,
-				ball.juice_values[.Sigil_Rotation],
-				2,
-				sigil_color,
-			)
-		}
-		rl.DrawCircleV(ball.translation, ball.radius, ball_color)
-	case .Sisyphus:
-		etchings_color := rl.Color{100, 100, 100, 255}
-		rl.DrawCircleV(ball.translation, ball.radius, rl.WHITE)
-		rl.DrawPolyLinesEx(
-			ball.translation,
-			3,
-			(ball.radius) - 2,
-			ball.rotation - 90,
-			2,
-			etchings_color,
-		)
+	ball_color := rl.Color{u8(ball.f_color.r), u8(ball.f_color.g), u8(ball.f_color.b), 255}
+	if ball_is(.Recalling) {
+		sigil_color: rl.Color = {ball_color.r, ball_color.g, ball_color.b, 200}
 		rl.DrawPolyLinesEx(
 			ball.translation,
 			5,
-			ball.radius,
-			ball.rotation - 270,
+			6,
+			-ball.juice_values[.Sigil_Rotation],
 			2,
-			etchings_color,
+			sigil_color,
 		)
-		bottom_of_ball := bottom_of_ball_box()
-		bottom_extents := bottom_of_ball.max - bottom_of_ball.min
-		top_of_ball := top_of_ball_box()
-		top_extents := top_of_ball.max - top_of_ball.min
-		rl.DrawRectangleV(top_of_ball.min, top_extents, rl.BLACK)
-		rl.DrawRectangleV(bottom_of_ball.min, bottom_extents, rl.BLACK)
-		// rl.DrawCircleV(top_of_ball, ball.radius / 2, rl.BLACK)
-		if ball.state == .Free {
-			rl.DrawLineV(ball.translation, player.translation, rl.YELLOW)
-		}
-
-	case .Ghost:
+		rl.DrawPolyLinesEx(
+			ball.translation,
+			3,
+			6,
+			ball.juice_values[.Sigil_Rotation],
+			2,
+			sigil_color,
+		)
 	}
+	rl.DrawCircleV(ball.translation, ball.radius, ball_color)
 }
 
 draw_dust :: proc() {
