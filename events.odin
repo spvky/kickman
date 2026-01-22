@@ -11,6 +11,7 @@ Event :: struct {
 
 Event_Type :: enum {
 	Player_State_Transition,
+	Room_Change,
 	Region_Change,
 }
 
@@ -20,12 +21,16 @@ Event_Player_State_Transition :: struct {
 	entered: Player_State,
 }
 
+Event_Room_Change :: struct {
+	new_room: tags.Room_Tag,
+}
 Event_Region_Change :: struct {
 	new_region: tags.Region_Tag,
 }
 
 Event_Payload :: union {
 	Event_Player_State_Transition,
+	Event_Room_Change,
 	Event_Region_Change,
 }
 

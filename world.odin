@@ -76,6 +76,7 @@ init_world :: proc() {
 	world.player.animation.sprite_height = 20
 	world.player.animation.animations = player_animations()
 	init_particle_system()
+	init_ball()
 	subscribe_event(.Player_State_Transition, player_state_transition_listener)
 }
 
@@ -83,6 +84,7 @@ set_room :: proc(new_room: tags.Room_Tag) {
 	if new_room.region_tag != world.current_room.region_tag {
 		publish_event(.Region_Change, Event_Region_Change{new_room.region_tag})
 	}
+	publish_event(.Room_Change, Event_Room_Change{new_room})
 	world.current_room = new_room
 	if player_is(.Riding) {
 		log.debugf("Set Room While Riding: %v", world.current_room)

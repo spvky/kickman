@@ -134,13 +134,18 @@ draw_player :: proc() {
 draw_ball :: proc() {
 	player := world.player
 	ball := world.ball
-	ball_color := rl.Color{u8(ball.f_color.r), u8(ball.f_color.g), u8(ball.f_color.b), 255}
+	ball_color := rl.Color {
+		u8(ball.f_color.r),
+		u8(ball.f_color.g),
+		u8(ball.f_color.b),
+		u8(ball.f_color.a),
+	}
 	if ball_is(.Recalling) {
 		sigil_color: rl.Color = {ball_color.r, ball_color.g, ball_color.b, 200}
 		rl.DrawPolyLinesEx(
 			ball.translation,
 			5,
-			6,
+			ball.radius * 2,
 			-ball.juice_values[.Sigil_Rotation],
 			2,
 			sigil_color,
@@ -148,7 +153,7 @@ draw_ball :: proc() {
 		rl.DrawPolyLinesEx(
 			ball.translation,
 			3,
-			6,
+			ball.radius * 2,
 			ball.juice_values[.Sigil_Rotation],
 			2,
 			sigil_color,

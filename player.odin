@@ -308,5 +308,4 @@ spawn_player :: proc() {
 	world.player.radius = 4
 	world.player.translation = world.spawn_point.position
 	world.player.facing = 1
-	summon_ball()
 }

@@ -8,8 +8,8 @@ Ball :: struct {
 	ignore_player:   f32,
 	spin:            f32,
 	rotation:        f32,
-	f_color:         [3]f32,
-	target_f_color:  [3]f32,
+	f_color:         [4]f32,
+	target_f_color:  [4]f32,
 	state:           Ball_State,
 	flags:           bit_set[Ball_Flag;u8],
 	timed_flags:     bit_set[Ball_Timed_Flag;u8],
@@ -17,10 +17,16 @@ Ball :: struct {
 	juice_values:    [Ball_Juice_Values]f32,
 }
 
+
 Ball_Juice_Values :: enum {
 	Rev_Flash,
 	Sigil_Rotation,
 }
+
+init_ball :: proc() {
+	subscribe_event(.Room_Change, summon_ball)
+}
+
 
 manage_ball_juice_values :: proc(delta: f32) {
 	ball := &world.ball
@@ -56,18 +62,16 @@ manage_ball_flags :: proc(delta: f32) {
 
 manage_ball_apperance :: proc(delta: f32) {
 	ball := &world.ball
-	ball.radius = 3
+	ball.radius = 4
 	switch ball.state {
 	case .Free:
-		ball.target_f_color = {255, 255, 255}
+		ball.target_f_color = {255, 255, 255, 255}
 	case .Riding, .Revved:
-		ball.target_f_color = {203, 178, 112}
+		ball.target_f_color = {203, 178, 112, 255}
 	case .Recalling:
-		ball.target_f_color = {165, 134, 236}
+		ball.target_f_color = {165, 134, 236, 255}
 	}
 	ball.f_color = math.lerp(ball.f_color, ball.target_f_color, delta * 10)
-
-
 }
 
 ride_ball :: proc() {
@@ -75,7 +79,19 @@ ride_ball :: proc() {
 	override_player_state(.Riding)
 }
 
-summon_ball :: proc() {
+summon_ball :: proc(event: Event) {
+	player := &world.player
+	ball := &world.ball
+	ball.state = .Free
+	ball.f_color = {255, 255, 255, 0}
+	player_feet := player.translation + {0, player.radius / 2}
+	ball_target_position: Vec2 = {
+		player.translation.x + (player.facing * player.radius * 8),
+		player_feet.y - 3,
+	}
+	ball.translation = ball_target_position
+	ball.velocity = VEC_0
+	player_t_remove(.Ignore_Ball)
 }
 
 recall_ball :: proc(ball: ^Ball) {

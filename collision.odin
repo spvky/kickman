@@ -197,11 +197,13 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 	if is_hitbox_active && player_lacks(.Grounded) && player.translation.y > collider.min.y {
 		kick_collision, kick_colliding := circle_aabb_collide(kick_pos, kick_radius, collider.aabb)
 		if kick_colliding {
+			direction := math.sign(player.translation.x - collider.aabb.min.x)
+			player.velocity.x = direction * 215
 			player.facing *= -1
-			player.velocity.x = player.facing * 200
-			player.velocity.y = jump_speed * 0.75
+			player.velocity.y = jump_speed * 0.70
 			player_t_add(.Kicking, 0.2)
 			player_t_add(.No_Turn, 0.4)
+			return
 		}
 	}
 
@@ -496,6 +498,7 @@ player_ball_collision :: proc() {
 
 				if math.abs(player.velocity.x) > 50 {
 					ball.velocity.x = (player.facing * 150) + player.velocity.x
+					return
 				}
 
 
@@ -514,8 +517,6 @@ player_ball_collision :: proc() {
 					return
 				}
 			}
-
-
 		}
 	}
 }
