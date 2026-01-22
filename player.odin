@@ -267,7 +267,7 @@ player_badge_action :: proc() {
 		switch player.badge_type {
 		case .Striker:
 			if player_can(.Recall) {
-				player_t_add(.No_Badge, 1)
+				player_t_add(.No_Badge, 1.5)
 				ball.state = .Recalling
 				ball_t_add(.Recall_Rising, 0.75)
 				consume_action(.Badge)
