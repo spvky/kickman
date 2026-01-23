@@ -164,9 +164,11 @@ manage_ball_velocity :: proc(delta: f32) {
 			ball.translation.y -= 16 * delta
 		} else {
 			player_feet := player.translation + {0, player.radius / 2}
-			ball_target_position: Vec2 = {
-				player.translation.x + (player.facing * player.radius * 8),
-				player_feet.y - 8,
+			ball_target_position := Vec2{0, player_feet.y - 8}
+			if point, ok := player.recall_cast_point.?; ok {
+				ball_target_position.x = point.x + (-player.facing * (ball.radius + 0.5))
+			} else {
+				ball_target_position.x = player.translation.x + (player.facing * player.radius * 8)
 			}
 			if l.distance(ball.translation, ball_target_position) > 12 {
 				ball.translation = math.lerp(ball.translation, ball_target_position, delta * 20)

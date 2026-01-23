@@ -128,6 +128,9 @@ draw_player :: proc() {
 		}
 		box_extents := player_bounce_box.max - player_bounce_box.min
 		rl.DrawRectangleV(player_bounce_box.min, box_extents, {255, 255, 255, 100})
+		if point, ok := player.recall_cast_point.?; ok {
+			rl.DrawCircleV(point, 3, rl.BLACK)
+		}
 	}
 }
 

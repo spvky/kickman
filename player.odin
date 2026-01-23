@@ -18,6 +18,7 @@ Player :: struct {
 	run_direction:              f32,
 	carry_pos:                  f32,
 	carry_height:               f32,
+	recall_cast_point:          Maybe(Vec2),
 	flags:                      bit_set[Player_Flag;u16],
 	timed_flags:                bit_set[Player_Timed_Flag;u16],
 	standing_platform_velocity: Vec2,

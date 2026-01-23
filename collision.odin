@@ -16,6 +16,10 @@ AABB :: struct {
 	min, max: Vec2,
 }
 
+Ray :: struct {
+	origin, direction: Vec2,
+}
+
 Circle_Collider :: struct {
 	translation: Vec2,
 	radius:      f32,
@@ -25,6 +29,8 @@ Collision :: struct {
 	normal: Vec2,
 	mtv:    Vec2,
 }
+
+ray_touches: [dynamic]Vec2
 
 aabb_nearest_point :: proc(c: AABB, v: Vec2) -> Vec2 {
 	return l.clamp(v, c.min, c.max)
@@ -176,7 +182,12 @@ player_tooltip_collision :: proc() {
 	}
 }
 
-player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
+player_static_collision :: proc(
+	collider: Collider,
+	on_ground: ^bool,
+	lowest_min: ^f32,
+	wall_point: ^Maybe(Vec2),
+) {
 	player := &world.player
 	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
 	player_should_collide := true
@@ -190,6 +201,23 @@ player_static_collision :: proc(collider: Collider, on_ground: ^bool) {
 		   collider.min.y < player.translation.y + (player.radius * 1.4) ||
 		   player_has(.Ignore_Oneways) {
 			player_should_collide = false
+		}
+	} else {
+		hit, r_min, r_max := ray_aabb_intersection(
+			collider.aabb,
+			Ray{direction = {player.facing, 0}, origin = player.translation},
+		)
+		if hit {
+			collision_point := player.translation + {r_min * player.facing, 0}
+			in_y_range :=
+				player.translation.y > collider.min.y && player.translation.y < collider.max.y
+			if l.distance(player.translation, collision_point) < player.radius * 8 && in_y_range {
+				if r_min < lowest_min^ {
+					lowest_min^ = r_min
+					wall_point^ = collision_point
+				}
+				// append(&ray_touches, collision_point)
+			}
 		}
 	}
 
@@ -349,9 +377,11 @@ player_ball_level_collision :: proc() {
 		allocator = context.temp_allocator,
 	)
 
+	lowest_min: f32 = math.F32_MAX
+	wall_point: Maybe(Vec2)
 	// Calculate collision for the player and ball for each collider in the slice
 	for collider in collision_slice {
-		player_static_collision(collider, &feet_on_ground)
+		player_static_collision(collider, &feet_on_ground, &lowest_min, &wall_point)
 		ball_static_collision(collider, &ball_on_ground, &ball_in_collider)
 	}
 
@@ -369,6 +399,12 @@ player_ball_level_collision :: proc() {
 		ball.flag_timers[.Coyote] = 0.10
 	} else {
 		ball.flags -= {.Grounded}
+	}
+
+	if p, ok := wall_point.?; ok {
+		player.recall_cast_point = p
+	} else {
+		player.recall_cast_point = nil
 	}
 
 	if ball_in_collider {
@@ -521,7 +557,27 @@ player_ball_collision :: proc() {
 	}
 }
 
+ray_aabb_intersection :: proc(b: AABB, r: Ray) -> (collides: bool, min, max: f32) {
+	min, max = -math.F32_MAX, math.F32_MAX
+	if r.direction.x != 0 {
+		tx1 := (b.min.x - r.origin.x) / r.direction.x
+		tx2 := (b.max.x - r.origin.x) / r.direction.x
+		min = math.max(min, math.min(tx1, tx2))
+		max = math.min(max, math.max(tx1, tx2))
+	}
+	if r.direction.y != 0 {
+		ty1 := (b.min.y - r.origin.y) / r.direction.y
+		ty2 := (b.max.y - r.origin.y) / r.direction.y
+		min = math.max(min, math.min(ty1, ty2))
+		max = math.min(max, math.max(ty1, ty2))
+	}
+	collides = max >= min
+	return
+}
+
+
 collision_step :: proc() {
+	ray_touches = make([dynamic]Vec2, 0, 10, allocator = context.temp_allocator)
 	player_ball_level_collision()
 	player_ball_entity_collision()
 	player_ball_transition_collision()
