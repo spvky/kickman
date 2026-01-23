@@ -187,6 +187,9 @@ player_static_collision :: proc(
 	on_ground: ^bool,
 	lowest_min: ^f32,
 	wall_point: ^Maybe(Vec2),
+	wall_cling_point: ^Vec2,
+	cling_collision: ^bool,
+	empty_cling_collision: ^bool,
 ) {
 	player := &world.player
 	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
@@ -268,31 +271,28 @@ player_static_collision :: proc(
 	//Wall Cling Collision
 	if player_is(.Falling) && player_lacks(.No_Cling) {
 		cling_sensor, empty_cling_sensor := player_cling_sensors(player)
-		cling_collision := circle_sensor_level_collider_overlap(
+		detect_cling_collision := circle_sensor_level_collider_overlap(
 			cling_sensor.translation,
 			cling_sensor.radius,
 			collider,
 			{.Standable, .Clingable},
 		)
-		empty_collision := circle_sensor_level_collider_overlap(
+		if detect_cling_collision {
+			cling_collision^ = true
+			if player.facing == 1 {
+				wall_cling_point^ = collider.aabb.min
+			} else {
+				wall_cling_point^ = Vec2{collider.aabb.max.x, collider.aabb.min.y}
+			}
+		}
+		detect_empty_collision := circle_sensor_level_collider_overlap(
 			empty_cling_sensor.translation,
 			empty_cling_sensor.radius,
 			collider,
 			{.Standable, .Clingable},
 		)
-
-		if cling_collision && !empty_collision {
-			new_translation: Vec2
-			if player.facing == 1 {
-				wall_point := collider.aabb.min
-				new_translation = wall_point + {-player.radius * 2, 8}
-			} else {
-				wall_point := Vec2{collider.aabb.max.x, collider.aabb.min.y}
-				new_translation = wall_point + {player.radius * 2, 8}
-			}
-			override_player_state(.Clinging)
-			player.velocity = VEC_0
-			player.translation = new_translation
+		if detect_empty_collision {
+			empty_cling_collision^ = true
 		}
 	}
 
@@ -378,10 +378,20 @@ player_ball_level_collision :: proc() {
 	)
 
 	lowest_min: f32 = math.F32_MAX
+	wall_cling_point: Vec2
+	cling_collision, empty_cling_collision: bool
 	wall_point: Maybe(Vec2)
 	// Calculate collision for the player and ball for each collider in the slice
 	for collider in collision_slice {
-		player_static_collision(collider, &feet_on_ground, &lowest_min, &wall_point)
+		player_static_collision(
+			collider,
+			&feet_on_ground,
+			&lowest_min,
+			&wall_point,
+			&wall_cling_point,
+			&cling_collision,
+			&empty_cling_collision,
+		)
 		ball_static_collision(collider, &ball_on_ground, &ball_in_collider)
 	}
 
@@ -393,6 +403,19 @@ player_ball_level_collision :: proc() {
 	} else {
 		player.flags -= {.Grounded}
 	}
+
+	if cling_collision && !empty_cling_collision {
+		new_translation: Vec2
+		if player.facing == 1 {
+			new_translation = wall_cling_point + {-player.radius * 2, 8}
+		} else {
+			new_translation = wall_cling_point + {player.radius * 2, 8}
+		}
+		override_player_state(.Clinging)
+		player.velocity = VEC_0
+		player.translation = new_translation
+	}
+
 
 	if ball_on_ground && ball_lacks(.No_Gravity) && ball_is(.Free, .Riding) {
 		ball.flags += {.Grounded}
