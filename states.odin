@@ -2,6 +2,7 @@ package main
 
 import "core:log"
 import "core:math"
+import l "core:math/linalg"
 
 Player_State :: enum {
 	// Grounded
@@ -146,7 +147,14 @@ determine_state_from_idle :: #force_inline proc(player: ^Player) -> (state: Play
 		if is_action_held(.Crouch) {
 			state = .Crouching
 		} else if player.movement_delta != 0 {
-			state = .Running
+			if point, ok := player.recall_cast_point.?; ok {
+				dist := l.distance(player.translation, point)
+				if dist > player.radius * 1.1 {
+					state = .Running
+				}
+			} else {
+				state = .Running
+			}
 		}
 	} else if player_has(.Grounded) {
 		if player.movement_delta == 0 {
@@ -177,6 +185,13 @@ determine_state_from_running :: #force_inline proc(player: ^Player) -> (state: P
 			}
 		} else if math.sign(player.movement_delta) != math.sign(player.velocity.x) {
 			state = .Skidding
+		} else {
+			if point, ok := player.recall_cast_point.?; ok {
+				dist := l.distance(player.translation, point)
+				if dist < player.radius * 1.1 {
+					state = .Idle
+				}
+			}
 		}
 	} else if player_has(.Grounded) {
 		if player.movement_delta == 0 {

@@ -212,7 +212,7 @@ player_jump :: proc() {
 			ball.velocity.y = jump_speed
 			ball_t_remove(.Coyote)
 		} else if player_is(.Clinging) {
-			player.velocity.y = jump_speed * 0.7
+			player.velocity.y = jump_speed * 1.1
 			player_t_add(.Just_Jumped, 0.2)
 			override_player_state(.Rising)
 			return
