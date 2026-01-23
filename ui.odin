@@ -163,6 +163,7 @@ draw_sigil :: proc(origin: Vec2, radius: f32) {
 region_change_listener :: proc(event: Event) {
 	if event.type == .Region_Change {
 		payload := event.payload.(Event_Region_Change)
+		log.debugf("New Region: %v", payload.new_region)
 		ui.region_display_tag = payload.new_region
 		ui_set_element_values(.Region_Display, true, 3)
 	}

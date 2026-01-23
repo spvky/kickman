@@ -20,7 +20,7 @@ draw_paralax_layers :: proc() {
 		}
 		origin := Vec2{320, 160}
 		source := rl.Rectangle{0, 0, 320 * width_units, 320}
-		dest := rl.Rectangle{position.x, position.y, 320 * width_units, 320}
+		dest := rl.Rectangle{position.x - 320, position.y, 320 * width_units, 320}
 		rl.DrawTexturePro(texture, source, dest, origin, 0, rl.WHITE)
 
 		delta := rl.GetFrameTime()

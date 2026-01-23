@@ -280,14 +280,14 @@ player_land :: proc() {
 
 kill_player_oob :: proc() {
 	player := &world.player
-	extents := assets.room_dimensions[world.current_room]
-	if player.translation.x < 0 - player.radius * 10 ||
-	   player.translation.x > extents.x + player.radius * 10 ||
-	   player.translation.y < 0 ||
-	   player.translation.y > extents.y {
-		log.debug("KILL")
-		spawn_player()
-	}
+	// extents := assets.room_dimensions[world.current_room]
+	// if player.translation.x < 0 - player.radius * 10 ||
+	//    player.translation.x > extents.x + player.radius * 10 ||
+	//    player.translation.y < 0 ||
+	//    player.translation.y > extents.y {
+	// 	log.debug("KILL")
+	// 	spawn_player()
+	// }
 }
 
 handle_player_animation :: proc(delta: f32) {
