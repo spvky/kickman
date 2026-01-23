@@ -329,7 +329,7 @@ ball_t_remove :: proc(flag: Ball_Timed_Flag) {
 }
 
 player_ball_can_interact :: proc() -> bool {
-	return player_lacks(.Ignore_Ball, .Ignore_Ball) && !player_is(.Riding)
+	return player_lacks(.Ignore_Ball, .Ignore_Ball) && !player_is(.Riding, .Clinging)
 }
 
 player_can :: proc(i: Player_Ball_Interaction) -> (able: bool) {
