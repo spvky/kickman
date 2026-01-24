@@ -86,7 +86,4 @@ set_room :: proc(new_room: tags.Room_Tag) {
 	}
 	publish_event(.Room_Change, Event_Room_Change{new_room})
 	world.current_room = new_room
-	if player_is(.Riding) {
-		log.debugf("Set Room While Riding: %v", world.current_room)
-	}
 }

@@ -522,7 +522,7 @@ player_ball_collision :: proc() {
 				kick_velo: Vec2
 				switch kick_angle {
 				case .Up:
-					kick_velo = {(player.facing * 25) + player.velocity.x, -300}
+					kick_velo = {(player.facing * 25) + player.velocity.x * 0.9, -300}
 				case .Forward:
 					kick_velo = {(player.facing * 250) + player.velocity.x, -100}
 				case .Down:
