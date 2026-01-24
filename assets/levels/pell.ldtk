@@ -38,7 +38,7 @@
 	"backupRelPath": null,
 	"levelNamePattern": "%world_%idx",
 	"tutorialDesc": null,
-	"customCommands": [],
+	"customCommands": [{ "command": "../../level_write/level_write", "when": "AfterSave" }],
 	"flags": [ "ExportOldTableOfContentData", "MultiWorlds", "UseMultilinesType" ],
 	"defs": { "layers": [
 		{

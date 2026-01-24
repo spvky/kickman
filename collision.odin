@@ -598,6 +598,21 @@ ray_aabb_intersection :: proc(b: AABB, r: Ray) -> (collides: bool, min, max: f32
 	return
 }
 
+ray_aabb_intersection_looped :: proc(b: AABB, r: Ray) -> (collides: bool, tmin, tmax: f32) {
+	tmin, tmax = 0, math.F32_MAX
+
+	for d in 0 ..< 2 {
+		t1 := (b.min[d] - r.origin[d]) * -r.direction[d]
+		t2 := (b.max[d] - r.origin[d]) * -r.direction[d]
+
+		tmin = math.min(math.max(t1, tmin), math.max(t2, tmin))
+		tmax = math.max(math.min(t1, tmax), math.min(t2, tmax))
+	}
+
+	collides = tmin <= tmax
+	return
+}
+
 
 collision_step :: proc() {
 	ray_touches = make([dynamic]Vec2, 0, 10, allocator = context.temp_allocator)
