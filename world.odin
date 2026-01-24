@@ -75,6 +75,7 @@ init_world :: proc() {
 	world.player.animation.sprite_width = 16
 	world.player.animation.sprite_height = 20
 	world.player.animation.animations = player_animations()
+	summon_ball(Event{})
 	init_particle_system()
 	init_ball()
 	subscribe_event(.Player_State_Transition, player_state_transition_listener)

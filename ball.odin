@@ -82,18 +82,20 @@ ride_ball :: proc() {
 summon_ball :: proc(event: Event) {
 	player := &world.player
 	ball := &world.ball
-	ball.state = .Free
-	ball.f_color = {255, 255, 255, 0}
-	player_feet := player.translation + {0, player.radius / 2}
-	ball_target_position := Vec2{0, player_feet.y - 8}
-	if point, ok := player.recall_cast_point.?; ok {
-		ball_target_position.x = point.x + (-player.facing * (ball.radius + 0.5))
-	} else {
-		ball_target_position.x = player.translation.x + (player.facing * player.radius * 8)
+	if ball.state != .Riding {
+		ball.state = .Free
+		ball.f_color = {255, 255, 255, 0}
+		player_feet := player.translation + {0, player.radius / 2}
+		ball_target_position := Vec2{0, player_feet.y - 8}
+		if point, ok := player.recall_cast_point.?; ok {
+			ball_target_position.x = point.x + (-player.facing * (ball.radius + 0.5))
+		} else {
+			ball_target_position.x = player.translation.x + (player.facing * player.radius * 8)
+		}
+		ball.translation = ball_target_position
+		ball.velocity = VEC_0
+		player_t_remove(.Ignore_Ball)
 	}
-	ball.translation = ball_target_position
-	ball.velocity = VEC_0
-	player_t_remove(.Ignore_Ball)
 }
 
 recall_ball :: proc(ball: ^Ball) {

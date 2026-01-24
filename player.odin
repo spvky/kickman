@@ -34,6 +34,7 @@ Player_Juice_Values :: enum u8 {
 	Dash_Spark_Timer,
 	Flourish_Timer,
 	Sleep_Timer,
+	Oob_Kill_Timer,
 }
 
 Kick_Angle :: enum u8 {
@@ -97,6 +98,19 @@ manage_player_juice_values :: proc(delta: f32) {
 				}
 			} else {
 				sleep_timer^ = 0
+			}
+		case .Oob_Kill_Timer:
+			extents := assets.room_dimensions[world.current_room]
+			if player.translation.x < 0 - player.radius * 10 ||
+			   player.translation.x > extents.x + player.radius * 10 ||
+			   player.translation.y < 0 ||
+			   player.translation.y > extents.y {
+				oob_timer := &player.juice_values[.Oob_Kill_Timer]
+				oob_timer^ += delta
+				if oob_timer^ > 0.3 {
+					oob_timer^ = 0
+					spawn_player()
+				}
 			}
 		}
 	}
@@ -309,4 +323,6 @@ spawn_player :: proc() {
 	world.player.radius = 4
 	world.player.translation = world.spawn_point.position
 	world.player.facing = 1
+	override_player_state(.Idle)
+	summon_ball(Event{})
 }
