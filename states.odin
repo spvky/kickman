@@ -24,6 +24,7 @@ Ball_State :: enum {
 	Recalling,
 	Riding,
 	Revved,
+	Captured,
 }
 
 // Returns true if the player state matches ANY of the passed states

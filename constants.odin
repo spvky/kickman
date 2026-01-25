@@ -78,3 +78,10 @@ calculate_roll_acceleration :: proc "c" () -> f32 {
 calculate_roll_pivot_acceleration :: proc "c" () -> f32 {
 	return MAX_SISYPHUS_ROLL_SPEED / (TIME_TO_MAX_ROLL_SPEED / 2)
 }
+
+// Colors
+
+COLOR_WHITE: Color_F : {255, 255, 255, 255}
+COLOR_REV: Color_F : {203, 178, 112, 255}
+COLOR_RECALL: Color_F : {165, 134, 236, 255}
+COLOR_CAPTURED: Color_F : {20, 105, 152, 255}

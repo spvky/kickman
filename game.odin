@@ -4,6 +4,12 @@ import "core:log"
 import rl "vendor:raylib"
 
 Vec2 :: [2]f32
+Color_F :: [4]f32
+
+Gradient_F :: struct {
+	start, end:           Color_F,
+	start_time, end_time: f32,
+}
 
 VEC_0 :: Vec2{0, 0}
 VEC_X :: Vec2{1, 0}

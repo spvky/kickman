@@ -33,6 +33,7 @@ render_scene_to_texture :: proc() {
 	draw_room_entities()
 	draw_current_room()
 	draw_ball()
+	draw_fire()
 	draw_player()
 	draw_dust()
 	draw_tooltips()
@@ -167,6 +168,10 @@ draw_ball :: proc() {
 
 draw_dust :: proc() {
 	render_particle_emitter(&world.particles.dust_particles)
+}
+
+draw_fire :: proc() {
+	render_particle_emitter(&world.particles.fire_particles)
 }
 
 draw_level_collision :: proc() {

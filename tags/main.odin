@@ -19,7 +19,7 @@ Region_Tag :: enum u8 {
 
 Entity_Tag :: enum {
 	Lever,
-	Button,
+	Eye,
 	Movable_Block,
 	Checkpoint,
 }

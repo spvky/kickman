@@ -19,7 +19,7 @@ Ball :: struct {
 
 
 Ball_Juice_Values :: enum {
-	Rev_Flash,
+	Fire_Timer,
 	Sigil_Rotation,
 }
 
@@ -32,11 +32,14 @@ manage_ball_juice_values :: proc(delta: f32) {
 	ball := &world.ball
 	for v in Ball_Juice_Values {
 		switch v {
-		case .Rev_Flash:
-			rev_timer := &ball.juice_values[.Rev_Flash]
-			rev_timer^ += delta
-			if rev_timer^ > math.PI {
-				rev_timer^ = 0
+		case .Fire_Timer:
+			fire_timer := &ball.juice_values[.Fire_Timer]
+			if ball_is(.Revved) {
+				fire_timer^ += delta
+				if fire_timer^ > 0.1 {
+					fire_timer^ = 0
+					make_fire(20, VEC_0, ball.radius * 1.2)
+				}
 			}
 		case .Sigil_Rotation:
 			sigil_rot := &ball.juice_values[.Sigil_Rotation]
@@ -65,11 +68,13 @@ manage_ball_apperance :: proc(delta: f32) {
 	ball.radius = 4
 	switch ball.state {
 	case .Free:
-		ball.target_f_color = {255, 255, 255, 255}
+		ball.target_f_color = COLOR_WHITE
 	case .Riding, .Revved:
-		ball.target_f_color = {203, 178, 112, 255}
+		ball.target_f_color = COLOR_REV
 	case .Recalling:
-		ball.target_f_color = {165, 134, 236, 255}
+		ball.target_f_color = COLOR_RECALL
+	case .Captured:
+		ball.target_f_color = COLOR_CAPTURED
 	}
 	ball.f_color = math.lerp(ball.f_color, ball.target_f_color, delta * 10)
 }

@@ -185,6 +185,8 @@ manage_ball_velocity :: proc(delta: f32) {
 		if ball_has(.Grounded) {
 			ball.velocity.x *= 0.9999
 		}
+	case .Captured:
+		ball.velocity = VEC_0
 	}
 }
 

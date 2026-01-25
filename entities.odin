@@ -28,7 +28,20 @@ draw_room_entities :: proc() {
 				source.x = 48
 			}
 			rl.DrawTexturePro(assets.entities_atlas, source, dest, {0, 0}, 0, rl.WHITE)
-		case .Button:
+		case .Eye:
+			dest := rl.Rectangle {
+				x      = entity.pos.x,
+				y      = entity.pos.y,
+				width  = 16,
+				height = 16,
+			}
+			source := rl.Rectangle {
+				width  = 16,
+				height = 16,
+				x      = 40,
+				y      = 8,
+			}
+			rl.DrawTexturePro(assets.entities_atlas, source, dest, {0, 0}, 0, rl.WHITE)
 		case .Checkpoint:
 			draw_checkpoint(entity)
 		case .Movable_Block:

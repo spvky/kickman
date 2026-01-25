@@ -286,9 +286,9 @@ main :: proc() {
 						temp_entity.id = entity.iid
 						temp_entity.room = room_tag
 						append(&temp_entities_array, temp_entity)
-					case "button":
+					case "eye":
 						temp_entity: Temp_Entity
-						temp_entity.tag = .Button
+						temp_entity.tag = .Eye
 						temp_entity.pos = entity.px
 						temp_entity.id = entity.iid
 						append(&temp_entities_array, temp_entity)
@@ -380,7 +380,7 @@ main :: proc() {
 							Movable_Assoc{index = oi, trigger_eid = temp_data.trigger_ref},
 						)
 
-					case .Lever, .Button:
+					case .Lever, .Eye:
 						new_entity.data = tags.Trigger_Data {
 							on = false,
 						}
