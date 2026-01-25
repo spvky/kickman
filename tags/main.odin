@@ -48,6 +48,8 @@ Movable_Block_Data :: struct {
 Trigger_Data :: struct {
 	on:              bool,
 	touching_player: bool,
+	toggleable:      bool,
+	active_value:    f32,
 }
 
 Checkpoint_Data :: struct {

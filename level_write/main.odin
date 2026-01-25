@@ -46,6 +46,7 @@ Temp_Entity :: struct {
 Temp_Entity_Data :: union {
 	Temp_Movable_Block_Data,
 	Temp_Tooltip_Data,
+	Temp_Trigger_Data,
 }
 
 Temp_Movable_Block_Data :: struct {
@@ -59,6 +60,10 @@ Temp_Tooltip_Data :: struct {
 	message:       string,
 	display_point: [2]int,
 	extents:       [2]int,
+}
+
+Temp_Trigger_Data :: struct {
+	toggleable: bool,
 }
 
 Temp_Binary_Transition :: struct {
@@ -276,7 +281,9 @@ main :: proc() {
 					}
 				}
 
+				log.debugf("Entities in collection: %v", len(entities))
 				for entity in entities {
+					log.debugf("Entity Identifier: %v", entity.identifier)
 					switch entity.identifier {
 					// Binary_Transition
 					case "lever":
@@ -287,10 +294,23 @@ main :: proc() {
 						temp_entity.room = room_tag
 						append(&temp_entities_array, temp_entity)
 					case "eye":
+						log.debug("Found Eye")
 						temp_entity: Temp_Entity
 						temp_entity.tag = .Eye
 						temp_entity.pos = entity.px
 						temp_entity.id = entity.iid
+						entity_data: Temp_Trigger_Data
+						for fi in entity.field_instances {
+							if raw_value, exists := fi.value.?; exists {
+								switch fi.identifier {
+								case "toggleable":
+									value := raw_value.(json.Boolean)
+									log.debugf("Parsing Eye found toggleable value of %v", value)
+									entity_data.toggleable = value
+								}
+							}
+						}
+						temp_entity.data = entity_data
 						append(&temp_entities_array, temp_entity)
 					case "checkpoint":
 						temp_entity: Temp_Entity
@@ -380,9 +400,19 @@ main :: proc() {
 							Movable_Assoc{index = oi, trigger_eid = temp_data.trigger_ref},
 						)
 
-					case .Lever, .Eye:
+					case .Lever:
 						new_entity.data = tags.Trigger_Data {
 							on = false,
+						}
+						trigger_map[te.id] = {
+							room  = room_tag,
+							index = u8(len(entities_array)),
+						}
+					case .Eye:
+						temp_data := te.data.(Temp_Trigger_Data)
+						new_entity.data = tags.Trigger_Data {
+							on         = false,
+							toggleable = temp_data.toggleable,
 						}
 						trigger_map[te.id] = {
 							room  = room_tag,
@@ -407,7 +437,9 @@ main :: proc() {
 
 
 		// Assign aabbs and transition points from entity refs
-		fmt.printfln("Transitions: %v", transitions_map)
+		if ODIN_DEBUG {
+			fmt.printfln("Transitions: %v", transitions_map)
+		}
 		for iid, &temp_transition in transitions_map {
 			binary_transition: Binary_Transition
 			if t, ok := transitions_map[temp_transition.transition_entity]; ok {
@@ -418,11 +450,13 @@ main :: proc() {
 				binary_transition.tag = t.tag
 
 				// Append to transitions
-				fmt.printfln(
-					"Transition Belongs in %v - Connects to %v",
-					temp_transition.tag,
-					t.tag,
-				)
+				if ODIN_DEBUG {
+					fmt.printfln(
+						"Transition Belongs in %v - Connects to %v",
+						temp_transition.tag,
+						t.tag,
+					)
+				}
 				region := &region_map[temp_transition.tag.region_tag]
 				room := &region.rooms[int(temp_transition.tag.room_index)]
 				append(&room.transitions, binary_transition)

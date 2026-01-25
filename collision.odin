@@ -467,6 +467,7 @@ player_ball_entity_collision :: proc() {
 			}
 
 			data := &entity.data.(tags.Trigger_Data)
+			log.debugf("Eye Toggleable: %v", data.toggleable)
 			if ball_is(.Free, .Revved, .Captured) {
 				_, ball_colliding := circle_aabb_collide(ball.translation, ball.radius, bb)
 				if ball_colliding {
@@ -475,7 +476,9 @@ player_ball_entity_collision :: proc() {
 					ball.translation = entity.pos + {8, 8}
 					ball.velocity = VEC_0
 				} else {
-					data.on = false
+					if data.toggleable {
+						data.on = false
+					}
 				}
 			}
 
