@@ -251,12 +251,12 @@ update_entities :: proc(delta: f32) {
 						data.state = .Charging
 					}
 				case .Charging:
-					data.shoot_timer += delta * 10
+					data.shoot_timer += delta * 5
 					if data.shoot_timer >= 1 {
 						data.state = .Firing
 					}
 				case .Firing:
-					data.shoot_timer -= delta * 20
+					data.shoot_timer -= delta * 10
 					if data.shoot_timer <= 0 {
 						data.state = .Dormant
 						angle_radians := math.to_radians(data.rotation)
