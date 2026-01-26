@@ -466,7 +466,6 @@ player_ball_entity_collision :: proc() {
 				min = entity.pos,
 				max = entity.pos + {16, 16},
 			}
-
 			data := &entity.data.(tags.Trigger_Data)
 			if ball_is(.Free, .Revved, .Captured) {
 				_, ball_colliding := circle_aabb_collide(ball.translation, ball.radius, bb)
@@ -481,7 +480,25 @@ player_ball_entity_collision :: proc() {
 					}
 				}
 			}
-
+		case .Cannon_Glyph:
+			if ball_lacks(.Ignore_Glyphs) {
+				bb := AABB {
+					min = entity.pos,
+					max = entity.pos + {16, 16},
+				}
+				data := &entity.data.(tags.Cannon_Data)
+				if ball_is(.Free, .Revved, .Captured) {
+					_, ball_colliding := circle_aabb_collide(ball.translation, ball.radius, bb)
+					if ball_colliding {
+						data.holding_ball = true
+						ball.state = .Captured
+						ball.translation = entity.pos + {8, 8}
+						ball.velocity = VEC_0
+					} else {
+						data.holding_ball = false
+					}
+				}
+			}
 		case .Movable_Block:
 			data := entity.data.(tags.Movable_Block_Data)
 			bb := AABB {

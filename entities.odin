@@ -42,10 +42,9 @@ draw_room_entities :: proc() {
 				x      = 40,
 				y      = 8,
 			}
-			triangle_rotation := 90 + data.active_value * 180
+			pentagon_rotation := 90 + data.active_value * 180
 
-			sigil_white := Color_F{255, 255, 255, 100}
-			sigil_color: Color_F = math.lerp(sigil_white, COLOR_CAPTURED, data.active_value)
+			sigil_color: Color_F = math.lerp(COLOR_SIGIL_WHITE, COLOR_CAPTURED, data.active_value)
 
 			rl.DrawTexturePro(
 				assets.entities_atlas,
@@ -59,9 +58,51 @@ draw_room_entities :: proc() {
 				entity.pos + {8, 8},
 				5,
 				12,
-				triangle_rotation,
+				pentagon_rotation,
 				to_rl_color(sigil_color),
 			)
+		case .Cannon_Glyph:
+			data := entity.data.(tags.Cannon_Data)
+			dest := rl.Rectangle {
+				x      = entity.pos.x,
+				y      = entity.pos.y,
+				width  = 16,
+				height = 16,
+			}
+			source := rl.Rectangle {
+				width  = 16,
+				height = 16,
+				x      = 40,
+				y      = 8,
+			}
+			sigil_color: Color_F = math.lerp(COLOR_SIGIL_WHITE, COLOR_CANNON, data.active_value)
+			shape_origin := entity.pos + {8, 8}
+			rl.DrawTexturePro(
+				assets.entities_atlas,
+				source,
+				dest,
+				{0, 0},
+				0,
+				to_rl_color(sigil_color),
+			)
+			rl.DrawPolyLines(shape_origin, 3, 12, data.rotation, to_rl_color(sigil_color))
+
+			tail_radius: f32 = 12
+			angle_radians := math.to_radians(data.rotation + 180)
+			tail_start :=
+				shape_origin +
+				{
+						(data.shoot_timer * 16) * math.cos(angle_radians),
+						(data.shoot_timer * 16) * math.sin(angle_radians),
+					}
+			tail_end :=
+				shape_origin +
+				{
+						((data.shoot_timer * 16) + tail_radius) * math.cos(angle_radians),
+						((data.shoot_timer * 16) + tail_radius) * math.sin(angle_radians),
+					}
+			rl.DrawLineEx(tail_start, tail_end, 1, to_rl_color(sigil_color))
+
 		case .Checkpoint:
 			draw_checkpoint(entity)
 		case .Movable_Block:
@@ -190,6 +231,48 @@ update_entities :: proc(delta: f32) {
 					data.active_value = 0
 				}
 			}
+		case .Cannon_Glyph:
+			data := &entity.data.(tags.Cannon_Data)
+			if data.holding_ball {
+				if data.active_value < 0.98 {
+					data.active_value += delta * 2.5
+				} else {
+					data.active_value = 1
+				}
+
+				if !data.holding_ball_previous && data.holding_ball {
+					data.state = .Charging
+				}
+
+				switch data.state {
+				case .Dormant:
+				case .Charging:
+					data.shoot_timer += delta * 10
+					if data.shoot_timer >= 1 {
+						data.state = .Firing
+					}
+				case .Firing:
+					data.shoot_timer -= delta * 20
+					if data.shoot_timer <= 0 {
+						data.state = .Dormant
+						angle_radians := math.to_radians(data.rotation)
+						world.ball.velocity = {
+							500 * math.cos(angle_radians),
+							500 * math.sin(angle_radians),
+						}
+						ball_t_add(.Ignore_Glyphs, 0.05)
+						ball_t_add(.No_Gravity, 0.25)
+						world.ball.state = .Free
+					}
+				}
+			} else {
+				if data.active_value > 0.02 {
+					data.active_value -= delta * 2.5
+				} else {
+					data.active_value = 0
+				}
+			}
+			data.holding_ball_previous = data.holding_ball
 		case .Movable_Block:
 			data := &entity.data.(tags.Movable_Block_Data)
 			trigger_data := assets.room_entities[data.trigger_room][data.trigger_index].data.(tags.Trigger_Data)

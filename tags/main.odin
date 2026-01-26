@@ -20,6 +20,7 @@ Region_Tag :: enum u8 {
 Entity_Tag :: enum {
 	Lever,
 	Eye,
+	Cannon_Glyph,
 	Movable_Block,
 	Checkpoint,
 }
@@ -34,6 +35,7 @@ Entity_Data :: union {
 	Movable_Block_Data,
 	Trigger_Data,
 	Checkpoint_Data,
+	Cannon_Data,
 }
 
 Movable_Block_Data :: struct {
@@ -50,6 +52,22 @@ Trigger_Data :: struct {
 	touching_player: bool,
 	toggleable:      bool,
 	active_value:    f32,
+}
+
+
+Cannon_Data :: struct {
+	rotation:              f32,
+	holding_ball:          bool,
+	holding_ball_previous: bool,
+	state:                 Cannon_State,
+	shoot_timer:           f32,
+	active_value:          f32,
+}
+
+Cannon_State :: enum u8 {
+	Dormant,
+	Charging,
+	Firing,
 }
 
 Checkpoint_Data :: struct {

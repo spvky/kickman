@@ -54,6 +54,7 @@ Ball_Timed_Flag :: enum u8 {
 	Coyote,
 	Recall_Rising,
 	Recall_Falling,
+	Ignore_Glyphs,
 }
 
 Ball_Master_Flag :: enum u16 {
@@ -64,6 +65,7 @@ Ball_Master_Flag :: enum u16 {
 	Coyote,
 	Recall_Rising,
 	Recall_Falling,
+	Ignore_Glyphs,
 }
 
 Player_Ball_Interaction :: enum u8 {
@@ -255,6 +257,8 @@ ball_has :: proc(set: ..Ball_Master_Flag) -> bool {
 			timed += {.Recall_Rising}
 		case .Recall_Falling:
 			timed += {.Recall_Falling}
+		case .Ignore_Glyphs:
+			timed += {.Ignore_Glyphs}
 		}
 	}
 	return static <= ball.flags && timed <= ball.timed_flags
@@ -298,6 +302,11 @@ ball_lacks :: proc(set: ..Ball_Master_Flag) -> (lacks: bool) {
 			}
 		case .Recall_Falling:
 			if .Recall_Falling in ball.timed_flags {
+				lacks = false
+				return
+			}
+		case .Ignore_Glyphs:
+			if .Ignore_Glyphs in ball.timed_flags {
 				lacks = false
 				return
 			}

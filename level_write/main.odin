@@ -47,6 +47,7 @@ Temp_Entity_Data :: union {
 	Temp_Movable_Block_Data,
 	Temp_Tooltip_Data,
 	Temp_Trigger_Data,
+	Temp_Cannon_Data,
 }
 
 Temp_Movable_Block_Data :: struct {
@@ -64,6 +65,10 @@ Temp_Tooltip_Data :: struct {
 
 Temp_Trigger_Data :: struct {
 	toggleable: bool,
+}
+
+Temp_Cannon_Data :: struct {
+	rotation: f32,
 }
 
 Temp_Binary_Transition :: struct {
@@ -305,8 +310,23 @@ main :: proc() {
 								switch fi.identifier {
 								case "toggleable":
 									value := raw_value.(json.Boolean)
-									log.debugf("Parsing Eye found toggleable value of %v", value)
 									entity_data.toggleable = value
+								}
+							}
+						}
+						temp_entity.data = entity_data
+						append(&temp_entities_array, temp_entity)
+					case "cannon_glyph":
+						temp_entity: Temp_Entity
+						temp_entity.tag = .Cannon_Glyph
+						temp_entity.pos = entity.px
+						entity_data: Temp_Cannon_Data
+						for fi in entity.field_instances {
+							if raw_value, exists := fi.value.?; exists {
+								switch fi.identifier {
+								case "rotation":
+									value := raw_value.(json.Integer)
+									entity_data.rotation = f32(value)
 								}
 							}
 						}
@@ -399,7 +419,6 @@ main :: proc() {
 							&room.movable_assoc,
 							Movable_Assoc{index = oi, trigger_eid = temp_data.trigger_ref},
 						)
-
 					case .Lever:
 						new_entity.data = tags.Trigger_Data {
 							on = false,
@@ -417,6 +436,11 @@ main :: proc() {
 						trigger_map[te.id] = {
 							room  = room_tag,
 							index = u8(len(entities_array)),
+						}
+					case .Cannon_Glyph:
+						temp_data := te.data.(Temp_Cannon_Data)
+						new_entity.data = tags.Cannon_Data {
+							rotation = temp_data.rotation,
 						}
 					case .Checkpoint:
 						new_entity.data = tags.Checkpoint_Data{}

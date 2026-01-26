@@ -37,7 +37,7 @@ apply_player_gravity :: proc(delta: f32) {
 apply_ball_gravity :: proc(delta: f32) {
 	ball := &world.ball
 
-	if ball_is(.Free, .Riding, .Revved) {
+	if ball_is(.Free, .Riding, .Revved) && ball_lacks(.No_Gravity) {
 		if ball.velocity.y < 0 {
 			ball.velocity.y += rising_gravity * delta
 		} else {

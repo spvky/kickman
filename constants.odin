@@ -82,6 +82,8 @@ calculate_roll_pivot_acceleration :: proc "c" () -> f32 {
 // Colors
 
 COLOR_WHITE: Color_F : {255, 255, 255, 255}
+COLOR_SIGIL_WHITE: Color_F : {255, 255, 255, 100}
 COLOR_REV: Color_F : {203, 178, 112, 255}
 COLOR_RECALL: Color_F : {165, 134, 236, 255}
 COLOR_CAPTURED: Color_F : {20, 105, 152, 255}
+COLOR_CANNON: Color_F : {205, 217, 55, 255}
