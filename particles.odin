@@ -153,7 +153,6 @@ update_particle_emitter :: proc(pe: ^Particle_Emitter($T), delta: f32) {
 				p.velocity += pe.gravity * delta
 				p.position += p.velocity * delta
 			case .Fire:
-				log.debug("Updating fire particles")
 				pd := pe.display.(Particle_Emitter_Circle)
 				d := &p.display.(Particle_Circle)
 				p.position.y -= delta * 10

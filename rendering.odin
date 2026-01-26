@@ -120,6 +120,7 @@ draw_player :: proc() {
 
 
 	if ODIN_DEBUG {
+		player_head := player_head_hitbox(&player)
 		sensor, empty_sensor := player_cling_sensors(&player)
 		rl.DrawCircleV(empty_sensor.translation, empty_sensor.radius, {255, 0, 0, 100})
 		rl.DrawCircleV(sensor.translation, sensor.radius, {0, 255, 0, 100})
@@ -128,6 +129,7 @@ draw_player :: proc() {
 			player.translation + ({player.radius * 1.5, player.radius * 2}),
 		}
 		box_extents := player_bounce_box.max - player_bounce_box.min
+		rl.DrawCircleV(player_head.translation, player_head.radius, {255, 255, 255, 100})
 		rl.DrawRectangleV(player_bounce_box.min, box_extents, {255, 255, 255, 100})
 		if point, ok := player.recall_cast_point.?; ok {
 			rl.DrawCircleV(point, 3, rl.BLACK)

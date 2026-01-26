@@ -190,11 +190,11 @@ player_static_collision :: proc(
 	wall_cling_point: ^Vec2,
 	cling_collision: ^bool,
 	empty_cling_collision: ^bool,
+	platform_velocity: ^Vec2,
 ) {
 	player := &world.player
 	player_feet_sensor := player.translation + Vec2{0, player.radius * 1.5}
 	player_should_collide := true
-	platform_velocity: Vec2
 	kick_pos, kick_radius, _, is_hitbox_active := player_kick_hitbox(player)
 
 
@@ -391,6 +391,7 @@ player_ball_level_collision :: proc() {
 			&wall_cling_point,
 			&cling_collision,
 			&empty_cling_collision,
+			&platform_velocity,
 		)
 		ball_static_collision(collider, &ball_on_ground, &ball_in_collider)
 	}
@@ -467,7 +468,6 @@ player_ball_entity_collision :: proc() {
 			}
 
 			data := &entity.data.(tags.Trigger_Data)
-			log.debugf("Eye Toggleable: %v", data.toggleable)
 			if ball_is(.Free, .Revved, .Captured) {
 				_, ball_colliding := circle_aabb_collide(ball.translation, ball.radius, bb)
 				if ball_colliding {
@@ -512,19 +512,38 @@ player_ball_collision :: proc() {
 	player_feet := player.translation + {0, player.radius / 2}
 	if player_ball_can_interact() {
 		// Calculate player hitboxes for ball interactions
-		player_head := player.translation - {0, player.radius / 2}
-		ball_above_head := ball.translation.y < player_head.y
+		player_head := player_head_hitbox(player)
+		// player.translation + {player.facing * player.radius * 0.75, -player.radius / 2}
+		ball_above_head := ball.translation.y < player_head.translation.y
 		player_bounce_box := AABB {
 			player.translation - {player.radius * 1.5, player.radius * 0.25},
 			player.translation + ({player.radius * 1.5, player.radius * 2}),
 		}
 
 		if player_can(.Header) {
-			if l.distance(player_head, ball.translation) < player.radius + ball.radius {
-				ball_magnitude := l.length(ball.velocity)
-				player_magnitude := l.length(player.velocity)
-				head_normal := l.normalize0(ball.translation - player_head)
-				ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
+			if l.distance(player_head.translation, ball.translation) <
+			   player_head.radius + ball.radius {
+				should_send_forward: bool
+				if player.facing == 1 {
+					should_send_forward =
+						ball.translation.x > player.translation.x + player.radius / 2
+				} else {
+					should_send_forward =
+						ball.translation.x < player.translation.x - player.radius / 2
+				}
+				if should_send_forward {
+					// ball_magnitude := l.length(ball.velocity)
+					// player_magnitude := l.length(player.velocity)
+					// head_normal := l.normalize0(ball.translation - player_head)
+					// ball.velocity = ((ball_magnitude * 0.9) + (player_magnitude * 0.5)) * head_normal
+					if ball.translation.y < player_head.translation.y {
+						ball.velocity = {player.facing * 200, -150}
+					} else {
+						ball.velocity = {player.facing * 250, 0}
+					}
+				} else {
+					ball.velocity = {0, player.velocity.y - 200}
+				}
 				player.flag_timers[.Ignore_Ball] = 0.2
 				ball.flags += {.Bounced}
 				return

@@ -155,6 +155,7 @@ player_kick :: proc() {
 		} else {
 			if player_lacks(.Grounded) {
 				if player.velocity.y > -75 {
+					player.velocity.x += 20 * player.facing
 					player.velocity.y = -75
 				}
 			}
@@ -180,6 +181,12 @@ dismount_ball :: proc(player: ^Player, ball: ^Ball) {
 }
 
 
+player_head_hitbox :: proc(player: ^Player) -> (head: Circle_Collider) {
+	head.translation =
+		player.translation + {player.facing * player.radius * 0.75, -player.radius * 0.75}
+	head.radius = player.radius
+	return
+}
 player_kick_hitbox :: proc(
 	player: ^Player,
 ) -> (

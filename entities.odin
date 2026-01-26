@@ -43,8 +43,25 @@ draw_room_entities :: proc() {
 				y      = 8,
 			}
 			triangle_rotation := 90 + data.active_value * 180
-			rl.DrawTexturePro(assets.entities_atlas, source, dest, {0, 0}, 0, rl.WHITE)
-			rl.DrawPolyLines(entity.pos + {8, 8}, 3, 16, triangle_rotation, rl.WHITE)
+
+			sigil_white := Color_F{255, 255, 255, 100}
+			sigil_color: Color_F = math.lerp(sigil_white, COLOR_CAPTURED, data.active_value)
+
+			rl.DrawTexturePro(
+				assets.entities_atlas,
+				source,
+				dest,
+				{0, 0},
+				0,
+				to_rl_color(sigil_color),
+			)
+			rl.DrawPolyLines(
+				entity.pos + {8, 8},
+				5,
+				12,
+				triangle_rotation,
+				to_rl_color(sigil_color),
+			)
 		case .Checkpoint:
 			draw_checkpoint(entity)
 		case .Movable_Block:
@@ -162,13 +179,13 @@ update_entities :: proc(delta: f32) {
 			data := &entity.data.(tags.Trigger_Data)
 			if data.on {
 				if data.active_value < 0.98 {
-					data.active_value += delta * 5
+					data.active_value += delta * 2.5
 				} else {
 					data.active_value = 1
 				}
 			} else {
 				if data.active_value > 0.02 {
-					data.active_value -= delta * 5
+					data.active_value -= delta * 2.5
 				} else {
 					data.active_value = 0
 				}

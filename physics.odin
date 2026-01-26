@@ -192,7 +192,7 @@ manage_ball_velocity :: proc(delta: f32) {
 
 apply_player_velocity :: proc(delta: f32) {
 	player := &world.player
-	player.translation += player.velocity * delta
+	player.translation += (player.velocity + player.standing_platform_velocity) * delta
 }
 
 apply_ball_velocity :: proc(delta: f32) {
