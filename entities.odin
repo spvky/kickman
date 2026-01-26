@@ -75,7 +75,7 @@ draw_room_entities :: proc() {
 				x      = 40,
 				y      = 8,
 			}
-			sigil_color: Color_F = math.lerp(COLOR_SIGIL_WHITE, COLOR_CANNON, data.active_value)
+			sigil_color: Color_F = math.lerp(COLOR_CANNON, COLOR_CANNON, data.active_value)
 			shape_origin := entity.pos + {8, 8}
 			rl.DrawTexturePro(
 				assets.entities_atlas,
@@ -102,6 +102,7 @@ draw_room_entities :: proc() {
 						((data.shoot_timer * 16) + tail_radius) * math.sin(angle_radians),
 					}
 			rl.DrawLineEx(tail_start, tail_end, 1, to_rl_color(sigil_color))
+			rl.DrawCircleLinesV(shape_origin, data.shoot_timer * 16, to_rl_color(sigil_color))
 
 		case .Checkpoint:
 			draw_checkpoint(entity)
@@ -246,6 +247,9 @@ update_entities :: proc(delta: f32) {
 
 				switch data.state {
 				case .Dormant:
+					if data.holding_ball {
+						data.state = .Charging
+					}
 				case .Charging:
 					data.shoot_timer += delta * 10
 					if data.shoot_timer >= 1 {

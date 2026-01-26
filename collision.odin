@@ -487,7 +487,7 @@ player_ball_entity_collision :: proc() {
 					max = entity.pos + {16, 16},
 				}
 				data := &entity.data.(tags.Cannon_Data)
-				if ball_is(.Free, .Revved, .Captured) {
+				if ball_is(.Free, .Revved, .Captured, .Riding) {
 					_, ball_colliding := circle_aabb_collide(ball.translation, ball.radius, bb)
 					if ball_colliding {
 						data.holding_ball = true

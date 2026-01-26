@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:strings"
+import "tags"
 import rl "vendor:raylib"
 
 player_debug :: proc() {
@@ -50,4 +51,29 @@ player_debug :: proc() {
 		16,
 		rl.YELLOW,
 	)
+}
+
+debug_cannons :: proc() {
+	for entity in assets.room_entities[world.current_room] {
+		if entity.tag == .Cannon_Glyph {
+			data := entity.data.(tags.Cannon_Data)
+			cannon_string := fmt.tprintf(
+				"Cannon\n\tholding_ball: %v\n\tstate: %v\n\tshoot_timer: %.2f",
+				data.holding_ball,
+				data.state,
+				data.shoot_timer,
+			)
+			ratio := f32(WINDOW_WIDTH) / SCREEN_WIDTH
+			text_position := rl.GetWorldToScreen2D(entity.pos, world.camera) * ratio + {85, 0}
+			rl.DrawTextEx(
+				assets.font,
+				strings.clone_to_cstring(cannon_string, allocator = context.temp_allocator),
+				text_position,
+				8,
+				0,
+				rl.YELLOW,
+			)
+
+		}
+	}
 }

@@ -92,6 +92,7 @@ render_to_screen :: proc() {
 	rl.DrawFPS(0, 0)
 	if ODIN_DEBUG {
 		player_debug()
+		debug_cannons()
 	}
 	rl.EndDrawing()
 }
