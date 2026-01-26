@@ -263,6 +263,8 @@ update_entities :: proc(delta: f32) {
 						ball_t_add(.Ignore_Glyphs, 0.05)
 						ball_t_add(.No_Gravity, 0.25)
 						world.ball.state = .Free
+						data.shoot_timer = 0
+						data.active_value = 0
 					}
 				}
 			} else {
