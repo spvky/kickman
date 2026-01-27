@@ -82,6 +82,7 @@ init_world :: proc() {
 }
 
 set_room :: proc(new_room: tags.Room_Tag) {
+	log.debug("New Room")
 	if new_room.region_tag != world.current_room.region_tag {
 		publish_event(.Region_Change, Event_Region_Change{new_room.region_tag})
 	}

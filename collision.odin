@@ -117,32 +117,37 @@ player_ball_transition_collision :: proc() {
 			if player_has(.No_Transition) {
 				transition.touching_player = true
 			} else if transition.active {
+				log.debug("Hit Transition")
 				transition_extents := transition.max - transition.min
 				translation_ptr: ^Vec2
+				velocity_ptr: ^Vec2
 
 				if player_is(.Riding) {
 					log.debugf("Hit transition while riding: %v", world.current_room)
 					translation_ptr = &ball.translation
+					velocity_ptr = &ball.velocity
 				} else {
 					translation_ptr = &player.translation
+					velocity_ptr = &player.velocity
 				}
 
 				if transition_extents.x < transition_extents.y {
 					y_offset := translation_ptr.y - (transition.max.y + transition.min.y) / 2
-					translation_ptr.x = transition.transition_position.x
+					translation_ptr.x =
+						transition.transition_position.x + (math.sign(velocity_ptr.x) * 16)
 					translation_ptr.y = transition.transition_position.y + y_offset
 				} else {
 					x_offset := translation_ptr.x - (transition.max.x + transition.min.x) / 2
-					translation_ptr.y = transition.transition_position.y
+					translation_ptr.y =
+						transition.transition_position.y + (math.sign(velocity_ptr.y) * 8)
 					translation_ptr.x = transition.transition_position.x + x_offset
 				}
+				if player_is(.Riding) {
+				}
 
-				// if !player_is(.Riding) {
-				// 	// catch_ball()
-				// }
 
 				set_room(transition.tag)
-				player_t_add(.No_Transition, 0.2)
+				// player_t_add(.No_Transition, 0.2)
 				clear_dust()
 			}
 		} else {
@@ -150,7 +155,7 @@ player_ball_transition_collision :: proc() {
 		}
 
 		//Ball
-		if !ball_is(.Riding) {
+		if !player_is(.Riding) {
 			if collision, ball_collided := circle_aabb_collide(
 				ball.translation,
 				ball.radius,
