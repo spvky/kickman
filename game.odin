@@ -58,6 +58,7 @@ game_shutdown :: proc() {
 
 states_update :: proc() {
 	manage_player_state()
+	manag_ball_state()
 	handle_state_transitions()
 }
 

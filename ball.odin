@@ -63,6 +63,12 @@ manage_ball_flags :: proc(delta: f32) {
 	}
 }
 
+manag_ball_state :: proc() {
+	if player_is(.Riding) && ball_is(.Free) {
+		world.ball.state = .Riding
+	}
+}
+
 manage_ball_apperance :: proc(delta: f32) {
 	ball := &world.ball
 	ball.radius = 4
